@@ -1,93 +1,118 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding=utf-8
-
-##
-## CONN-2
-##
-#DEF CONN-2 XP 0 80 N Y 1 F N
-#F0 "XP" 150 100 118 H V C CNN
-#F1 "CONN-2" 1100 100 118 H V C CNN
-#F2 "" 700 400 118 H V C CNN
-#F3 "" 700 400 118 H V C CNN
-#DRAW
-#T 0 200 -200 118 0 0 0 Конт Normal 0 C C
-#T 0 1200 -200 118 0 0 0 Цепь Normal 0 C C
-#P 2 0 0 0 0 -800 2000 -800 N
-#S 0 0 2000 -1200 0 1 0 f
-#P 2 0 1 0 0 -400 2000 -400 N
-#P 2 0 1 0 420 0 420 -1200 N
-#X 1 1 -200 -600 200 R 118 118 1 1 P
-#X 2 2 -200 -1000 200 R 118 118 1 1 P
-#ENDDRAW
-#ENDDEF
 
 import sys
 import os
-
-if len(sys.argv) < 2:
-    print 'E: pin count should be specified'
-    sys.exit(1)
-    
-N = sys.argv[1]  # pin count
-
-if not N.isdigit():
-    print 'E: pin count is not number'
-    sys.exit(1)
-    
-    
-N = int(N)    
+import getopt
 
 #-------------------------------------------------------------------------------
-#
-#    Header
-#
-header  = '#' + os.linesep
-header += '# CONN-' + str(N) + os.linesep
-header += '#' + os.linesep
-
-Name   = 'CONN-' + str(N) + ' '
-Ref    = 'XP '
-Unused = '0 '
-PinNameOffset = '80 '
-DrawPinNum    = 'N '
-DrawPinName   = 'Y '
-UnitCount     = '1 '
-UnitsLocked   = 'F '  # L: locked; F: free
-OptionFlag    = 'N'   # N: normal; P: power
-
-header  += 'DEF ' + Name + Ref + Unused + PinNameOffset + DrawPinNum + DrawPinName + UnitCount + UnitsLocked + OptionFlag + os.linesep
-
+def join_rec(l):
+    res = ''
+    for idx, i in enumerate(l, start = 1):
+        sep = ' '
+        if idx == len(l):
+            sep = ''
+        res += str(i) + sep
+        
+    return res
 #-------------------------------------------------------------------------------
-#
-#    Fields
-#
-f0 = 'F0 "XP" 150 100 118 H V C CNN' + os.linesep
-f1 = 'F1 "CONN-' + str(N) + '" 1100 100 118 H V C CNN' + os.linesep
-f2 = 'F2 "" 700 400 118 H V C CNN' + os.linesep
-f3 = 'F3 "" 700 400 118 H V C CNN' + os.linesep
-
-#-------------------------------------------------------------------------------
-#
-#    Drawings
-#
-step    = 400 # mils
-pin_len = 200 # mils
-height = str(-(N + 1)*step)
-
-draw  = 'DRAW' + os.linesep
-draw += 'T 0 210 -200 118 0 0 0 Конт Normal 0 C C' + os.linesep
-draw += 'T 0 1200 -200 118 0 0 0 Цепь Normal 0 C C'  + os.linesep
-draw += 'S 0 0 2000 ' + height +' 0 1 0 f'  + os.linesep
-draw += 'P 2 0 1 0 420 0 420 ' + height +' N'  + os.linesep
-
-for i in range(1,N+1):
-    y = str(-i*step)
-    draw += 'P 2 0 0 0 0 ' + y + ' 2000 ' + y + ' N'  + os.linesep
-    draw += 'X ' + str(i) + ' ' + str(i) + ' ' + str(-pin_len) + ' ' + str(-(200+i*step)) + ' ' + str(pin_len) + ' R 118 118 1 1 P'  + os.linesep
+def create_header(pin_count, part_count):
     
-draw += 'ENDDRAW' + os.linesep
+    header  = '#' + os.linesep
+    header += '# CONN-' + pin_count + os.linesep
+    header += '#' + os.linesep
 
-sout = header + f0 + f1 + f2 + f3 + draw + 'ENDDEF' + os.linesep
-                                                                                                                  
-with open('conn-' + str(N) + '.lib', 'wb') as f:
-    f.write(sout) 
+    Name   = 'DEF CONN-' + pin_count 
+    Ref    = 'XP'
+    Unused = '0'
+    PinNameOffset = '80'
+    DrawPinNum    = 'N'
+    DrawPinName   = 'Y'
+    UnitCount     = part_count
+    UnitsLocked   = 'F'   # L: locked; F: free
+    OptionFlag    = 'N'   # N: normal; P: power
+
+    l = [Name, Ref, Unused, PinNameOffset, DrawPinNum, DrawPinName, UnitCount, UnitsLocked, OptionFlag]
+    
+    header  += join_rec(l) + os.linesep
+    
+    return header
+   
+#-------------------------------------------------------------------------------
+def create_field(field, name, pos_x, pos_y, font=118, visibility='V'):
+    l = ['F'+str(field), '"'+name+'"', pos_x, pos_y, str(font), 'H', visibility, 'L CNN']
+    return join_rec(l) + os.linesep
+ 
+#-------------------------------------------------------------------------------
+def create_drawings(pin_count, part_count, width, font=118):
+    step    = 400 # mils
+    pin_len = 200 # mils
+
+    draw  = 'DRAW' + os.linesep
+    draw += 'T 0 210 -200 118 0 0 0 Конт Normal 0 C C' + os.linesep
+    draw += 'T 0 1200 -200 118 0 0 0 Цепь Normal 0 C C'  + os.linesep
+
+    pins_chunk = int(int(pin_count)/int(part_count))
+    print(pins_chunk)
+    height = str(-(pins_chunk + 1)*step)
+    
+    draw += 'S 0 0 ' + width + ' ' + height +' 0 1 0 f'  + os.linesep
+    draw += 'P 2 0 1 0 420 0 420 ' + height +' N'  + os.linesep
+
+    for i in range(1,pins_chunk+1):
+        y = str(-i*step)
+        draw += 'P 2 0 0 0 0 ' + y + ' ' + width + ' ' + y + ' N'  + os.linesep
+
+    for n in range(1, int(part_count)+1):
+        for i in range(1,pins_chunk+1):
+            draw += 'X ' + str(i+(n-1)*pins_chunk) + ' ' + str(i+(n-1)*pins_chunk) + ' ' + \
+                     str(-pin_len) + ' ' + str(-(200+i*step)) + ' ' + str(pin_len) + \
+                     ' R ' + str(font) + ' ' + str(font) + ' ' + str(n) + ' 1 P'  + os.linesep
+        
+        
+    draw += 'ENDDRAW' + os.linesep
+
+    return draw
+       
+#-------------------------------------------------------------------------------
+def create_conn(pin_count, part_count, width):
+    rec  = create_header( pin_count, part_count )
+    rec += create_field( field=0, name='XP', pos_x=0, pos_y=100 )
+    rec += create_field( field=1, name='CONN-'+pin_count, pos_x=1000, pos_y=100 )
+    rec += create_field( field=2, name='', pos_x=700, pos_y=400, visibility='I' )
+    rec += create_field( field=3, name='', pos_x=700, pos_y=400, visibility='I' )
+    rec += create_drawings(pin_count, part_count, width)
+    rec += 'ENDDEF' + os.linesep
+
+    print(rec)
+    with open('conn-' + pin_count + '.cmp', 'wb') as f:
+        f.write( bytes(rec, 'UTF-8') )
+    
+    
+def main():
+    #-------------------------------------------------
+    #
+    #    Process options
+    #
+    optlist, fld = getopt.gnu_getopt(sys.argv[1:], 'n:p:w:')
+
+
+    pin_count  = 0
+    part_count = 1
+    width      = '2000'
+    for i in optlist:
+        if i[0] == '-n':
+            pin_count = i[1]
+        elif i[0] == '-p':
+            part_count = i[1]
+        elif i[0] == '-z':
+            width = i[i]
+    
+    if int(pin_count)%int(part_count):
+        print('E: pin count should be multiple of part count')
+        return 1
+            
+    create_conn(pin_count, part_count, width)
+    
+if __name__ == '__main__':
+    main()
