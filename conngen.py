@@ -6,6 +6,15 @@ import os
 import getopt
 
 #-------------------------------------------------------------------------------
+#
+#    Settings
+#
+STEP      = 400  # mils
+PIN_LEN   = 200  # mils
+FONT_SIZE = 118  # mils
+WIDTH     = 2000 # mils
+
+#-------------------------------------------------------------------------------
 def join_rec(l):
     res = ''
     for idx, i in enumerate(l, start = 1):
@@ -45,28 +54,25 @@ def create_field(field, name, pos_x, pos_y, font=118, visibility='V'):
  
 #-------------------------------------------------------------------------------
 def create_drawings(pin_count, part_count, width, font=118):
-    step    = 400 # mils
-    pin_len = 200 # mils
 
     draw  = 'DRAW' + os.linesep
     draw += 'T 0 210 -200 118 0 0 0 Конт Normal 0 C C' + os.linesep
     draw += 'T 0 1200 -200 118 0 0 0 Цепь Normal 0 C C'  + os.linesep
 
     pins_chunk = int(int(pin_count)/int(part_count))
-    print(pins_chunk)
-    height = str(-(pins_chunk + 1)*step)
+    height = str(-(pins_chunk + 1)*STEP)
     
     draw += 'S 0 0 ' + width + ' ' + height +' 0 1 0 f'  + os.linesep
     draw += 'P 2 0 1 0 420 0 420 ' + height +' N'  + os.linesep
 
     for i in range(1,pins_chunk+1):
-        y = str(-i*step)
+        y = str(-i*STEP)
         draw += 'P 2 0 0 0 0 ' + y + ' ' + width + ' ' + y + ' N'  + os.linesep
 
     for n in range(1, int(part_count)+1):
         for i in range(1,pins_chunk+1):
             draw += 'X ' + str(i+(n-1)*pins_chunk) + ' ' + str(i+(n-1)*pins_chunk) + ' ' + \
-                     str(-pin_len) + ' ' + str(-(200+i*step)) + ' ' + str(pin_len) + \
+                     str(-PIN_LEN) + ' ' + str( -int( (STEP/2+i*STEP) ) ) + ' ' + str(PIN_LEN) + \
                      ' R ' + str(font) + ' ' + str(font) + ' ' + str(n) + ' 1 P'  + os.linesep
         
         
@@ -84,8 +90,9 @@ def create_conn(pin_count, part_count, width):
     rec += create_drawings(pin_count, part_count, width)
     rec += 'ENDDEF' + os.linesep
 
-    print(rec)
-    with open('conn-' + pin_count + '.cmp', 'wb') as f:
+    cname = 'conn-' + pin_count + '.cmp'
+    print('I: create component file ' + cname)
+    with open(cname, 'wb') as f:
         f.write( bytes(rec, 'UTF-8') )
     
     
@@ -99,7 +106,7 @@ def main():
 
     pin_count  = 0
     part_count = 1
-    width      = '2000'
+    width      = str(WIDTH)
     for i in optlist:
         if i[0] == '-n':
             pin_count = i[1]
