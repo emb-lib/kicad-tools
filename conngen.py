@@ -48,13 +48,18 @@ def create_header(pin_count, part_count):
     return header
    
 #-------------------------------------------------------------------------------
-def create_field(field, name, pos_x, pos_y, font=118, visibility='V'):
+def create_field(field, name, pos_x, pos_y, font=FONT_SIZE, visibility='V'):
     l = ['F'+str(field), '"'+name+'"', pos_x, pos_y, str(font), 'H', visibility, 'L CNN']
     return join_rec(l) + os.linesep
  
 #-------------------------------------------------------------------------------
-def create_drawings(pin_count, part_count, width, font=118):
+def create_drawings(pin_count, part_count, width, filled, font=FONT_SIZE):
 
+    if filled:
+        f = 'f'
+    else:
+        f = 'n'
+    
     draw  = 'DRAW' + os.linesep
     draw += 'T 0 210 -200 118 0 0 0 Конт Normal 0 C C' + os.linesep
     draw += 'T 0 1200 -200 118 0 0 0 Цепь Normal 0 C C'  + os.linesep
@@ -62,7 +67,7 @@ def create_drawings(pin_count, part_count, width, font=118):
     pins_chunk = int(int(pin_count)/int(part_count))
     height = str(-(pins_chunk + 1)*STEP)
     
-    draw += 'S 0 0 ' + width + ' ' + height +' 0 1 0 f'  + os.linesep
+    draw += 'S 0 0 ' + width + ' ' + height +' 0 1 0 ' + f  + os.linesep
     draw += 'P 2 0 1 0 420 0 420 ' + height +' N'  + os.linesep
 
     for i in range(1,pins_chunk+1):
@@ -81,13 +86,13 @@ def create_drawings(pin_count, part_count, width, font=118):
     return draw
        
 #-------------------------------------------------------------------------------
-def create_conn(pin_count, part_count, width):
+def create_conn(pin_count, part_count, width, filled):
     rec  = create_header( pin_count, part_count )
     rec += create_field( field=0, name='XP', pos_x=0, pos_y=100 )
     rec += create_field( field=1, name='CONN-'+pin_count, pos_x=1000, pos_y=100 )
     rec += create_field( field=2, name='', pos_x=700, pos_y=400, visibility='I' )
     rec += create_field( field=3, name='', pos_x=700, pos_y=400, visibility='I' )
-    rec += create_drawings(pin_count, part_count, width)
+    rec += create_drawings(pin_count, part_count, width, filled)
     rec += 'ENDDEF' + os.linesep
 
     cname = 'conn-' + pin_count + '.cmp'
@@ -101,25 +106,28 @@ def main():
     #
     #    Process options
     #
-    optlist, fld = getopt.gnu_getopt(sys.argv[1:], 'n:p:w:')
+    optlist, fld = getopt.gnu_getopt(sys.argv[1:], 'n:p:w:f')
 
 
     pin_count  = 0
     part_count = 1
     width      = str(WIDTH)
+    filled     = False
     for i in optlist:
         if i[0] == '-n':
             pin_count = i[1]
         elif i[0] == '-p':
             part_count = i[1]
-        elif i[0] == '-z':
-            width = i[i]
+        elif i[0] == '-w':
+            width = i[1]
+        elif i[0] == '-f':
+            filled = True
     
     if int(pin_count)%int(part_count):
         print('E: pin count should be multiple of part count')
         return 1
             
-    create_conn(pin_count, part_count, width)
+    create_conn(pin_count, part_count, width, filled)
     
 if __name__ == '__main__':
     main()
