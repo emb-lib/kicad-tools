@@ -34,7 +34,10 @@ def create_header(pin_count, part_count):
     Name   = 'DEF CONN-' + pin_count 
     Ref    = 'XP'
     Unused = '0'
-    PinNameOffset = '80'
+    if int(pin_count) < 100:
+        PinNameOffset = '80'
+    else:
+        PinNameOffset = '70'
     DrawPinNum    = 'N'
     DrawPinName   = 'Y'
     UnitCount     = part_count
