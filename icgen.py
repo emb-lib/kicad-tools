@@ -33,6 +33,41 @@ def join_rec(l):
         
     return res
 #-------------------------------------------------------------------------------
+def draw_pline(part, *vertexes):
+    N    = int(len(vertexes[0])/2)
+    C    = 0
+    Th   = 0
+    CC   = 'N'
+    
+    return join_rec( ['P', N, part, C, Th] + vertexes[0] + [CC] ) + os.linesep
+    
+#-------------------------------------------------------------------------------
+def draw_line(part, x0, y0, x1, y1):
+    N    = 2
+    C    = 0
+    Th   = 0
+    CC   = 'N'
+
+    return join_rec( ['P', N, part, C, Th, x0, y0, x1, y1, CC] ) + os.linesep
+
+#-------------------------------------------------------------------------------
+def draw_amp_symbol(part_id, capt):
+    x0, y0 = capt[1:]
+    vertexes = [x0, y0, x0+100, y0+50, x0, y0+100, x0, y0]
+    
+    return draw_pline(part_id, vertexes)
+#-------------------------------------------------------------------------------
+def draw_text(part_id, capt):
+    text, x0, y0 = capt
+
+    Orientation     = 0
+    CommonBodyStyle = 0
+    
+    params = ['T', Orientation, x0, y0, FONT_SIZE, 0, part_id, CommonBodyStyle, text, 'Normal 0 C C']
+    
+    #draw += 'T 0 210 -200 118 0 0 0 Конт Normal 0 C C' + os.linesep
+    return join_rec( params) + os.linesep
+#-------------------------------------------------------------------------------
 def create_header(ic):
     
     header  = '#' + os.linesep
@@ -60,15 +95,6 @@ def create_field(field, name, pos_x, pos_y, font=FONT_SIZE, visibility='V'):
     l = ['F'+str(field), '"'+name+'"', pos_x, pos_y, str(font), 'H', visibility, 'L CNN']
     return join_rec(l) + os.linesep
  
-#-------------------------------------------------------------------------------
-def draw_line(part, x0, y0, x1, y1):
-    N    = '2'
-    C    = '0'
-    Th   = '0'
-    CC   = 'N'
-    
-    return join_rec( ['P', N, part, C, Th, x0, y0, x1, y1, CC] ) + os.linesep
-    
 #-------------------------------------------------------------------------------
 def draw_pin(ic, part_id, pin, org):
     if org[0] < 0:
@@ -136,6 +162,17 @@ def draw_part(ic, part_name):
       
     draw  = join_rec( [Type, X0, Y0, width, -height, part_id, C, Th, filled] ) + os.linesep
 
+    #-----------------------------------
+    #
+    #   Caption
+    #  
+    capt = part['Caption']
+    if capt:
+        if capt[0] == '|>':
+            draw += draw_amp_symbol(part_id, capt)
+        else:
+            draw += draw_text(part_id, capt)
+    
     #-----------------------------------
     #
     #   Vertical lines
@@ -243,16 +280,19 @@ def create_cmp(yml):
     if not check_cmp_params(ic):
         sys.exit(2)
         
+    name = ic['Name']
+    if 'NameOffset' in ic.keys():
+        name_offset = ic['NameOffset']
+    else:
+        name_offset = 1000   # default offset
 
     rec  = create_header(ic)
-    rec += create_field( field=0, name=ic['Ref'], pos_x=0, pos_y=100 )
-    rec += create_field( field=1, name=ic['Name'], pos_x=1000, pos_y=100 )
-    rec += create_field( field=2, name='', pos_x=700, pos_y=400, visibility='I' )
-    rec += create_field( field=3, name='', pos_x=700, pos_y=400, visibility='I' )
+    rec += create_field( field=0, name=ic['Ref'],     pos_x=0,           pos_y=100 )
+    rec += create_field( field=1, name=ic['Name'],    pos_x=name_offset, pos_y=100 )
+    rec += create_field( field=2, name='',            pos_x=700,         pos_y=400, visibility='I' )
+    rec += create_field( field=3, name='',            pos_x=700,         pos_y=400, visibility='I' )
     rec += create_drawings(ic)
     rec += 'ENDDEF' + os.linesep
-
-    #print(rec)
 
     cname = ic['Name'] + '.cmp'
     print('I: create component file ' + cname)
