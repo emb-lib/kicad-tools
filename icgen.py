@@ -65,7 +65,6 @@ def draw_text(part_id, capt):
     
     params = ['T', Orientation, x0, y0, FONT_SIZE, 0, part_id, CommonBodyStyle, text, 'Normal 0 C C']
     
-    #draw += 'T 0 210 -200 118 0 0 0 Конт Normal 0 C C' + os.linesep
     return join_rec( params) + os.linesep
 #-------------------------------------------------------------------------------
 def create_header(ic):
@@ -135,12 +134,12 @@ def draw_part(ic, part_name):
             
         h += 1 
         
-        if pgroup['Direction'] == 'R':
+        if pgroup['Side'] == 'Left':
             h_l += h
-        elif pgroup['Direction'] == 'L':
+        elif pgroup['Side'] == 'Right':
             h_r += h
         else:
-            print('E: invalid PinGroup Direction in ' + i)
+            print('E: invalid PinGroup Side in ' + i)
                   
     height = max(h_l, h_r)*STEP
     width  = sum(vsect)
@@ -204,7 +203,7 @@ def draw_part(ic, part_name):
     pin_org_r = [ width + int(ic['PinLen']), 0]
     for idx, pg_name in enumerate(pgroups, start=1):
         pgroup = part[pg_name]
-        if pgroup['Direction'] == 'R':
+        if pgroup['Side'] == 'Left':
             for p in pgroup['Pins']:
                 pin_org_l, pin_rec = draw_pin(ic, part_id, p, pin_org_l)
                 draw += pin_rec
@@ -262,7 +261,7 @@ def check_cmp_params(ic):
             success = False
             
         pgroups = sections(part, 'PinGroup')
-        pgroup_params = ['Direction', 'Sep', 'Pins']
+        pgroup_params = ['Side', 'Sep', 'Pins']
         for pg_name in pgroups:
             pgroup = part[pg_name]
             for p in pgroup_params:
