@@ -95,7 +95,6 @@ def draw_part(ic, part_name):
     
     part_id = part_name[4:]
         
-    print(part)
     pgroups = sections(part, 'PinGroup')
 
     h_l = 0
@@ -116,7 +115,6 @@ def draw_part(ic, part_name):
         else:
             print('E: invalid PinGroup Direction in ' + i)
                   
-    print( max(h_l, h_r) )
     height = max(h_l, h_r)*STEP
     width  = sum(part['Outline'])
                   
@@ -162,7 +160,6 @@ def draw_part(ic, part_name):
         if pgroup['Direction'] == 'R':
             for p in pgroup['Pins']:
                 pin_org_l, pin_rec = draw_pin(ic, part_id, p, pin_org_l)
-                print(pin_org_l)
                 draw += pin_rec
         
             pin_org_l[1] += -STEP
@@ -187,16 +184,49 @@ def create_drawings(ic):
     
     draw  = 'DRAW' + os.linesep
     
-    print(parts)
     for i in parts:
         draw += draw_part(ic, i)
 
     draw += 'ENDDRAW' + os.linesep        
     return draw
 #-------------------------------------------------------------------------------
+def check_cmp_params(ic):
+    
+    params = ['Name', 'Description', 'Ref', 'PinLen', 'PinNameOffset', 'Filled']
+    
+    success = True
+    for i in params:
+        if not i in ic.keys():
+            print('E: component description has no "' + i + '" parameter')
+            success = False
+            
+    parts = sections(ic, "Part")
+    part_params = ['Caption', 'Outline']
+    for part_name in parts:
+        part = ic[part_name]
+        for p in part_params:
+            if not p in part.keys():
+                print('E: "' + part_name + '" part description has no "' + p + '" parameter')
+                success = False
+                
+        pgroups = sections(part, 'PinGroup')
+        pgroup_params = ['Direction', 'Sep', 'Pins']
+        for pg_name in pgroups:
+            pgroup = part[pg_name]
+            for p in pgroup_params:
+                if not p in pgroup.keys():
+                    print('E: "' + pg_name + '" pin group description has no "' + p + '" parameter')
+                    success = False
+            
+    return success
+
+#-------------------------------------------------------------------------------
 def create_cmp(yml):
 
     ic = yaml.load( open(yml) )
+    
+    if not check_cmp_params(ic):
+        sys.exit(2)
 
     rec  = create_header(ic)
     rec += create_field( field=0, name=ic['Ref'], pos_x=0, pos_y=100 )
@@ -206,7 +236,7 @@ def create_cmp(yml):
     rec += create_drawings(ic)
     rec += 'ENDDEF' + os.linesep
 
-    print(rec)
+    #print(rec)
 
     cname = ic['Name'] + '.cmp'
     print('I: create component file ' + cname)
