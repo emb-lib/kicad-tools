@@ -238,7 +238,7 @@ def create_drawings(ic):
 #-------------------------------------------------------------------------------
 def check_cmp_params(ic):
     
-    params = ['Name', 'Description', 'Ref', 'PinLen', 'PinNameOffset', 'Filled']
+    params = ['Name', 'Ref', 'PinLen', 'PinNameOffset', 'Filled']
     
     success = True
     for i in params:
@@ -272,6 +272,32 @@ def check_cmp_params(ic):
     return success
 
 #-------------------------------------------------------------------------------
+def create_cmp_desc(ic):
+
+    desc = 'Description' in ic.keys()
+    kwd  = 'Keywords' in ic.keys()
+    
+    if not desc and not kwd:
+        return
+        
+    dcmp  = '#' + os.linesep
+    
+    dcmp += '$CMP ' + ic['Name']  + os.linesep
+    if desc:
+        dcmp += 'D ' + ic['Description'] + os.linesep
+
+    if kwd:
+        dcmp += 'K ' + ic['Keywords'] + os.linesep
+    
+    dcmp += '$ENDCMP' + os.linesep
+    
+    cname = ic['Name'] + '.dcmp'
+    
+    with open(cname, 'wb') as f:
+        f.write( bytes(dcmp, 'UTF-8') )
+    
+        
+#-------------------------------------------------------------------------------
 def create_cmp(yml):
 
     ic = yaml.load( open(yml) )
@@ -298,6 +324,7 @@ def create_cmp(yml):
     with open(cname, 'wb') as f:
         f.write( bytes(rec, 'UTF-8') )
     
+    create_cmp_desc(ic)
     
 def main():
     #-------------------------------------------------

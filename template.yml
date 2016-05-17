@@ -1,0 +1,81 @@
+#-------------------------------------------------------------------------------
+#
+#    Title (optional)
+#
+#
+
+#-------------------------------------------------------------------------------
+#
+#    Common component parameters
+#
+Name:          Component Name        # name string
+NameOffset:    600                   # mils; optional, default value: 1000
+Description:   Cmp description       # optional; for example: High-speed low-power 14-bit ADC; ignored for now
+Keywords:      Keywords list         # optional
+Ref:           D                     # reference designator base
+PinLen:        400                   # mils
+PinNameOffset: 50                    # mils
+Spacing:       200                   # mils; vertical step for pin drawing
+Filled:        Yes                   # fill outline with color, values: Yes | No
+
+#-------------------------------------------------------------------------------
+#
+#    Parts definition
+#
+#    Component can have as many parts as need, each part has its own definition
+#
+Part1: 
+    Caption:  [ADC, 1500, -300]      # text or symbol on part drawing and its position; only '|>' symbol supported for now
+    Sections: [1000, 1000, 1000]     # vertical sections widths; 1, 2 or 3 sections are supported; sections count follows 
+                                     # from section list length, i.e. [500] means 1 section, [600, 600. 600] - 3 sections
+                   
+    #---------------------------------------------------------------------------
+    #
+    #    Pin group definition
+    #
+    #    Pins are coupled in groups. Each group has the following parameters:
+    #
+    #         Side: the side on which pin group located. Values: Left | Right
+    #         Sep:  separator - horizontal line that separates current group from the following one.
+    #                           Values: Yes | No. 
+    #         Pins: array of lists, each list defines one pin. 
+    #
+    #               Format: -[<Pin Number>, <Pin Name>, <Space>]
+    #                      
+    #                        <Space> specifies verical space from previous origin (pin or separtor) to current pin
+    #
+    PinGroup1:
+        Side: Left
+        Sep:  Yes
+        Pins:
+            - [1, AIN+, 1]
+            - [2, AIN-, 3]
+                                                         
+    PinGroup2:
+        Side: Left
+        Sep:  Yes
+        Pins:
+            - [9,  VDD, 1]
+            - [10, VDD, 1]
+            - [40, VDD, 1]
+            - [3,  VDD, 3]
+
+    ...
+
+    PinGroupN:
+        Side: Right
+        Sep:  No
+        Pins:
+            - [11, ENC+,    1]
+            - [12, ENC-,    1]
+            - [28, CLKOUT+, 1]
+            - [27, CLKOUT-, 1]
+
+             
+Part2:
+     ...
+     
+...
+
+PartN:
+     ...
