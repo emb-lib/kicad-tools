@@ -86,7 +86,8 @@ def draw_pin(ic, part_id, pin, org):
 #-------------------------------------------------------------------------------
 def draw_part(ic, part_name):
 
-    part = ic[part_name]
+    part  = ic[part_name]
+    vsect = part['Sections']
     
     if ic['Filled']:
         filled = 'f'
@@ -116,7 +117,7 @@ def draw_part(ic, part_name):
             print('E: invalid PinGroup Direction in ' + i)
                   
     height = max(h_l, h_r)*STEP
-    width  = sum(part['Outline'])
+    width  = sum(vsect)
                   
     if filled:
         f = 'f'
@@ -139,20 +140,29 @@ def draw_part(ic, part_name):
     #
     #   Vertical lines
     #  
-    X0   = part['Outline'][0]
-    Y0   = 0
-    X1   = X0
-    Y1   = -height
-
-    draw += draw_line(part_id, X0, Y0, X1, Y1) 
-    X0 += part['Outline'][1]
-    X1  = X0
-    draw += draw_line(part_id, X0, Y0, X1, Y1) 
+    X = 0
+    for i in range( len(vsect) - 1):
+        X0   = X + vsect[i]
+        Y0   = 0
+        X1   = X0
+        Y1   = -height
+        draw += draw_line(part_id, X0, Y0, X1, Y1) 
+        X = X0
                                 
     #-----------------------------------
     #
     #   Pins
     #  
+    sep_l_x0 = 0
+    sep_l_x1 = vsect[0]
+    if len(vsect) == 1:
+        sep_r_x0 = 0
+    elif len(vsect) == 2:
+        sep_r_x0 = vsect[0]
+    else:
+        sep_r_x0 = sum(vsect[:-1])
+        
+    
     pin_org_l = [ -int(ic['PinLen']), 0]
     pin_org_r = [ width + int(ic['PinLen']), 0]
     for idx, pg_name in enumerate(pgroups, start=1):
@@ -164,7 +174,7 @@ def draw_part(ic, part_name):
         
             pin_org_l[1] += -STEP
             if pgroup['Sep']:
-                draw += draw_line(part_id, 0, pin_org_l[1], part['Outline'][0], pin_org_l[1])        
+                draw += draw_line(part_id, sep_l_x0, pin_org_l[1], sep_l_x1, pin_org_l[1])        
         
         else:
             for p in pgroup['Pins']:
@@ -173,7 +183,7 @@ def draw_part(ic, part_name):
 
             pin_org_r[1] += -STEP
             if pgroup['Sep']:
-                draw += draw_line(part_id, part['Outline'][0]+part['Outline'][1], pin_org_r[1], width, pin_org_r[1])
+                draw += draw_line(part_id, sep_r_x0, pin_org_r[1], width, pin_org_r[1])
                 
     return draw
     
@@ -201,14 +211,19 @@ def check_cmp_params(ic):
             success = False
             
     parts = sections(ic, "Part")
-    part_params = ['Caption', 'Outline']
+    part_params = ['Caption', 'Sections']
     for part_name in parts:
         part = ic[part_name]
         for p in part_params:
             if not p in part.keys():
                 print('E: "' + part_name + '" part description has no "' + p + '" parameter')
                 success = False
-                
+           
+        sect_count = len(part['Sections'])             
+        if sect_count < 1 or sect_count > 3:
+            print('E: "' + part_name + '" part has invalid sections count: ' + str(sect_count) + ' (must be 1..3)')
+            success = False
+            
         pgroups = sections(part, 'PinGroup')
         pgroup_params = ['Direction', 'Sep', 'Pins']
         for pg_name in pgroups:
@@ -227,6 +242,7 @@ def create_cmp(yml):
     
     if not check_cmp_params(ic):
         sys.exit(2)
+        
 
     rec  = create_header(ic)
     rec += create_field( field=0, name=ic['Ref'], pos_x=0, pos_y=100 )
