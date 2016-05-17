@@ -10,7 +10,8 @@
 #
 Name:          Component Name        # name string
 NameOffset:    600                   # mils; optional, default value: 1000
-Description:   Component description # for example: High-speed low-power 14-bit ADC; ignored for now
+Description:   Cmp description       # optional; for example: High-speed low-power 14-bit ADC; ignored for now
+Keywords:      Keywords list         # optional
 Ref:           D                     # reference designator base
 PinLen:        400                   # mils
 PinNameOffset: 50                    # mils
