@@ -310,7 +310,7 @@ def create_cmp_desc(ic, infile, outpath):
     
         
 #-------------------------------------------------------------------------------
-def create_cmp(yml, outpath):
+def create_cmp(yml, outpath, silent):
 
     ic = yaml.load( open(yml) )
     
@@ -332,7 +332,8 @@ def create_cmp(yml, outpath):
     rec += 'ENDDEF' + os.linesep
 
     cname = namegen(yml, 'cmp')
-    print('I: create component file ' + cname)
+    if not silent:
+        print('I: create component file ' + cname)
     with open( os.path.join(outpath, cname ), 'wb') as f:
         f.write( bytes(rec, 'UTF-8') )
     
@@ -343,7 +344,7 @@ def main():
     #
     #    Process options
     #
-    optlist, fl = getopt.gnu_getopt(sys.argv[1:], 'o:')
+    optlist, fl = getopt.gnu_getopt(sys.argv[1:], 'o:s')
 
     yml = fl[0]
     
@@ -354,11 +355,14 @@ def main():
         sys.exit(1)
             
     outpath = ''
+    silent  = False
     for i in optlist:
         if i[0] == '-o':
             outpath = i[1]
+        if i[0] == '-s':
+            silent = True
             
-    create_cmp(yml, outpath)
+    create_cmp(yml, outpath, silent)
     
 if __name__ == '__main__':
     main()
