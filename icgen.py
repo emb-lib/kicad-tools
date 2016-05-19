@@ -135,6 +135,13 @@ def draw_part(ic, part_name):
         h = 0
         pgroup = part[i]
         for p in  pgroup['Pins']:
+            if len(p) != 3:
+                print( 'E: invalid pin description: ' + str(p) +\
+                        ', must have 3 fields but only ' + str(len(p)) + ' found' )
+                print( '   Part:     ' + part_name)
+                print( '   PinGroup: ' + i)
+                sys.exit(2)
+                
             h += p[2]
             
         h += 1 
