@@ -15,6 +15,11 @@ PIN_LEN   = 200  # mils
 FONT_SIZE = 118  # mils
 
 #-------------------------------------------------------------------------------
+def namegen(fullpath, ext):
+    basename = os.path.basename(fullpath)
+    name     = os.path.splitext(basename)[0]
+    return name + os.path.extsep + ext
+#-------------------------------------------------------------------------------
 def sections(d, pattern):
     res = []
     for i in d.keys():
@@ -130,6 +135,13 @@ def draw_part(ic, part_name):
         h = 0
         pgroup = part[i]
         for p in  pgroup['Pins']:
+            if len(p) != 3:
+                print( 'E: invalid pin description: ' + str(p) +\
+                        ', must have 3 fields but only ' + str(len(p)) + ' found' )
+                print( '   Part:     ' + part_name)
+                print( '   PinGroup: ' + i)
+                sys.exit(2)
+                
             h += p[2]
             
         h += 1 
@@ -272,7 +284,7 @@ def check_cmp_params(ic):
     return success
 
 #-------------------------------------------------------------------------------
-def create_cmp_desc(ic):
+def create_cmp_desc(ic, infile, outpath):
 
     desc = 'Description' in ic.keys()
     kwd  = 'Keywords' in ic.keys()
@@ -291,14 +303,14 @@ def create_cmp_desc(ic):
     
     dcmp += '$ENDCMP' + os.linesep
     
-    cname = ic['Name'] + '.dcmp'
+    cname = namegen(infile, 'dcmp')
     
-    with open(cname, 'wb') as f:
+    with open( os.path.join(outpath, cname), 'wb' ) as f:
         f.write( bytes(dcmp, 'UTF-8') )
     
         
 #-------------------------------------------------------------------------------
-def create_cmp(yml):
+def create_cmp(yml, outpath, silent):
 
     ic = yaml.load( open(yml) )
     
@@ -319,27 +331,38 @@ def create_cmp(yml):
     rec += create_drawings(ic)
     rec += 'ENDDEF' + os.linesep
 
-    cname = ic['Name'] + '.cmp'
-    print('I: create component file ' + cname)
-    with open(cname, 'wb') as f:
+    cname = namegen(yml, 'cmp')
+    if not silent:
+        print('I: create component file ' + cname)
+    with open( os.path.join(outpath, cname ), 'wb') as f:
         f.write( bytes(rec, 'UTF-8') )
     
-    create_cmp_desc(ic)
+    create_cmp_desc(ic, yml, outpath)
     
 def main():
     #-------------------------------------------------
     #
     #    Process options
     #
-    optlist, fl = getopt.gnu_getopt(sys.argv[1:], '')
+    optlist, fl = getopt.gnu_getopt(sys.argv[1:], 'o:s')
 
     yml = fl[0]
     
     if not yml:
-        print('I: usage: icgen.py <filename.yml>')
+        print('I: usage: icgen.py [options] <filename.yml>')
+        print('    where options are:')
+        print('      -o: directory for output files')
         sys.exit(1)
             
-    create_cmp(yml)
+    outpath = ''
+    silent  = False
+    for i in optlist:
+        if i[0] == '-o':
+            outpath = i[1]
+        if i[0] == '-s':
+            silent = True
+            
+    create_cmp(yml, outpath, silent)
     
 if __name__ == '__main__':
     main()
