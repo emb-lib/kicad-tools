@@ -15,6 +15,11 @@ PIN_LEN   = 200  # mils
 FONT_SIZE = 118  # mils
 
 #-------------------------------------------------------------------------------
+def namegen(fullpath, ext):
+    basename = os.path.basename(fullpath)
+    name     = os.path.splitext(basename)[0]
+    return name + os.path.extsep + ext
+#-------------------------------------------------------------------------------
 def sections(d, pattern):
     res = []
     for i in d.keys():
@@ -272,7 +277,7 @@ def check_cmp_params(ic):
     return success
 
 #-------------------------------------------------------------------------------
-def create_cmp_desc(ic, outpath):
+def create_cmp_desc(ic, infile, outpath):
 
     desc = 'Description' in ic.keys()
     kwd  = 'Keywords' in ic.keys()
@@ -291,7 +296,7 @@ def create_cmp_desc(ic, outpath):
     
     dcmp += '$ENDCMP' + os.linesep
     
-    cname = ic['Name'] + '.dcmp'
+    cname = namegen(infile, 'dcmp')
     
     with open( os.path.join(outpath, cname), 'wb' ) as f:
         f.write( bytes(dcmp, 'UTF-8') )
@@ -319,12 +324,12 @@ def create_cmp(yml, outpath):
     rec += create_drawings(ic)
     rec += 'ENDDEF' + os.linesep
 
-    cname = ic['Name'] + '.cmp'
+    cname = namegen(yml, 'cmp')
     print('I: create component file ' + cname)
     with open( os.path.join(outpath, cname ), 'wb') as f:
         f.write( bytes(rec, 'UTF-8') )
     
-    create_cmp_desc(ic, outpath)
+    create_cmp_desc(ic, yml, outpath)
     
 def main():
     #-------------------------------------------------
@@ -346,7 +351,6 @@ def main():
         if i[0] == '-o':
             outpath = i[1]
             
-    print(outpath)
     create_cmp(yml, outpath)
     
 if __name__ == '__main__':
