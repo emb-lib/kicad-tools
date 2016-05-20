@@ -32,7 +32,7 @@ usage: conngen -n N [-p P -w W -f]
 Result: connector component file.
 Note that pin count must be multiple of part count.
 
-#### Integrated circuit generator 
+#### Integrated circuit generator utility
 ```
 usage: icgen [-o PATH -s] filename.yml
     where:
