@@ -126,9 +126,13 @@ def main():
         elif i[0] == '-f':
             filled = True
     
+    if pin_count == 0:
+        print('E: pin count must be specified')
+        sys.exit(1)
+        
     if int(pin_count)%int(part_count):
         print('E: pin count should be multiple of part count')
-        return 1
+        sys.exit(1)
             
     create_conn(pin_count, part_count, width, filled)
     
