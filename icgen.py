@@ -128,23 +128,31 @@ def draw_part(ic, part_name):
         
     pgroups = sections(part, 'PinGroup')
 
+    #-----------------------------------
+    #
+    #   Calculate part height
+    #  
     h_l = 0
     h_r = 0
 
     for i in pgroups:
         h = 0
         pgroup = part[i]
-        for p in  pgroup['Pins']:
-            if len(p) != 3:
-                print( 'E: invalid pin description: ' + str(p) +\
-                        ', must have 3 fields but only ' + str(len(p)) + ' found' )
-                print( '   Part:     ' + part_name)
-                print( '   PinGroup: ' + i)
-                sys.exit(2)
-                
-            h += p[2]
+        
+        if 'Height' in pgroup.keys():
+            h = int( pgroup['Height'] )
+        else:
+            for p in  pgroup['Pins']:
+                if len(p) != 3:
+                    print( 'E: invalid pin description: ' + str(p) +\
+                            ', must have 3 fields but only ' + str(len(p)) + ' found' )
+                    print( '   Part:     ' + part_name)
+                    print( '   PinGroup: ' + i)
+                    sys.exit(2)
+                    
+                h += p[2]
             
-        h += 1 
+            h += 1 
         
         if pgroup['Side'] == 'Left':
             h_l += h
@@ -154,6 +162,7 @@ def draw_part(ic, part_name):
             print('E: invalid PinGroup Side in ' + i)
                   
     height = max(h_l, h_r)*STEP
+
     width  = sum(vsect)
                   
     if filled:
@@ -215,21 +224,37 @@ def draw_part(ic, part_name):
     pin_org_r = [ width + int(ic['PinLen']), 0]
     for idx, pg_name in enumerate(pgroups, start=1):
         pgroup = part[pg_name]
+        if 'Height' in pgroup.keys():
+            pg_height = -int( pgroup['Height'] )
+        else:
+            pg_height = -1
+         
+        h = 0 
         if pgroup['Side'] == 'Left':
+            h = pin_org_l[1]
             for p in pgroup['Pins']:
                 pin_org_l, pin_rec = draw_pin(ic, part_id, p, pin_org_l)
                 draw += pin_rec
         
-            pin_org_l[1] += -STEP
+            if pg_height == -1:
+                pin_org_l[1] += pg_height*STEP
+            else:
+                pin_org_l[1] = h + pg_height*STEP
+            
             if pgroup['Sep']:
                 draw += draw_line(part_id, sep_l_x0, pin_org_l[1], sep_l_x1, pin_org_l[1])        
         
         else:
+            h = pin_org_r[1]
             for p in pgroup['Pins']:
                 pin_org_r, pin_rec = draw_pin(ic, part_id, p, pin_org_r)
                 draw += pin_rec
 
-            pin_org_r[1] += -STEP
+            if pg_height == -1:
+                pin_org_r[1] += pg_height*STEP
+            else:
+                pin_org_r[1] = h + pg_height*STEP
+               
             if pgroup['Sep']:
                 draw += draw_line(part_id, sep_r_x0, pin_org_r[1], width, pin_org_r[1])
                 
