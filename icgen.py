@@ -318,15 +318,22 @@ def create_cmp(yml, outpath, silent):
         sys.exit(2)
         
     name = ic['Name']
+    
     if 'NameOffset' in ic.keys():
         name_offset = ic['NameOffset']
     else:
         name_offset = 1000   # default offset
 
+    if 'Footprint' in ic.keys():
+        footprint = ic['Footprint']
+    else:
+        footprint = ''   # default footprint
+        
+        
     rec  = create_header(ic)
     rec += create_field( field=0, name=ic['Ref'],     pos_x=0,           pos_y=100 )
     rec += create_field( field=1, name=ic['Name'],    pos_x=name_offset, pos_y=100 )
-    rec += create_field( field=2, name='',            pos_x=700,         pos_y=400, visibility='I' )
+    rec += create_field( field=2, name=footprint,     pos_x=700,         pos_y=400, visibility='I' )
     rec += create_field( field=3, name='',            pos_x=700,         pos_y=400, visibility='I' )
     rec += create_drawings(ic)
     rec += 'ENDDEF' + os.linesep
