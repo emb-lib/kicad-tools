@@ -333,8 +333,8 @@ def create_cmp(yml, outpath, silent):
     rec  = create_header(ic)
     rec += create_field( field=0, name=ic['Ref'],     pos_x=0,           pos_y=100 )
     rec += create_field( field=1, name=ic['Name'],    pos_x=name_offset, pos_y=100 )
-    rec += create_field( field=2, name=footprint,     pos_x=700,         pos_y=400, visibility='I' )
-    rec += create_field( field=3, name='',            pos_x=700,         pos_y=400, visibility='I' )
+    rec += create_field( field=2, name=footprint,     pos_x=name_offset, pos_y=250, visibility='I' )
+    rec += create_field( field=3, name='',            pos_x=name_offset, pos_y=500, visibility='I' )
     rec += create_drawings(ic)
     rec += 'ENDDEF' + os.linesep
 
