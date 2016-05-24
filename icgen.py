@@ -25,8 +25,9 @@ def sections(d, pattern):
     for i in d.keys():
         if pattern in i:
             res.append(i)
-            
-    return sorted(res)
+        
+    res.sort(key=lambda s, npos=len(pattern): int(s[npos:]))
+    return res
 #-------------------------------------------------------------------------------
 def join_rec(l):
     res = ''
