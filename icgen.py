@@ -10,7 +10,6 @@ import yaml
 #
 #    Settings
 #
-STEP      = 200  # mils
 PIN_LEN   = 200  # mils
 FONT_SIZE = 118  # mils
 
@@ -102,6 +101,9 @@ def create_field(field, name, pos_x, pos_y, font=FONT_SIZE, visibility='V'):
  
 #-------------------------------------------------------------------------------
 def draw_pin(ic, part_id, pin, org):
+
+    STEP = ic['Spacing']
+
     if org[0] < 0:
         orient = 'R'
     else:
@@ -117,6 +119,7 @@ def draw_pin(ic, part_id, pin, org):
 #-------------------------------------------------------------------------------
 def draw_part(ic, part_name):
 
+    STEP  = ic['Spacing']
     part  = ic[part_name]
     vsect = part['Sections']
     
