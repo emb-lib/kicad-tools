@@ -11,7 +11,7 @@ import yaml
 #    Settings
 #
 PIN_LEN   = 200  # mils
-FONT_SIZE = 118  # mils
+FONT_SIZE = 100  # mils
 
 #-------------------------------------------------------------------------------
 def namegen(fullpath, ext):
