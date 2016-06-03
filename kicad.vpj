@@ -75,7 +75,7 @@
         <Folder
             Name="src"
             Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.prg;*.s;*.S;*.h;*.H;*.hh;*.hpp;*.hxx">
-            <F N="conn-gui.py"/>
+            <F N="kge.py"/>
             <F N="conngen.py"/>
             <F N="icgen.py"/>
             <F N="merge-lib.sh"/>
