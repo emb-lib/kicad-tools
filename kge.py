@@ -25,7 +25,8 @@ class MainWindow(QMainWindow):
         
     def initUI(self):
         
-        cfg = yaml.load( open('kscm.yml') )
+        self.cfg = yaml.load( open('kscm.yml') )
+        
         #----------------------------------------------------
         #
         #    Main Window
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
         self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
         
-        cmptab = cfg['ComponentTable']
+        cmptab = self.cfg['ComponentTable']
         
         self.CmpTable.setColumnWidth(0, cmptab['RefWidth'])
         self.CmpTable.setColumnWidth(1, cmptab['NameWidth'])
@@ -83,8 +84,8 @@ class MainWindow(QMainWindow):
         
         b   = read_file('det-1/det-1.sch')
         rcl = raw_cmp_list(b)
-        self.CmpDict = cmp_dict(rcl)
-        print( len (rcl))
+        ipl = self.cfg['Ignore']
+        self.CmpDict = cmp_dict(rcl, ipl)
         self.update_cmp_list(self.CmpDict)
         self.CmpTable.show()
         #----------------------------------------------------
@@ -164,13 +165,24 @@ def raw_cmp_list(s):
     return res
 
 #-------------------------------------------------------------------------------
-def cmp_dict(rcl):
+def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
     
     cdict = {}
     
     for i in rcl:
         cmp = Component()
         cmp.parse_comp(i)
+        ignore = False
+        for ip in ipl:
+            r = re.search(ip+'.*\d+', cmp.Ref)
+            if r:
+                ignore = True
+                print(cmp.Ref)
+                continue
+           
+        if ignore:
+            continue
+            
         cdict[cmp.Ref] = cmp
         
     return cdict
