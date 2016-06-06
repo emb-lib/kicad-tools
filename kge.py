@@ -6,7 +6,8 @@ import re
 import sys
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
-                             QTextEdit, QVBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem, 
+                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, 
+                             QTableWidget, QTableWidgetItem, QCommonStyle,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui import QIcon
@@ -26,17 +27,17 @@ class MainWindow(QMainWindow):
         #
         #    Main Window
         #
-        Layout = QGridLayout(self)
         work_zone = QWidget(self)
+        Layout    = QHBoxLayout(work_zone)
+        #work_zone.setLayout(Layout)
         self.setCentralWidget(work_zone)
-        work_zone.setLayout(Layout)
         
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)        
         
-        self.statusBar()
+        self.statusBar().showMessage('Ready')
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
@@ -46,7 +47,12 @@ class MainWindow(QMainWindow):
         toolbar.addAction(exitAction)        
         
         self.CmpTabBox    = QGroupBox('Components', self)
-        self.CmpTabLayout = QVBoxLayout(self)
+        self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
+        self.CmpTabLayout.setContentsMargins(4,10,4,4)
+        self.CmpTabLayout.setSpacing(10)
+        
+        #self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetFixedSize)
+        self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
         
         #----------------------------------------------------
         #
@@ -59,11 +65,14 @@ class MainWindow(QMainWindow):
         self.CmpTable.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
         self.CmpTable.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
         
-        self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
+        self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
-        self.CmpTable.verticalHeader().setDefaultSectionSize(20)
+        self.CmpTable.setColumnWidth(0, 60)
+        self.CmpTable.setColumnWidth(1, 200)
         self.CmpTable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.CmpTable.verticalHeader().setDefaultSectionSize(20)
         self.CmpTable.setHorizontalHeaderLabels( ('Ref', 'Name') )
+        #self.CmpTable.resize( 100, self.CmpTable.height() )
         
         b   = read_file('det-1/det-1.sch')
         rcl = raw_cmp_list(b)
@@ -72,13 +81,14 @@ class MainWindow(QMainWindow):
         self.CmpTable.show()
         #----------------------------------------------------
         
-        self.Button = QPushButton('Apply', self)
+        self.CmpApplyButton = QPushButton('Apply', self)
+        #self.CmpApplyButton.resize( 100, self.CmpApplyButton.height() )
         
         self.CmpTabLayout.addWidget(self.CmpTable)
-        self.CmpTabLayout.addWidget(self.Button)
-        self.CmpTabBox.setLayout(self.CmpTabLayout)
-        #self.layout().addWidget(self.CmpTabBox, 0,0)
-        self.centralWidget().layout().addWidget(self.CmpTabBox, 0,0)
+        self.CmpTabLayout.addWidget(self.CmpApplyButton)
+        #self.CmpTabBox.setLayout(self.CmpTabLayout)
+        self.centralWidget().layout().addWidget(self.CmpTabBox)
+        self.centralWidget().layout().addStretch(1)
         
                 
         #----------------------------------------------------
@@ -161,6 +171,18 @@ def cmp_dict(rcl):
 if __name__ == '__main__':
 
     app  = QApplication(sys.argv)
+    app.setStyleSheet('QGroupBox {\
+                           border: 1px solid gray;\
+                           border-radius: 3px;\
+                           margin: 10px;\
+                           padding: 4px;\
+                       }\
+                       QGroupBox::title {\
+                           subcontrol-origin: margin;\
+                           subcontrol-position: top left;\
+                           padding: 2px;\
+                           left: 20px;\
+                       }' )
     mwin = MainWindow()
 
     sys.exit( app.exec_() )
