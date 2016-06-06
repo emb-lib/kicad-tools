@@ -68,7 +68,8 @@ class MainWindow(QMainWindow):
         self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
         self.CmpTable.setColumnWidth(0, 60)
-        self.CmpTable.setColumnWidth(1, 200)
+        self.CmpTable.setColumnWidth(1, 153)
+        self.CmpTable.setFixedWidth(260)
         self.CmpTable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.CmpTable.verticalHeader().setDefaultSectionSize(20)
         self.CmpTable.setHorizontalHeaderLabels( ('Ref', 'Name') )
@@ -86,7 +87,6 @@ class MainWindow(QMainWindow):
         
         self.CmpTabLayout.addWidget(self.CmpTable)
         self.CmpTabLayout.addWidget(self.CmpApplyButton)
-        #self.CmpTabBox.setLayout(self.CmpTabLayout)
         self.centralWidget().layout().addWidget(self.CmpTabBox)
         self.centralWidget().layout().addStretch(1)
         
