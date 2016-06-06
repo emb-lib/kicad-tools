@@ -5,11 +5,14 @@
 import re
 import sys
 from PyQt5.Qt import Qt
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
-    QTextEdit, QVBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView, QApplication)
+from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
+                             QTextEdit, QVBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem, 
+                             QAbstractItemView, QHeaderView, QMainWindow, QApplication)
+
+from PyQt5.QtGui import QIcon
 
 #-------------------------------------------------------------------------------
-class MainForm(QWidget):
+class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
@@ -21,10 +24,27 @@ class MainForm(QWidget):
         
         #----------------------------------------------------
         #
-        #    Layouts
+        #    Main Window
         #
         Layout = QGridLayout(self)
-        self.setLayout(Layout)
+        work_zone = QWidget(self)
+        self.setCentralWidget(work_zone)
+        work_zone.setLayout(Layout)
+        
+        exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(self.close)        
+        
+        self.statusBar()
+
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(exitAction)
+
+        toolbar = self.addToolBar('Exit')
+        toolbar.addAction(exitAction)        
+        
         self.CmpTabBox    = QGroupBox('Components', self)
         self.CmpTabLayout = QVBoxLayout(self)
         
@@ -57,7 +77,8 @@ class MainForm(QWidget):
         self.CmpTabLayout.addWidget(self.CmpTable)
         self.CmpTabLayout.addWidget(self.Button)
         self.CmpTabBox.setLayout(self.CmpTabLayout)
-        self.layout().addWidget(self.CmpTabBox, 0,0)
+        #self.layout().addWidget(self.CmpTabBox, 0,0)
+        self.centralWidget().layout().addWidget(self.CmpTabBox, 0,0)
         
                 
         #----------------------------------------------------
@@ -139,8 +160,8 @@ def cmp_dict(rcl):
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    app = QApplication(sys.argv)
-    mform = MainForm()
+    app  = QApplication(sys.argv)
+    mwin = MainWindow()
 
     sys.exit( app.exec_() )
 #-------------------------------------------------------------------------------
