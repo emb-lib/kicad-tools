@@ -4,6 +4,7 @@
 
 import re
 import sys
+import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, 
@@ -11,6 +12,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui import QIcon
+
 
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
@@ -23,6 +25,7 @@ class MainWindow(QMainWindow):
         
     def initUI(self):
         
+        cfg = yaml.load( open('kscm.yml') )
         #----------------------------------------------------
         #
         #    Main Window
@@ -67,9 +70,12 @@ class MainWindow(QMainWindow):
         
         self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
-        self.CmpTable.setColumnWidth(0, 60)
-        self.CmpTable.setColumnWidth(1, 153)
-        self.CmpTable.setFixedWidth(260)
+        
+        cmptab = cfg['ComponentTable']
+        
+        self.CmpTable.setColumnWidth(0, cmptab['RefWidth'])
+        self.CmpTable.setColumnWidth(1, cmptab['NameWidth'])
+        self.CmpTable.setFixedWidth(cmptab['Width'])
         self.CmpTable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.CmpTable.verticalHeader().setDefaultSectionSize(20)
         self.CmpTable.setHorizontalHeaderLabels( ('Ref', 'Name') )
@@ -78,6 +84,7 @@ class MainWindow(QMainWindow):
         b   = read_file('det-1/det-1.sch')
         rcl = raw_cmp_list(b)
         self.CmpDict = cmp_dict(rcl)
+        print( len (rcl))
         self.update_cmp_list(self.CmpDict)
         self.CmpTable.show()
         #----------------------------------------------------
