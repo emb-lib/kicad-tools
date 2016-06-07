@@ -122,11 +122,12 @@ class MainWindow(QMainWindow):
         self.CmpTable.setRowCount(len(cd))
             
         for idx, k in enumerate( keys ):
-            Name = QTableWidgetItem(cd[k].Name)
+            Name = QTableWidgetItem(cd[k][0].Name)
             Ref  = QTableWidgetItem(k)
           #  print(ref + ' ' + cd[ref].Name)
             self.CmpTable.setItem(idx, 0, Ref)
             self.CmpTable.setItem(idx, 1, Name)
+            print(cd[k])
             
         
 
@@ -145,6 +146,16 @@ class Component:
         else:
             print('E: invalid component L record, rec: "' + rec + '"')
             sys.exit(1)
+            
+        r = re.search('U (\d+) (\d+) ([\w\d]+)', rec)
+        if r:
+            self.Part, self.mm, self.Timestamp = r.groups()
+        else:
+            print('E: invalid component U record, rec: "' + rec + '"')
+            sys.exit(1)
+
+            
+            
         
 #-------------------------------------------------------------------------------
 def split_alphanumeric(x):
@@ -177,13 +188,15 @@ def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
             r = re.search(ip+'.*\d+', cmp.Ref)
             if r:
                 ignore = True
-                print(cmp.Ref)
                 continue
            
         if ignore:
             continue
             
-        cdict[cmp.Ref] = cmp
+        if not cmp.Ref in cdict:
+            cdict[cmp.Ref] = []
+
+        cdict[cmp.Ref].append(cmp)
         
     return cdict
 #-------------------------------------------------------------------------------
