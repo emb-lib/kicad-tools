@@ -122,16 +122,42 @@ class MainWindow(QMainWindow):
         self.CmpTable.setRowCount(len(cd))
             
         for idx, k in enumerate( keys ):
-            Name = QTableWidgetItem(cd[k][0].Name)
+            Name = QTableWidgetItem(cd[k][0].LibName)
             Ref  = QTableWidgetItem(k)
           #  print(ref + ' ' + cd[ref].Name)
             self.CmpTable.setItem(idx, 0, Ref)
             self.CmpTable.setItem(idx, 1, Name)
-            print(cd[k])
-            
         
 
 #-------------------------------------------------------------------------------
+class ComponentField:
+    
+    def __init__(self, rec):
+
+        self.InnerCode = rec[0]
+        
+        if self.InnerCode == '0':
+            self.Name = 'Ref'
+        elif self.InnerCode == '1':
+            self.Name = 'Value'
+        elif self.InnerCode == '2':
+            self.Name = 'Footprint'
+        elif self.InnerCode == '3':
+            self.Name = 'DocSheet'
+        else:
+            self.Name = rec[11]
+            
+        self.Text        = rec[1]
+        self.Orientation = rec[2]
+        self.PosX        = rec[3]
+        self.PosY        = rec[4]
+        self.FontSize    = rec[5]
+        self.Visible     = True if int(rec[6]) == 0 else False
+        self.HJustify    = rec[7]
+        self.VJustify    = rec[8]
+        self.FontItalic  = rec[9]
+        self.FontBold    = rec[10]
+    
 class Component:
     
     def __init__(self):
@@ -142,19 +168,39 @@ class Component:
     def parse_comp(self, rec):
         r = re.search('L ([\w-]+) ([\w#]+)', rec)
         if r:
-            self.Name, self.Ref = r.groups()
+            self.LibName, self.Ref = r.groups()
         else:
             print('E: invalid component L record, rec: "' + rec + '"')
             sys.exit(1)
             
         r = re.search('U (\d+) (\d+) ([\w\d]+)', rec)
+
         if r:
-            self.Part, self.mm, self.Timestamp = r.groups()
+            self.PartNo, self.mm, self.Timestamp = r.groups()
         else:
             print('E: invalid component U record, rec: "' + rec + '"')
             sys.exit(1)
 
+        r = re.search('P (\d+) (\d+)', rec)
+        if r:
+            self.PosX, self.PosY = r.groups()
+        else:
+            print('E: invalid component P record, rec: "' + rec + '"')
+            sys.exit(1)
             
+        cfre = re.compile('F\s+(\d+)\s+\"(.*?)\"\s+(H|V)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+([LRCBT])\s+([LRCBT])([NI])([NB])\s+(?:\"(.*)\")*')
+        r = re.findall(cfre, rec)
+        
+        r.sort(key=lambda x: int(x[0]))
+        
+        self.Fields = []
+        for i in r:
+            self.Fields.append( ComponentField(i) )
+        
+#       for i in self.Fields:
+#           print(vars(i))
+#
+#       print('***********************')
             
         
 #-------------------------------------------------------------------------------
@@ -197,7 +243,9 @@ def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
             cdict[cmp.Ref] = []
 
         cdict[cmp.Ref].append(cmp)
+     
         
+           
     return cdict
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
