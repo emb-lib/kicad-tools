@@ -2,16 +2,18 @@
 # coding: utf-8
 
 
-import re
 import sys
+import os
+import re
 import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter,
+                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui import (QIcon, QBrush, QColor)
+from PyQt5.QtCore import QSettings
 
 
 #-------------------------------------------------------------------------------
@@ -187,8 +189,21 @@ class MainWindow(QMainWindow):
         #    Window
         #
         self.setWindowTitle('KiCad Schematic Component Manager')
-        self.setGeometry(100, 100, 1024, 768)
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        print(Settings.allKeys())
+        if Settings.contains('geometry'):
+            self.restoreGeometry( Settings.value('geometry') )
+        else:
+            self.setGeometry(100, 100, 1024, 768)
+
         self.show()
+        
+        
+    def closeEvent(self, event):
+        print('close app')
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        Settings.setValue( 'geometry', self.saveGeometry() )
+        QWidget.closeEvent(self, event)
         
         
     def cellActivated(self, row, col):
