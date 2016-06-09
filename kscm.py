@@ -7,7 +7,7 @@ import sys
 import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, 
+                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
@@ -76,7 +76,6 @@ class MainWindow(QMainWindow):
         #
         work_zone = QWidget(self)
         Layout    = QHBoxLayout(work_zone)
-        #work_zone.setLayout(Layout)
         self.setCentralWidget(work_zone)
         
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
@@ -169,10 +168,20 @@ class MainWindow(QMainWindow):
         #self.InspectorLayout.addStretch()
                 
         #----------------------------------------------------
-        self.centralWidget().layout().addWidget(self.CmpTabBox)
-        self.centralWidget().layout().addWidget(self.SelectView)
-        #self.centralWidget().layout().addStretch()
-        self.centralWidget().layout().addWidget(self.InspectorBox)
+        Splitter = QSplitter(self)
+        #Splitter.addWidget(self.CmpTabBox)    
+        Splitter.addWidget(self.SelectView)   
+        Splitter.addWidget(self.InspectorBox) 
+                 
+        self.centralWidget().layout().addWidget(self.CmpTabBox)    
+        self.centralWidget().layout().addWidget(Splitter)
+        
+#       self.centralWidget().layout().addWidget(self.CmpTabBox)
+#       self.centralWidget().layout().addWidget(self.SelectView)
+#       #self.centralWidget().layout().addStretch()
+#       self.centralWidget().layout().addWidget(self.InspectorBox)
+
+
         #----------------------------------------------------
         #
         #    Window
@@ -328,7 +337,7 @@ if __name__ == '__main__':
     app.setStyleSheet('QGroupBox {\
                            border: 1px solid gray;\
                            border-radius: 3px;\
-                           margin: 10px;\
+                           margin: 4px;\
                            padding: 4px;\
                        }\
                        QGroupBox::title {\
