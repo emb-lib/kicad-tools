@@ -8,12 +8,55 @@ import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, 
-                             QTableWidget, QTableWidgetItem, QCommonStyle,
+                             QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import (QIcon, QBrush, QColor)
 
 
+#-------------------------------------------------------------------------------
+class Inspector(QTreeWidget):
+    
+    def __init__(self, parent):
+        super().__init__(parent)
+        #self.setAlternatingRowColors(True)
+        self.setIndentation(16)
+        self.setColumnCount(2)
+        #self.header().resizeSection(0, 150)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        #self.header().setStretchLastSection(False)
+        self.setHeaderLabels( ('Property', 'Value') );
+        std_items   = self.addParent(self, 0, 'Standard', 'slon')
+        usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
+        field_items = self.addParent(self, 0, 'Field Details', '')
+        
+        self.addChild(std_items, 0, 'Ref', '?')
+        self.addChild(std_items, 0, 'Value', '~')
+        self.addChild(std_items, 0, 'Footprint', '~')
+        self.addChild(std_items, 0, 'DocSheet', '~')
+    
+        self.addChild(usr_items, 0, 'Name', '?')
+        self.addChild(usr_items, 0, 'Type', '?')
+
+        self.addChild(field_items, 0, '<empty>', '?')
+            
+        
+    def addParent(self, parent, column, title, data):
+        item = QTreeWidgetItem(parent, [title])
+        item.setData(column, Qt.UserRole, data)
+        item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+        item.setExpanded (True)
+#       item.setBackground( 0, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
+#       item.setBackground( 1, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
+        return item
+        
+        
+    def addChild(self, parent, column, title, data):
+        item = QTreeWidgetItem(parent, [title])
+        item.setData(column, Qt.UserRole, data)
+        #item.setCheckState (column, Qt.Unchecked)
+        return item
+            
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
@@ -95,10 +138,41 @@ class MainWindow(QMainWindow):
         
         self.CmpTabLayout.addWidget(self.CmpTable)
         self.CmpTabLayout.addWidget(self.CmpApplyButton)
-        self.centralWidget().layout().addWidget(self.CmpTabBox)
-        self.centralWidget().layout().addStretch(1)
         
                 
+        #----------------------------------------------------
+        #
+        #    Select View
+        #
+        self.SelectView = QTreeWidget(self)
+        self.SelectView.setColumnCount(2)
+        self.SelectView.setHeaderLabels( ('Property', 'Value') );
+
+        self.SVTopItem = QTreeWidgetItem(self.SelectView)
+        self.SVTopItem.setText(1, 'Standard')
+        
+        self.SVItem1 = QTreeWidgetItem(self.SVTopItem)
+        self.SVItem1.setText(0, 'sub-slonick')
+        
+        #----------------------------------------------------
+        #
+        #    Inspector
+        #
+        self.Inspector = Inspector(self)
+        
+        self.InspectorBox    = QGroupBox('Inspector', self)
+        self.InspectorLayout = QVBoxLayout(self.InspectorBox)
+        self.InspectorLayout.setContentsMargins(4,10,4,4)
+        self.InspectorLayout.setSpacing(10)
+        
+        self.InspectorLayout.addWidget(self.Inspector)
+        #self.InspectorLayout.addStretch()
+                
+        #----------------------------------------------------
+        self.centralWidget().layout().addWidget(self.CmpTabBox)
+        self.centralWidget().layout().addWidget(self.SelectView)
+        #self.centralWidget().layout().addStretch()
+        self.centralWidget().layout().addWidget(self.InspectorBox)
         #----------------------------------------------------
         #
         #    Window
@@ -262,7 +336,48 @@ if __name__ == '__main__':
                            subcontrol-position: top left;\
                            padding: 2px;\
                            left: 20px;\
-                       }' )
+                       }\
+                      Inspector {\
+                        alternate-background-color: #ffffd0;\
+                      }\
+                       Inspector {\
+                           show-decoration-selected: 1;\
+                       }\
+                       QTreeView::item {\
+                           border: 1px solid #d9d9d9;\
+                           border-top-color: #d9d9d9;\
+                           border-left-color: transparent;\
+                           border-bottom-color: transparent;\
+                       }\
+                       QTreeView::item:has-children {\
+                           left: 18px;\
+                           background-color: #FFDCA4;\
+                           border: 1px solid #d9d9d9;\
+                           border-top-color: #d9d9d9;\
+                           border-left-color: transparent;\
+                           border-right-color: transparent;\
+                           border-bottom-color: transparent;\
+                       }\
+                       QTreeWidget::item:hover {\
+                           background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
+                           border: 1px solid #bfcde4;\
+                       }\
+                       QTreeWidget::item:selected {\
+                           border: 1px solid #567dbc;\
+                       }\
+                       QTreeWidget::item:selected:active{\
+                           background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
+                       }\
+                       QTreeWidget::item:selected:!active {\
+                           background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6b9be8, stop: 1 #577fbf);\
+                       }'
+                      )
+    
+    
+     #background-color: #fffff0;\
+    #                           border-top-color: transparent;\
+    #                           border-bottom-color: transparent;\
+    
     mwin = MainWindow()
 
     sys.exit( app.exec_() )
