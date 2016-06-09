@@ -60,6 +60,57 @@ class Inspector(QTreeWidget):
         return item
             
 #-------------------------------------------------------------------------------
+class ComponentsTable(QTableWidget):
+    
+    def __init__(self, parent):
+        super().__init__(0, 2, parent)
+        
+        #self.cellActivated.connect(self.cellActivated)
+
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
+
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
+        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
+        
+        self.setColumnWidth(0, 60)
+        self.setColumnWidth(1, 153)
+        self.setFixedWidth(260)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.verticalHeader().setDefaultSectionSize(20)
+        self.setHorizontalHeaderLabels( ('Ref', 'Name') )
+
+        b   = read_file('det-1/det-1.sch')
+        rcl = raw_cmp_list(b)
+        ipl = ['LBL'] # self.cfg['Ignore']
+        self.CmpDict = cmp_dict(rcl, ipl)
+        self.update_cmp_list(self.CmpDict)
+        
+                
+    #---------------------------------------------------------------------------    
+    def cellActivated(self, row, col):
+        items = self.selectedItems()
+        for i in items:
+            if i.column() == 0:
+                print( i.data(Qt.DisplayRole) )
+        
+                        
+    #---------------------------------------------------------------------------    
+    def update_cmp_list(self, cd):
+
+        keys = list( cd.keys() )
+        keys.sort( key=split_alphanumeric )    
+
+        self.setRowCount(len(cd))
+
+        for idx, k in enumerate( keys ):
+            Name = QTableWidgetItem(cd[k][0].LibName)
+            Ref  = QTableWidgetItem(k)
+          #  print(ref + ' ' + cd[ref].Name)
+            self.setItem(idx, 0, Ref)
+            self.setItem(idx, 1, Name)
+                                        
+#-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
     def __init__(self):
@@ -106,34 +157,34 @@ class MainWindow(QMainWindow):
         #
         #    Components table
         #
-        self.CmpTable = QTableWidget(0, 2, self)
+#       self.CmpTable = QTableWidget(0, 2, self)
+#
+#       self.CmpTable.cellActivated.connect(self.cellActivated)
+#
+#       self.CmpTable.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
+#       self.CmpTable.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
+#
+#       self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
+#       self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
+#
+#       cmptab = self.cfg['ComponentTable']
         
-        self.CmpTable.cellActivated.connect(self.cellActivated)
-        
-        self.CmpTable.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
-        self.CmpTable.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
-        
-        self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
-        self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
-        
-        cmptab = self.cfg['ComponentTable']
-        
-        self.CmpTable.setColumnWidth(0, cmptab['RefWidth'])
-        self.CmpTable.setColumnWidth(1, cmptab['NameWidth'])
-        self.CmpTable.setFixedWidth(cmptab['Width'])
-        self.CmpTable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
-        self.CmpTable.verticalHeader().setDefaultSectionSize(20)
-        self.CmpTable.setHorizontalHeaderLabels( ('Ref', 'Name') )
-        #self.CmpTable.resize( 100, self.CmpTable.height() )
-        
-        b   = read_file('det-1/det-1.sch')
-        rcl = raw_cmp_list(b)
-        ipl = self.cfg['Ignore']
-        self.CmpDict = cmp_dict(rcl, ipl)
-        self.update_cmp_list(self.CmpDict)
-        self.CmpTable.show()
+#       self.CmpTable.setColumnWidth(0, cmptab['RefWidth'])
+#       self.CmpTable.setColumnWidth(1, cmptab['NameWidth'])
+#       self.CmpTable.setFixedWidth(cmptab['Width'])
+#       self.CmpTable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+#       self.CmpTable.verticalHeader().setDefaultSectionSize(20)
+#       self.CmpTable.setHorizontalHeaderLabels( ('Ref', 'Name') )
+#
+#       b   = read_file('det-1/det-1.sch')
+#       rcl = raw_cmp_list(b)
+#       ipl = self.cfg['Ignore']
+#       self.CmpDict = cmp_dict(rcl, ipl)
+#       self.update_cmp_list(self.CmpDict)
+#       self.CmpTable.show()
         #----------------------------------------------------
-        
+       
+        self.CmpTable       = ComponentsTable(self) 
         self.CmpApplyButton = QPushButton('Chose', self)
         
         self.CmpTabLayout.addWidget(self.CmpTable)
@@ -202,27 +253,6 @@ class MainWindow(QMainWindow):
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         QWidget.closeEvent(self, event)
         
-    #---------------------------------------------------------------------------    
-    def cellActivated(self, row, col):
-        items = self.CmpTable.selectedItems()
-        for i in items:
-            if i.column() == 0:
-                print( i.data(Qt.DisplayRole) )
-    
-    #---------------------------------------------------------------------------    
-    def update_cmp_list(self, cd):
-        
-        keys = list( cd.keys() )
-        keys.sort( key=split_alphanumeric )    
-
-        self.CmpTable.setRowCount(len(cd))
-            
-        for idx, k in enumerate( keys ):
-            Name = QTableWidgetItem(cd[k][0].LibName)
-            Ref  = QTableWidgetItem(k)
-          #  print(ref + ' ' + cd[ref].Name)
-            self.CmpTable.setItem(idx, 0, Ref)
-            self.CmpTable.setItem(idx, 1, Name)
         
 
 #-------------------------------------------------------------------------------
