@@ -65,7 +65,7 @@ class ComponentsTable(QTableWidget):
     def __init__(self, parent):
         super().__init__(0, 2, parent)
         
-        #self.cellActivated.connect(self.cellActivated)
+        self.cellActivated.connect(self.cell_activated)
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
@@ -88,7 +88,7 @@ class ComponentsTable(QTableWidget):
         
                 
     #---------------------------------------------------------------------------    
-    def cellActivated(self, row, col):
+    def cell_activated(self, row, col):
         items = self.selectedItems()
         for i in items:
             if i.column() == 0:
