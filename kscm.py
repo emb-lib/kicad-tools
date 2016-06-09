@@ -70,12 +70,13 @@ class ComponentsTable(QTableWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
 
-        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
+        self.horizontalHeader().setStretchLastSection(True)
+        #self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
         
-        self.setColumnWidth(0, 60)
-        self.setColumnWidth(1, 153)
-        self.setFixedWidth(260)
+       # self.setColumnWidth(0, 60)
+       # self.setColumnWidth(1, 153)
+       # self.setFixedWidth(260)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Name') )
@@ -157,32 +158,6 @@ class MainWindow(QMainWindow):
         #
         #    Components table
         #
-#       self.CmpTable = QTableWidget(0, 2, self)
-#
-#       self.CmpTable.cellActivated.connect(self.cellActivated)
-#
-#       self.CmpTable.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
-#       self.CmpTable.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
-#
-#       self.CmpTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
-#       self.CmpTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
-#
-#       cmptab = self.cfg['ComponentTable']
-        
-#       self.CmpTable.setColumnWidth(0, cmptab['RefWidth'])
-#       self.CmpTable.setColumnWidth(1, cmptab['NameWidth'])
-#       self.CmpTable.setFixedWidth(cmptab['Width'])
-#       self.CmpTable.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
-#       self.CmpTable.verticalHeader().setDefaultSectionSize(20)
-#       self.CmpTable.setHorizontalHeaderLabels( ('Ref', 'Name') )
-#
-#       b   = read_file('det-1/det-1.sch')
-#       rcl = raw_cmp_list(b)
-#       ipl = self.cfg['Ignore']
-#       self.CmpDict = cmp_dict(rcl, ipl)
-#       self.update_cmp_list(self.CmpDict)
-#       self.CmpTable.show()
-        #----------------------------------------------------
        
         self.CmpTable       = ComponentsTable(self) 
         self.CmpApplyButton = QPushButton('Chose', self)
@@ -220,10 +195,11 @@ class MainWindow(QMainWindow):
                 
         #----------------------------------------------------
         self.Splitter = QSplitter(self)
+        self.Splitter.addWidget(self.CmpTabBox)
         self.Splitter.addWidget(self.SelectView)   
         self.Splitter.addWidget(self.InspectorBox) 
                  
-        self.centralWidget().layout().addWidget(self.CmpTabBox)    
+        #self.centralWidget().layout().addWidget(self.CmpTabBox)    
         self.centralWidget().layout().addWidget(self.Splitter)
         
 
