@@ -170,13 +170,13 @@ class MainWindow(QMainWindow):
         #self.InspectorLayout.addStretch()
                 
         #----------------------------------------------------
-        Splitter = QSplitter(self)
+        self.Splitter = QSplitter(self)
         #Splitter.addWidget(self.CmpTabBox)    
-        Splitter.addWidget(self.SelectView)   
-        Splitter.addWidget(self.InspectorBox) 
+        self.Splitter.addWidget(self.SelectView)   
+        self.Splitter.addWidget(self.InspectorBox) 
                  
         self.centralWidget().layout().addWidget(self.CmpTabBox)    
-        self.centralWidget().layout().addWidget(Splitter)
+        self.centralWidget().layout().addWidget(self.Splitter)
         
 #       self.centralWidget().layout().addWidget(self.CmpTabBox)
 #       self.centralWidget().layout().addWidget(self.SelectView)
@@ -196,6 +196,9 @@ class MainWindow(QMainWindow):
         else:
             self.setGeometry(100, 100, 1024, 768)
 
+        if Settings.contains('splitter'):
+            self.Splitter.restoreState( Settings.value('splitter') )
+            
         self.show()
         
         
@@ -203,6 +206,7 @@ class MainWindow(QMainWindow):
         print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
+        Settings.setValue( 'splitter', self.Splitter.saveState() )
         QWidget.closeEvent(self, event)
         
         
