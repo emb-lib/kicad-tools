@@ -134,8 +134,7 @@ class MainWindow(QMainWindow):
         self.CmpTable.show()
         #----------------------------------------------------
         
-        self.CmpApplyButton = QPushButton('Apply', self)
-        #self.CmpApplyButton.resize( 100, self.CmpApplyButton.height() )
+        self.CmpApplyButton = QPushButton('Chose', self)
         
         self.CmpTabLayout.addWidget(self.CmpTable)
         self.CmpTabLayout.addWidget(self.CmpApplyButton)
@@ -167,22 +166,15 @@ class MainWindow(QMainWindow):
         self.InspectorLayout.setSpacing(10)
         
         self.InspectorLayout.addWidget(self.Inspector)
-        #self.InspectorLayout.addStretch()
                 
         #----------------------------------------------------
         self.Splitter = QSplitter(self)
-        #Splitter.addWidget(self.CmpTabBox)    
         self.Splitter.addWidget(self.SelectView)   
         self.Splitter.addWidget(self.InspectorBox) 
                  
         self.centralWidget().layout().addWidget(self.CmpTabBox)    
         self.centralWidget().layout().addWidget(self.Splitter)
         
-#       self.centralWidget().layout().addWidget(self.CmpTabBox)
-#       self.centralWidget().layout().addWidget(self.SelectView)
-#       #self.centralWidget().layout().addStretch()
-#       self.centralWidget().layout().addWidget(self.InspectorBox)
-
 
         #----------------------------------------------------
         #
@@ -201,7 +193,8 @@ class MainWindow(QMainWindow):
             
         self.show()
         
-        
+                
+    #---------------------------------------------------------------------------    
     def closeEvent(self, event):
         print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
@@ -209,13 +202,14 @@ class MainWindow(QMainWindow):
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         QWidget.closeEvent(self, event)
         
-        
+    #---------------------------------------------------------------------------    
     def cellActivated(self, row, col):
         items = self.CmpTable.selectedItems()
         for i in items:
             if i.column() == 0:
                 print( i.data(Qt.DisplayRole) )
     
+    #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
         
         keys = list( cd.keys() )
@@ -354,15 +348,18 @@ if __name__ == '__main__':
 
     app  = QApplication(sys.argv)
     app.setStyleSheet('QGroupBox {\
-                           border: 1px solid gray;\
-                           border-radius: 3px;\
-                           margin: 4px;\
-                           padding: 4px;\
+                           border: 2px solid gray;\
+                           border-radius: 4px;\
+                           margin: 0px;\
+                           margin-top: 1ex;\
+                           padding: 0px;\
+                           font-size: 12pt;\
+                           font-weight: bold;\
                        }\
                        QGroupBox::title {\
                            subcontrol-origin: margin;\
                            subcontrol-position: top left;\
-                           padding: 2px;\
+                           padding: 0px;\
                            left: 20px;\
                        }\
                       Inspector {\
