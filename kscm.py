@@ -215,6 +215,11 @@ class MainWindow(QMainWindow):
         else:
             self.setGeometry(100, 100, 1024, 768)
 
+        if Settings.contains('cmptable'):
+            w0, w1 = Settings.value('cmptable')
+            self.CmpTable.setColumnWidth( 0, int(w0) )
+            self.CmpTable.setColumnWidth( 1, int(w1) )
+            
         if Settings.contains('splitter'):
             self.Splitter.restoreState( Settings.value('splitter') )
             
@@ -226,6 +231,8 @@ class MainWindow(QMainWindow):
         print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
+        #Settings.setValue( 'cmptable', self.CmpTable.saveGeometry() )
+        Settings.setValue( 'cmptable', [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         QWidget.closeEvent(self, event)
         
