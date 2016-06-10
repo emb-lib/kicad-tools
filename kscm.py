@@ -12,8 +12,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
-from PyQt5.QtGui import (QIcon, QBrush, QColor)
-from PyQt5.QtCore import QSettings
+from PyQt5.QtGui  import  QIcon, QBrush, QColor
+from PyQt5.QtCore import QSettings, pyqtSignal
 
 
 #-------------------------------------------------------------------------------
@@ -59,8 +59,17 @@ class Inspector(QTreeWidget):
         #item.setCheckState (column, Qt.Unchecked)
         return item
             
+    
+    def load(self, refs):
+        
+        for i in refs:
+            print( i )
+        
+        
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
+    
+    cells_choosen = pyqtSignal([list])
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -72,18 +81,14 @@ class ComponentsTable(QTableWidget):
 
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
         self.horizontalHeader().setStretchLastSection(True)
-        #self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
         
-       # self.setColumnWidth(0, 60)
-       # self.setColumnWidth(1, 153)
-       # self.setFixedWidth(260)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Name') )
 
         b   = read_file('det-1/det-1.sch')
         rcl = raw_cmp_list(b)
-        ipl = ['LBL'] # self.cfg['Ignore']
+        ipl = ['LBL'] 
         self.CmpDict = cmp_dict(rcl, ipl)
         self.update_cmp_list(self.CmpDict)
         
@@ -91,9 +96,13 @@ class ComponentsTable(QTableWidget):
     #---------------------------------------------------------------------------    
     def cell_activated(self, row, col):
         items = self.selectedItems()
+        refs = []
         for i in items:
             if i.column() == 0:
-                print( i.data(Qt.DisplayRole) )
+                refs.append( i.data(Qt.DisplayRole) )
+        
+        print('emit "cells_choosen"')
+        self.cells_choosen.emit(refs)
         
                         
     #---------------------------------------------------------------------------    
@@ -122,8 +131,6 @@ class MainWindow(QMainWindow):
         
     def initUI(self):
         
-        self.cfg = yaml.load( open('kscm.yml') )
-        
         #----------------------------------------------------
         #
         #    Main Window
@@ -151,19 +158,17 @@ class MainWindow(QMainWindow):
         self.CmpTabLayout.setContentsMargins(4,10,4,4)
         self.CmpTabLayout.setSpacing(10)
         
-        #self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetFixedSize)
         self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
         
         #----------------------------------------------------
         #
         #    Components table
         #
-       
         self.CmpTable       = ComponentsTable(self) 
-        self.CmpApplyButton = QPushButton('Chose', self)
+        self.CmpChooseButton = QPushButton('Choose', self)
         
         self.CmpTabLayout.addWidget(self.CmpTable)
-        self.CmpTabLayout.addWidget(self.CmpApplyButton)
+        self.CmpTabLayout.addWidget(self.CmpChooseButton)
         
                 
         #----------------------------------------------------
@@ -194,14 +199,17 @@ class MainWindow(QMainWindow):
         self.InspectorLayout.addWidget(self.Inspector)
                 
         #----------------------------------------------------
+
         self.Splitter = QSplitter(self)
         self.Splitter.addWidget(self.CmpTabBox)
         self.Splitter.addWidget(self.SelectView)   
         self.Splitter.addWidget(self.InspectorBox) 
                  
-        #self.centralWidget().layout().addWidget(self.CmpTabBox)    
         self.centralWidget().layout().addWidget(self.Splitter)
         
+        
+        #----------------------------------------------------
+        self.CmpTable.cells_choosen.connect(self.Inspector.load)
 
         #----------------------------------------------------
         #
@@ -231,7 +239,6 @@ class MainWindow(QMainWindow):
         print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
-        #Settings.setValue( 'cmptable', self.CmpTable.saveGeometry() )
         Settings.setValue( 'cmptable', [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         QWidget.closeEvent(self, event)
