@@ -28,19 +28,22 @@ class Inspector(QTreeWidget):
         self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         #self.header().setStretchLastSection(False)
         self.setHeaderLabels( ('Property', 'Value') );
-        std_items   = self.addParent(self, 0, 'Standard', 'slon')
-        usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
-        field_items = self.addParent(self, 0, 'Field Details', '')
+        self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
+        self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
+        self.field_items = self.addParent(self, 0, 'Field Details', '')
         
-        self.addChild(std_items, 0, 'Ref', '?')
-        self.addChild(std_items, 0, 'Value', '~')
-        self.addChild(std_items, 0, 'Footprint', '~')
-        self.addChild(std_items, 0, 'DocSheet', '~')
+        self.addChild(self.std_items, 0, 'Ref', '?')
+        self.addChild(self.std_items, 0, 'LibName', '~')
+        self.addChild(self.std_items, 0, 'Value', '~')
+        self.addChild(self.std_items, 0, 'Footprint', '~')
+        self.addChild(self.std_items, 0, 'DocSheet', '~')
+        self.addChild(self.std_items, 0, 'X', '~')
+        self.addChild(self.std_items, 0, 'Y', '~')
+        self.addChild(self.std_items, 0, 'Timestamp', '~')
     
-        self.addChild(usr_items, 0, 'Name', '?')
-        self.addChild(usr_items, 0, 'Type', '?')
+        self.addChild(self.usr_items, 0, '<empty>', '?')
 
-        self.addChild(field_items, 0, '<empty>', '?')
+        self.addChild(self.field_items, 0, '<empty>', '?')
             
         
     def addParent(self, parent, column, title, data):
@@ -59,11 +62,44 @@ class Inspector(QTreeWidget):
         #item.setCheckState (column, Qt.Unchecked)
         return item
             
+    def set_data(self, item, column, role):
+        pass;
     
     def load(self, refs):
         
-        for i in refs:
-            print( i )
+        comp = refs[0][0]
+        
+        print( (comp.__dict__) )
+        #print(self.topLevelItem(0).childCount())
+        for f in comp.Fields:
+            print(f.InnerCode)
+        
+        for i in range( self.topLevelItem(0).childCount() ):
+            item = self.topLevelItem(0).child(i)
+
+            if item.data(0, Qt.DisplayRole) == 'Ref':
+                item.setData(1, Qt.DisplayRole, comp.Ref)
+                
+            if item.data(0, Qt.DisplayRole) == 'LibName':
+                item.setData(1, Qt.DisplayRole, comp.LibName)
+                
+            if item.data(0, Qt.DisplayRole) == 'Value':
+                item.setData(1, Qt.DisplayRole, comp.Fields[1].Text)
+                
+            if item.data(0, Qt.DisplayRole) == 'Footprint':
+                item.setData(1, Qt.DisplayRole, comp.Fields[2].Text)
+                
+            if item.data(0, Qt.DisplayRole) == 'DocSheet':
+                item.setData(1, Qt.DisplayRole, comp.Fields[3].Text)
+                
+            if item.data(0, Qt.DisplayRole) == 'X':
+                item.setData(1, Qt.DisplayRole, comp.PosX)
+                                
+            if item.data(0, Qt.DisplayRole) == 'Y':
+                item.setData(1, Qt.DisplayRole, comp.PosY)
+                
+            if item.data(0, Qt.DisplayRole) == 'Timestamp':
+                item.setData(1, Qt.DisplayRole, comp.Timestamp)
         
         
 #-------------------------------------------------------------------------------
@@ -99,7 +135,7 @@ class ComponentsTable(QTableWidget):
         refs = []
         for i in items:
             if i.column() == 0:
-                refs.append( i.data(Qt.DisplayRole) )
+                refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
         print('emit "cells_choosen"')
         self.cells_choosen.emit(refs)
@@ -278,8 +314,7 @@ class Component:
     
     def __init__(self):
         self.Ref = '~'
-        self.Name = '~'
-        self.Footprint = '~'
+        self.LibName = '~'
         
     def parse_comp(self, rec):
         r = re.search('L ([\w-]+) ([\w#]+)', rec)
