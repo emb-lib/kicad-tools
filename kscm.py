@@ -86,19 +86,37 @@ class Inspector(QTreeWidget):
         return item
             
     #---------------------------------------------------------------------------    
-    def item_edit(self, item, col):
-        print( item.data( col, Qt.DisplayRole) )
-        
     def item_clicked(self, item, col):
         if item.checkState(2) == Qt.Checked:
             item.setFlags( item.flags() | Qt.ItemIsEditable)
         else:
             item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
         
+        param = item.data(0, Qt.DisplayRole)
+        comp = self.comps[0]
+        if item.parent() == self.topLevelItem(0):
+            if param == 'Ref':
+                self.load_field(comp.Fields[0])
+            elif param == 'Value':
+                self.load_field(comp.Fields[1])
+            elif param == 'Footprint':
+                self.load_field(comp.Fields[2])
+            elif param == 'Doc Sheet':
+                self.load_field(comp.Fields[3])
+            else:
+                self.load_field(None)
+                
+        if item.parent() == self.topLevelItem(1):
+            print('user defined')
+            
+                
+            
+            
     #---------------------------------------------------------------------------    
     def load_cmp(self, refs):
         
-        comp = refs[0][0]
+        self.comps = refs[0]
+        comp = self.comps[0]
         
         print( (comp.__dict__) )
         #print(self.topLevelItem(0).childCount())
@@ -135,8 +153,26 @@ class Inspector(QTreeWidget):
         for f in comp.Fields[4:]:
             print( f.InnerCode )
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
+        
+            
                         
     #---------------------------------------------------------------------------    
+    def load_field(self, f):
+        self.topLevelItem(2).takeChildren()
+        if not f:
+            self.addChild(self.field_items, '<empty>', '')
+            return
+        else:
+            self.addChild(self.field_items, 'X',                  f.PosX)
+            self.addChild(self.field_items, 'Y',                  f.PosY)
+            self.addChild(self.field_items, 'Orientation',        f.Orientation)
+            self.addChild(self.field_items, 'Visible',            f.Visible)
+            self.addChild(self.field_items, 'Horizontal Justify', f.HJustify)
+            self.addChild(self.field_items, 'Vertical Justify',   f.VJustify)
+            self.addChild(self.field_items, 'Font Size',          f.FontSize)
+            self.addChild(self.field_items, 'Font Bold',          f.FontBold)
+            self.addChild(self.field_items, 'Font Italic',        f.FontItalic)
+            
         
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
