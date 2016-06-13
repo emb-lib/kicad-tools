@@ -46,10 +46,10 @@ class Inspector(QTreeWidget):
         self.field_items = self.addParent(self, 0, 'Field Details', '')
         
         self.addChild(self.std_items, 'Ref',       '?')
-        self.addChild(self.std_items, 'LibName',   '~')
+        self.addChild(self.std_items, 'Lib Name',  '~')
         self.addChild(self.std_items, 'Value',     '~', Qt.ItemIsEditable)
         self.addChild(self.std_items, 'Footprint', '~', Qt.ItemIsEditable)
-        self.addChild(self.std_items, 'DocSheet',  '~', Qt.ItemIsEditable)
+        self.addChild(self.std_items, 'Doc Sheet', '~', Qt.ItemIsEditable)
         self.addChild(self.std_items, 'X',         '~')
         self.addChild(self.std_items, 'Y',         '~')
         self.addChild(self.std_items, 'Timestamp', '~')
@@ -109,7 +109,7 @@ class Inspector(QTreeWidget):
             if item.data(0, Qt.DisplayRole) == 'Ref':
                 item.setData(1, Qt.DisplayRole, comp.Ref)
                 
-            if item.data(0, Qt.DisplayRole) == 'LibName':
+            if item.data(0, Qt.DisplayRole) == 'Lib Name':
                 item.setData(1, Qt.DisplayRole, comp.LibName)
                 
             if item.data(0, Qt.DisplayRole) == 'Value':
@@ -118,7 +118,7 @@ class Inspector(QTreeWidget):
             if item.data(0, Qt.DisplayRole) == 'Footprint':
                 item.setData(1, Qt.EditRole, comp.Fields[2].Text)
                 
-            if item.data(0, Qt.DisplayRole) == 'DocSheet':
+            if item.data(0, Qt.DisplayRole) == 'Doc Sheet':
                 item.setData(1, Qt.DisplayRole, comp.Fields[3].Text)
                 
             if item.data(0, Qt.DisplayRole) == 'X':
