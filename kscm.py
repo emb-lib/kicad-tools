@@ -35,29 +35,30 @@ class Inspector(QTreeWidget):
         super().__init__(parent)
         #self.setAlternatingRowColors(True)
         self.setIndentation(16)
-        self.setColumnCount(2)
+        self.setColumnCount(3)
         #self.header().resizeSection(0, 150)
         self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         #self.header().setStretchLastSection(False)
-        self.setHeaderLabels( ('Property', 'Value') );
+        self.setHeaderLabels( ('Property', 'Value', 'Edit') );
         self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
         self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
         self.field_items = self.addParent(self, 0, 'Field Details', '')
         
-        self.addChild(self.std_items, 1, 'Ref', '?')
-        self.addChild(self.std_items, 1, 'LibName', '~')
-        self.addChild(self.std_items, 1, 'Value', '~')
-        self.addChild(self.std_items, 1, 'Footprint', '~')
-        self.addChild(self.std_items, 1, 'DocSheet', '~')
-        self.addChild(self.std_items, 1, 'X', '~')
-        self.addChild(self.std_items, 1, 'Y', '~')
-        self.addChild(self.std_items, 1, 'Timestamp', '~')
+        self.addChild(self.std_items, 'Ref',       '?')
+        self.addChild(self.std_items, 'LibName',   '~')
+        self.addChild(self.std_items, 'Value',     '~', Qt.ItemIsEditable)
+        self.addChild(self.std_items, 'Footprint', '~', Qt.ItemIsEditable)
+        self.addChild(self.std_items, 'DocSheet',  '~', Qt.ItemIsEditable)
+        self.addChild(self.std_items, 'X',         '~')
+        self.addChild(self.std_items, 'Y',         '~')
+        self.addChild(self.std_items, 'Timestamp', '~')
     
-        self.addChild(self.usr_items, 1, '<empty>', '')
+        self.addChild(self.usr_items, '<empty>', '')
 
-        self.addChild(self.field_items, 1, '<empty>', '')
+        self.addChild(self.field_items, '<empty>', '')
             
-     #   self.itemDoubleClicked.connect(self.item_edit)
+        self.itemDoubleClicked.connect(self.item_edit)
+        self.itemClicked.connect(self.item_clicked)
         
         self.setItemDelegate(self.ItemDelegate(self))
         
@@ -73,22 +74,26 @@ class Inspector(QTreeWidget):
         return item
         
     #---------------------------------------------------------------------------    
-    def addChild(self, parent, column, title, data):
+    def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
         item = QTreeWidgetItem(parent, [title])
-        item.setData(column, Qt.DisplayRole, data)
-        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        item.setData(1, Qt.DisplayRole, data)
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | flags)
         
-        #item.setCheckState (column, Qt.Unchecked)
+        if flags & Qt.ItemIsEditable:
+            item.setCheckState (2, Qt.Checked)
+        else:
+            item.setCheckState (2, Qt.Unchecked)
         return item
             
     #---------------------------------------------------------------------------    
-#   def item_edit(self, item, col):
-#       print( item.data( col, Qt.DisplayRole) )
-#
-#       if col == 1:
-#           self.editItem(item, col)
-        #self.openPersistentEditor(item, 1)
+    def item_edit(self, item, col):
+        print( item.data( col, Qt.DisplayRole) )
         
+    def item_clicked(self, item, col):
+        if item.checkState(2) == Qt.Checked:
+            item.setFlags( item.flags() | Qt.ItemIsEditable)
+        else:
+            item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
         
     #---------------------------------------------------------------------------    
     def load_cmp(self, refs):
@@ -129,7 +134,7 @@ class Inspector(QTreeWidget):
                         
         for f in comp.Fields[4:]:
             print( f.InnerCode )
-            self.addChild(self.usr_items, 1, f.Name, f.Text)
+            self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
                 
                         
     #---------------------------------------------------------------------------    
