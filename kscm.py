@@ -19,6 +19,7 @@ from PyQt5.QtCore import QSettings, pyqtSignal
 #-------------------------------------------------------------------------------
 class Inspector(QTreeWidget):
     
+    #---------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
         #self.setAlternatingRowColors(True)
@@ -32,20 +33,21 @@ class Inspector(QTreeWidget):
         self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
         self.field_items = self.addParent(self, 0, 'Field Details', '')
         
-        self.addChild(self.std_items, 0, 'Ref', '?')
-        self.addChild(self.std_items, 0, 'LibName', '~')
-        self.addChild(self.std_items, 0, 'Value', '~')
-        self.addChild(self.std_items, 0, 'Footprint', '~')
-        self.addChild(self.std_items, 0, 'DocSheet', '~')
-        self.addChild(self.std_items, 0, 'X', '~')
-        self.addChild(self.std_items, 0, 'Y', '~')
-        self.addChild(self.std_items, 0, 'Timestamp', '~')
+        self.addChild(self.std_items, 1, 'Ref', '?')
+        self.addChild(self.std_items, 1, 'LibName', '~')
+        self.addChild(self.std_items, 1, 'Value', '~')
+        self.addChild(self.std_items, 1, 'Footprint', '~')
+        self.addChild(self.std_items, 1, 'DocSheet', '~')
+        self.addChild(self.std_items, 1, 'X', '~')
+        self.addChild(self.std_items, 1, 'Y', '~')
+        self.addChild(self.std_items, 1, 'Timestamp', '~')
     
-        self.addChild(self.usr_items, 0, '<empty>', '?')
+        self.addChild(self.usr_items, 1, '<empty>', '')
 
-        self.addChild(self.field_items, 0, '<empty>', '?')
+        self.addChild(self.field_items, 1, '<empty>', '')
             
         
+    #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
         item.setData(column, Qt.UserRole, data)
@@ -55,24 +57,22 @@ class Inspector(QTreeWidget):
 #       item.setBackground( 1, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
         return item
         
-        
+    #---------------------------------------------------------------------------    
     def addChild(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
-        item.setData(column, Qt.UserRole, data)
+        print(data)
+        item.setData(column, Qt.DisplayRole, data)
         #item.setCheckState (column, Qt.Unchecked)
         return item
             
-    def set_data(self, item, column, role):
-        pass;
     
-    def load(self, refs):
+    #---------------------------------------------------------------------------    
+    def load_cmp(self, refs):
         
         comp = refs[0][0]
         
         print( (comp.__dict__) )
         #print(self.topLevelItem(0).childCount())
-        for f in comp.Fields:
-            print(f.InnerCode)
         
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
@@ -87,7 +87,7 @@ class Inspector(QTreeWidget):
                 item.setData(1, Qt.DisplayRole, comp.Fields[1].Text)
                 
             if item.data(0, Qt.DisplayRole) == 'Footprint':
-                item.setData(1, Qt.DisplayRole, comp.Fields[2].Text)
+                item.setData(1, Qt.EditRole, comp.Fields[2].Text)
                 
             if item.data(0, Qt.DisplayRole) == 'DocSheet':
                 item.setData(1, Qt.DisplayRole, comp.Fields[3].Text)
@@ -101,11 +101,23 @@ class Inspector(QTreeWidget):
             if item.data(0, Qt.DisplayRole) == 'Timestamp':
                 item.setData(1, Qt.DisplayRole, comp.Timestamp)
         
+        self.topLevelItem(1).takeChildren()
+                        
+        for f in comp.Fields[4:]:
+            print( f.InnerCode )
+            self.addChild(self.usr_items, 1, f.Name, f.Text)
+                
+                        
+    #---------------------------------------------------------------------------    
+    def load_field(f):
+        pass
+                
+                
         
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
     
-    cells_choosen = pyqtSignal([list])
+    cells_chosen = pyqtSignal([list])
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -137,8 +149,8 @@ class ComponentsTable(QTableWidget):
             if i.column() == 0:
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
-        print('emit "cells_choosen"')
-        self.cells_choosen.emit(refs)
+        print('emit "cells_chosen"')
+        self.cells_chosen.emit(refs)
         
                         
     #---------------------------------------------------------------------------    
@@ -245,7 +257,7 @@ class MainWindow(QMainWindow):
         
         
         #----------------------------------------------------
-        self.CmpTable.cells_choosen.connect(self.Inspector.load)
+        self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
 
         #----------------------------------------------------
         #
