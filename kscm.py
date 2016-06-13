@@ -57,7 +57,6 @@ class Inspector(QTreeWidget):
 
         self.addChild(self.field_items, '<empty>', '')
             
-        self.itemDoubleClicked.connect(self.item_edit)
         self.itemClicked.connect(self.item_clicked)
         
         self.setItemDelegate(self.ItemDelegate(self))
@@ -135,13 +134,8 @@ class Inspector(QTreeWidget):
         for f in comp.Fields[4:]:
             print( f.InnerCode )
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
-                
                         
     #---------------------------------------------------------------------------    
-    def load_field(f):
-        pass
-                
-                
         
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
@@ -266,14 +260,20 @@ class MainWindow(QMainWindow):
         #
         #    Inspector
         #
-        self.Inspector = Inspector(self)
+        self.Inspector       = Inspector(self)
+        self.InspectorAdd    = QPushButton('Add Parameter', self)
+        self.InspectorDelete = QPushButton('Delete Parameter', self)
+        self.InspectorRename = QPushButton('Rename Parameter', self)
         
         self.InspectorBox    = QGroupBox('Inspector', self)
         self.InspectorLayout = QVBoxLayout(self.InspectorBox)
         self.InspectorLayout.setContentsMargins(4,10,4,4)
-        self.InspectorLayout.setSpacing(10)
+        self.InspectorLayout.setSpacing(2)
         
         self.InspectorLayout.addWidget(self.Inspector)
+        self.InspectorLayout.addWidget(self.InspectorAdd)
+        self.InspectorLayout.addWidget(self.InspectorDelete)
+        self.InspectorLayout.addWidget(self.InspectorRename)
                 
         #----------------------------------------------------
 
