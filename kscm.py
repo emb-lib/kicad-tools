@@ -8,7 +8,7 @@ import re
 import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, 
+                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
@@ -19,6 +19,17 @@ from PyQt5.QtCore import QSettings, pyqtSignal
 #-------------------------------------------------------------------------------
 class Inspector(QTreeWidget):
     
+    class ItemDelegate(QStyledItemDelegate):
+
+        def __init__(self, parent):
+            super().__init__(parent)
+            
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                print( idx.column() )
+                return QStyledItemDelegate.createEditor(self, parent, option, idx)
+    
+        
     #---------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -46,6 +57,9 @@ class Inspector(QTreeWidget):
 
         self.addChild(self.field_items, 1, '<empty>', '')
             
+     #   self.itemDoubleClicked.connect(self.item_edit)
+        
+        self.setItemDelegate(self.ItemDelegate(self))
         
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
@@ -53,6 +67,7 @@ class Inspector(QTreeWidget):
         item.setData(column, Qt.UserRole, data)
         item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         item.setExpanded (True)
+        item.setFlags(Qt.ItemIsEnabled)
 #       item.setBackground( 0, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
 #       item.setBackground( 1, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
         return item
@@ -60,12 +75,21 @@ class Inspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def addChild(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
-        print(data)
         item.setData(column, Qt.DisplayRole, data)
+        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        
         #item.setCheckState (column, Qt.Unchecked)
         return item
             
-    
+    #---------------------------------------------------------------------------    
+#   def item_edit(self, item, col):
+#       print( item.data( col, Qt.DisplayRole) )
+#
+#       if col == 1:
+#           self.editItem(item, col)
+        #self.openPersistentEditor(item, 1)
+        
+        
     #---------------------------------------------------------------------------    
     def load_cmp(self, refs):
         
@@ -292,6 +316,9 @@ class MainWindow(QMainWindow):
         QWidget.closeEvent(self, event)
         
         
+#       for ref in self.CmpTable.CmpDict.keys():
+#           print( ref + ' ' + self.CmpTable.CmpDict[ref][0].Fields[2].Text)
+        
 
 #-------------------------------------------------------------------------------
 class ComponentField:
@@ -414,34 +441,34 @@ def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
 if __name__ == '__main__':
 
     app  = QApplication(sys.argv)
-    app.setStyleSheet('QGroupBox {\
-                           border: 2px solid gray;\
-                           border-radius: 4px;\
-                           margin: 0px;\
-                           margin-top: 1ex;\
-                           padding: 0px;\
-                           font-size: 12pt;\
-                           font-weight: bold;\
-                       }\
-                       QGroupBox::title {\
+    app.setStyleSheet( 'QGroupBox {\
+                            border: 2px solid gray;\
+                            border-radius: 4px;\
+                            margin: 0px;\
+                            margin-top: 1ex;\
+                            padding: 0px;\
+                            font-size: 12pt;\
+                            font-weight: bold;\
+                        }\
+                        QGroupBox::title {\
                            subcontrol-origin: margin;\
                            subcontrol-position: top left;\
                            padding: 0px;\
                            left: 20px;\
-                       }\
-                      Inspector {\
+                        }\
+                        Inspector {\
                         alternate-background-color: #ffffd0;\
-                      }\
-                       Inspector {\
+                        }\
+                        Inspector {\
                            show-decoration-selected: 1;\
-                       }\
-                       QTreeView::item {\
+                        }\
+                        Inspector::item {\
                            border: 1px solid #d9d9d9;\
                            border-top-color: #d9d9d9;\
                            border-left-color: transparent;\
                            border-bottom-color: transparent;\
-                       }\
-                       QTreeView::item:has-children {\
+                        }\
+                        Inspector::item:has-children {\
                            left: 18px;\
                            background-color: #FFDCA4;\
                            border: 1px solid #d9d9d9;\
@@ -449,22 +476,25 @@ if __name__ == '__main__':
                            border-left-color: transparent;\
                            border-right-color: transparent;\
                            border-bottom-color: transparent;\
-                       }\
-                       QTreeWidget::item:hover {\
+                        }\
+                        QTreeWidget::item:selected {\
+                            border: 1px solid #567dbc;\
+                        }\
+                        QTreeWidget::item:selected:active{\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
+                        }\
+                        QTreeWidget::item:selected:!active {\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6b9be8, stop: 1 #577fbf);\
+                        }\
+                        QTreeWidget::item:hover {\
                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
                            border: 1px solid #bfcde4;\
-                       }\
-                       QTreeWidget::item:selected {\
-                           border: 1px solid #567dbc;\
-                       }\
-                       QTreeWidget::item:selected:active{\
-                           background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
-                       }\
-                       QTreeWidget::item:selected:!active {\
-                           background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6b9be8, stop: 1 #577fbf);\
-                       }'
+                        }\
+                      '
                       )
     
+    
+        
     
      #background-color: #fffff0;\
     #                           border-top-color: transparent;\
