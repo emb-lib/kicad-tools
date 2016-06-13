@@ -68,6 +68,7 @@ class Inspector(QTreeWidget):
             
         self.itemClicked.connect(self.item_clicked)
         self.currentItemChanged.connect(self.item_changed)
+        self.itemActivated.connect(self.item_activated)
         
         self.setItemDelegate(self.ItemDelegate(self))
         
@@ -119,9 +120,14 @@ class Inspector(QTreeWidget):
             print('user defined')
             
         
+    #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         self.item_clicked(item, 0)
                 
+    #---------------------------------------------------------------------------    
+    def item_activated(self, item, col):
+        print(item.data(col, Qt.DisplayRole))
+        self.editItem(item, 1)
             
             
     #---------------------------------------------------------------------------    
