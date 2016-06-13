@@ -56,9 +56,18 @@ class Inspector(QTreeWidget):
     
         self.addChild(self.usr_items, '<empty>', '')
 
-        self.addChild(self.field_items, '<empty>', '')
+        self.addChild(self.field_items, 'X',                  '')
+        self.addChild(self.field_items, 'Y',                  '')
+        self.addChild(self.field_items, 'Orientation',        '')
+        self.addChild(self.field_items, 'Visible',            '')
+        self.addChild(self.field_items, 'Horizontal Justify', '')
+        self.addChild(self.field_items, 'Vertical Justify',   '')
+        self.addChild(self.field_items, 'Font Size',          '')
+        self.addChild(self.field_items, 'Font Bold',          '')
+        self.addChild(self.field_items, 'Font Italic',        '')
             
         self.itemClicked.connect(self.item_clicked)
+        self.currentItemChanged.connect(self.item_changed)
         
         self.setItemDelegate(self.ItemDelegate(self))
         
@@ -109,6 +118,9 @@ class Inspector(QTreeWidget):
         if item.parent() == self.topLevelItem(1):
             print('user defined')
             
+        
+    def item_changed(self, item, prev):
+        self.item_clicked(item, 0)
                 
             
             
@@ -158,21 +170,38 @@ class Inspector(QTreeWidget):
                         
     #---------------------------------------------------------------------------    
     def load_field(self, f):
-        self.topLevelItem(2).takeChildren()
-        if not f:
-            self.addChild(self.field_items, '<empty>', '')
-            return
-        else:
-            self.addChild(self.field_items, 'X',                  f.PosX)
-            self.addChild(self.field_items, 'Y',                  f.PosY)
-            self.addChild(self.field_items, 'Orientation',        f.Orientation)
-            self.addChild(self.field_items, 'Visible',            f.Visible)
-            self.addChild(self.field_items, 'Horizontal Justify', f.HJustify)
-            self.addChild(self.field_items, 'Vertical Justify',   f.VJustify)
-            self.addChild(self.field_items, 'Font Size',          f.FontSize)
-            self.addChild(self.field_items, 'Font Bold',          f.FontBold)
-            self.addChild(self.field_items, 'Font Italic',        f.FontItalic)
-            
+
+        for i in range( self.topLevelItem(2).childCount() ):
+            item = self.topLevelItem(2).child(i)
+
+            if item.data(0, Qt.DisplayRole) == 'X':
+                item.setData(1, Qt.DisplayRole, f.PosX if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'Y':
+                item.setData(1, Qt.DisplayRole, f.PosY if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'Orientation':
+                item.setData(1, Qt.DisplayRole, f.Orientation if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'Visible':
+                item.setData(1, Qt.DisplayRole, str(f.Visible) if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'HJustify':
+                item.setData(1, Qt.DisplayRole, f.HJustify if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'VJustify':
+                item.setData(1, Qt.DisplayRole, f.VJustify if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'Font Size':
+                item.setData(1, Qt.DisplayRole, f.FontSize if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'Font Bold':
+                item.setData(1, Qt.DisplayRole, f.FontBold if f else '')
+
+            if item.data(0, Qt.DisplayRole) == 'Font Italic':
+                item.setData(1, Qt.DisplayRole, f.FontItalic if f else '')
+
+                
         
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
