@@ -7,7 +7,7 @@ import os
 import re
 import yaml
 from PyQt5.Qt import Qt
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction,
+from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
@@ -15,10 +15,12 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
 from PyQt5.QtGui  import  QIcon, QBrush, QColor
 from PyQt5.QtCore import QSettings, pyqtSignal
 
-
 #-------------------------------------------------------------------------------
 class Inspector(QTreeWidget):
     
+    load_field = pyqtSignal( [list], [str] )
+    
+        
     class ItemDelegate(QStyledItemDelegate):
 
         def __init__(self, parent):
@@ -43,7 +45,6 @@ class Inspector(QTreeWidget):
         self.setHeaderLabels( ('Property', 'Value', 'Edit') );
         self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
         self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
-        self.field_items = self.addParent(self, 0, 'Field Details', '')
         
         self.addChild(self.std_items, 'Ref',       '?')
         self.addChild(self.std_items, 'Lib Name',  '~')
@@ -55,16 +56,6 @@ class Inspector(QTreeWidget):
         self.addChild(self.std_items, 'Timestamp', '~')
     
         self.addChild(self.usr_items, '<empty>', '')
-
-        self.addChild(self.field_items, 'X',                  '')
-        self.addChild(self.field_items, 'Y',                  '')
-        self.addChild(self.field_items, 'Orientation',        '')
-        self.addChild(self.field_items, 'Visible',            '')
-        self.addChild(self.field_items, 'Horizontal Justify', '')
-        self.addChild(self.field_items, 'Vertical Justify',   '')
-        self.addChild(self.field_items, 'Font Size',          '')
-        self.addChild(self.field_items, 'Font Bold',          '')
-        self.addChild(self.field_items, 'Font Italic',        '')
             
         self.itemClicked.connect(self.item_clicked)
         self.currentItemChanged.connect(self.item_changed)
@@ -79,8 +70,6 @@ class Inspector(QTreeWidget):
         item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         item.setExpanded (True)
         item.setFlags(Qt.ItemIsEnabled)
-#       item.setBackground( 0, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
-#       item.setBackground( 1, QBrush(QColor('#FFDCA4'), Qt.SolidPattern) )
         return item
         
     #---------------------------------------------------------------------------    
@@ -105,30 +94,18 @@ class Inspector(QTreeWidget):
         param = item.data(0, Qt.DisplayRole)
         comp = self.comps[0]
         if item.parent() == self.topLevelItem(0):
-            if param == 'Ref':
-                self.load_field(comp.Fields[0])
-            elif param == 'Value':
-                self.load_field(comp.Fields[1])
-            elif param == 'Footprint':
-                self.load_field(comp.Fields[2])
-            elif param == 'Doc Sheet':
-                self.load_field(comp.Fields[3])
-            else:
-                self.load_field(None)
+            self.load_field.emit([comp, param])
                 
         if item.parent() == self.topLevelItem(1):
             print('user defined')
             
-        
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         self.item_clicked(item, 0)
                 
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
-        print(item.data(col, Qt.DisplayRole))
         self.editItem(item, 1)
-            
             
     #---------------------------------------------------------------------------    
     def load_cmp(self, refs):
@@ -173,42 +150,147 @@ class Inspector(QTreeWidget):
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
         
             
-                        
+#-------------------------------------------------------------------------------    
+class FieldInspector(QTreeWidget):
+
     #---------------------------------------------------------------------------    
-    def load_field(self, f):
+    class ItemDelegate(QStyledItemDelegate):
 
-        for i in range( self.topLevelItem(2).childCount() ):
-            item = self.topLevelItem(2).child(i)
+        def __init__(self, parent):
+            super().__init__(parent)
 
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                print( idx.column() )
+                return QStyledItemDelegate.createEditor(self, parent, option, idx)
+
+    #---------------------------------------------------------------------------    
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setIndentation(16)
+        self.setColumnCount(3)
+        self.header().resizeSection(2, 10)
+        self.header().setSectionResizeMode(0, QHeaderView.Interactive)
+        self.header().setSectionResizeMode(2, QHeaderView.Fixed)
+        self.setHeaderLabels( ('Field Name', 'Value', 'Edit') );
+        self.field_items = self.addParent(self, 0, 'Field Details', '')
+    
+        self.addChild(self.field_items, 'X',                  '')
+        self.addChild(self.field_items, 'Y',                  '')
+        self.addChild(self.field_items, 'Orientation',        '')
+        self.addChild(self.field_items, 'Visible',            '')
+        self.addChild(self.field_items, 'Horizontal Justify', '')
+        self.addChild(self.field_items, 'Vertical Justify',   '')
+        self.addChild(self.field_items, 'Font Size',          '')
+        self.addChild(self.field_items, 'Font Bold',          '')
+        self.addChild(self.field_items, 'Font Italic',        '')
+    
+        self.itemClicked.connect(self.item_clicked)
+        self.currentItemChanged.connect(self.item_changed)
+        self.itemActivated.connect(self.item_activated)
+    
+        self.setItemDelegate(self.ItemDelegate(self))
+    
+    #---------------------------------------------------------------------------    
+    def addParent(self, parent, column, title, data):
+        item = QTreeWidgetItem(parent, [title])
+        item.setData(column, Qt.UserRole, data)
+        #item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+        item.setExpanded (True)
+        item.setFlags(Qt.ItemIsEnabled)
+        return item
+    
+    #---------------------------------------------------------------------------    
+    def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
+        item = QTreeWidgetItem(parent, [title])
+        item.setData(1, Qt.DisplayRole, data)
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | flags)
+    
+        if flags & Qt.ItemIsEditable:
+            item.setCheckState (2, Qt.Checked)
+        else:
+            item.setCheckState (2, Qt.Unchecked)
+        return item
+    
+    #---------------------------------------------------------------------------    
+    def item_clicked(self, item, col):
+        if item.checkState(2) == Qt.Checked:
+            item.setFlags( item.flags() | Qt.ItemIsEditable)
+        else:
+            item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
+    
+    #---------------------------------------------------------------------------    
+    def item_changed(self, item, prev):
+        self.item_clicked(item, 0)
+    
+    #---------------------------------------------------------------------------    
+    def item_activated(self, item, col):
+        self.editItem(item, 1)
+    
+    #---------------------------------------------------------------------------    
+    def load_field(self, d ):
+    
+        self.comp  = d[0]
+        self.param = d[1]
+        
+        comp = self.comp
+        param = self.param
+        
+        if param == 'Ref':
+            f = self.comp.Fields[0]
+        elif param == 'Value':
+            f = self.comp.Fields[1]
+        elif param == 'Footprint':
+            f =  self.comp.Fields[2]
+        elif param == 'Doc Sheet':
+            f = self.comp.Fields[3]
+        else:
+            f = None
+            
+        self.field = f
+            
+        
+        for i in range( self.topLevelItem(0).childCount() ):
+            item = self.topLevelItem(0).child(i)
+    
             if item.data(0, Qt.DisplayRole) == 'X':
                 item.setData(1, Qt.DisplayRole, f.PosX if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'Y':
                 item.setData(1, Qt.DisplayRole, f.PosY if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'Orientation':
-                item.setData(1, Qt.DisplayRole, f.Orientation if f else '')
-
+    
+                self.cb = QComboBox(self)
+                if f:
+                    self.cb.setEnabled( item.checkState(2) == Qt.Checked )
+                    self.cb.addItems( ['Vertical', 'Horizontal'] )
+                    self.setItemWidget(item, 1, self.cb)
+                else:
+                    self.removeItemWidget(item, 1)
+                if self.cb:
+                    print(self.cb.currentIndex())
+    
             if item.data(0, Qt.DisplayRole) == 'Visible':
                 item.setData(1, Qt.DisplayRole, str(f.Visible) if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'HJustify':
                 item.setData(1, Qt.DisplayRole, f.HJustify if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'VJustify':
                 item.setData(1, Qt.DisplayRole, f.VJustify if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'Font Size':
                 item.setData(1, Qt.DisplayRole, f.FontSize if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'Font Bold':
                 item.setData(1, Qt.DisplayRole, f.FontBold if f else '')
-
+    
             if item.data(0, Qt.DisplayRole) == 'Font Italic':
                 item.setData(1, Qt.DisplayRole, f.FontItalic if f else '')
-
-                
-        
+    
+    
+                    
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
     
@@ -333,6 +415,7 @@ class MainWindow(QMainWindow):
         #    Inspector
         #
         self.Inspector       = Inspector(self)
+        self.FieldInspector  = FieldInspector(self)
         self.InspectorAdd    = QPushButton('Add Parameter', self)
         self.InspectorDelete = QPushButton('Delete Parameter', self)
         self.InspectorRename = QPushButton('Rename Parameter', self)
@@ -343,6 +426,7 @@ class MainWindow(QMainWindow):
         self.InspectorLayout.setSpacing(2)
         
         self.InspectorLayout.addWidget(self.Inspector)
+        self.InspectorLayout.addWidget(self.FieldInspector)
         self.InspectorLayout.addWidget(self.InspectorAdd)
         self.InspectorLayout.addWidget(self.InspectorDelete)
         self.InspectorLayout.addWidget(self.InspectorRename)
@@ -359,6 +443,7 @@ class MainWindow(QMainWindow):
         
         #----------------------------------------------------
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
+        self.Inspector.load_field.connect(self.FieldInspector.load_field)
 
         #----------------------------------------------------
         #
@@ -381,6 +466,8 @@ class MainWindow(QMainWindow):
             w0, w1, w2 = Settings.value('inspector')
             self.Inspector.setColumnWidth( 0, int(w0) )
             self.Inspector.setColumnWidth( 1, int(w1) )
+            self.FieldInspector.setColumnWidth( 0, int(w0) )
+            self.FieldInspector.setColumnWidth( 1, int(w1) )
             #self.Inspector.setColumnWidth( 2, int(w2) )
             
         if Settings.contains('splitter'):
@@ -559,6 +646,27 @@ if __name__ == '__main__':
                         Inspector::item:has-children {\
                            left: 18px;\
                            background-color: #FFDCA4;\
+                           border: 1px solid #d9d9d9;\
+                           border-top-color: #d9d9d9;\
+                           border-left-color: transparent;\
+                           border-right-color: transparent;\
+                           border-bottom-color: transparent;\
+                        }\
+                        FieldInspector {\
+                        alternate-background-color: #ffffd0;\
+                        }\
+                        Inspector {\
+                           show-decoration-selected: 1;\
+                        }\
+                        FieldInspector::item {\
+                           border: 1px solid #d9d9d9;\
+                           border-top-color: #d9d9d9;\
+                           border-left-color: transparent;\
+                           border-bottom-color: transparent;\
+                        }\
+                        FieldInspector::item:has-children {\
+                           left: 18px;\
+                           background-color: #21E96C;\
                            border: 1px solid #d9d9d9;\
                            border-top-color: #d9d9d9;\
                            border-left-color: transparent;\
