@@ -219,6 +219,8 @@ class FieldInspector(QTreeWidget):
         else:
             item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
     
+        self.load_field()
+            
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         self.item_clicked(item, 0)
@@ -228,12 +230,16 @@ class FieldInspector(QTreeWidget):
         self.editItem(item, 1)
     
     #---------------------------------------------------------------------------    
-    def load_field(self, d ):
-    
+    def load_field_slot(self, d):
         self.comp  = d[0]
         self.param = d[1]
         
-        comp = self.comp
+        self.load_field()
+
+    #---------------------------------------------------------------------------    
+    def load_field(self):
+        
+        comp  = self.comp
         param = self.param
         
         if param == 'Ref':
@@ -443,7 +449,7 @@ class MainWindow(QMainWindow):
         
         #----------------------------------------------------
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
-        self.Inspector.load_field.connect(self.FieldInspector.load_field)
+        self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
 
         #----------------------------------------------------
         #
