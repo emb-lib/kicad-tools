@@ -36,8 +36,9 @@ class Inspector(QTreeWidget):
         #self.setAlternatingRowColors(True)
         self.setIndentation(16)
         self.setColumnCount(3)
-        #self.header().resizeSection(0, 150)
-        self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.header().resizeSection(2, 10)
+        self.header().setSectionResizeMode(0, QHeaderView.Interactive)
+        self.header().setSectionResizeMode(2, QHeaderView.Fixed)
         #self.header().setStretchLastSection(False)
         self.setHeaderLabels( ('Property', 'Value', 'Edit') );
         self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
@@ -306,9 +307,10 @@ class MainWindow(QMainWindow):
             self.CmpTable.setColumnWidth( 1, int(w1) )
             
         if Settings.contains('inspector'):
-            w1, w2 = Settings.value('inspector')
+            w0, w1, w2 = Settings.value('inspector')
+            self.Inspector.setColumnWidth( 0, int(w0) )
             self.Inspector.setColumnWidth( 1, int(w1) )
-            self.Inspector.setColumnWidth( 2, int(w2) )
+            #self.Inspector.setColumnWidth( 2, int(w2) )
             
         if Settings.contains('splitter'):
             self.Splitter.restoreState( Settings.value('splitter') )
@@ -322,7 +324,7 @@ class MainWindow(QMainWindow):
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
-        Settings.setValue( 'inspector', [self.Inspector.columnWidth(1), self.Inspector.columnWidth(2)] )
+        Settings.setValue( 'inspector', [self.Inspector.columnWidth(0), self.Inspector.columnWidth(1), self.Inspector.columnWidth(2)] )
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         QWidget.closeEvent(self, event)
         
