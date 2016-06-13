@@ -411,6 +411,10 @@ class Component:
         else:
             print('E: invalid component L record, rec: "' + rec + '"')
             sys.exit(1)
+           
+        if not re.match( '\D+\d+',  r.group(2) ):
+            print('E: schematic must be annotated before loading in Component Manager' + os.linesep*2 + rec)
+            sys.exit(2)
             
         r = re.search('U (\d+) (\d+) ([\w\d]+)', rec)
 
