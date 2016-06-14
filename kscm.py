@@ -427,12 +427,17 @@ class MainWindow(QMainWindow):
         self.InspectorRename = QPushButton('Rename Parameter', self)
         
         self.InspectorBox    = QGroupBox('Inspector', self)
+        self.InspectorSplit  = QSplitter(Qt.Vertical, self)
         self.InspectorLayout = QVBoxLayout(self.InspectorBox)
         self.InspectorLayout.setContentsMargins(4,10,4,4)
         self.InspectorLayout.setSpacing(2)
         
-        self.InspectorLayout.addWidget(self.Inspector)
-        self.InspectorLayout.addWidget(self.FieldInspector)
+        
+        print(self.InspectorSplit.sizes())
+        
+        self.InspectorSplit.addWidget(self.Inspector)
+        self.InspectorSplit.addWidget(self.FieldInspector)
+        self.InspectorLayout.addWidget(self.InspectorSplit)
         self.InspectorLayout.addWidget(self.InspectorAdd)
         self.InspectorLayout.addWidget(self.InspectorDelete)
         self.InspectorLayout.addWidget(self.InspectorRename)
