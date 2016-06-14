@@ -173,6 +173,7 @@ class FieldInspector(QTreeWidget):
         self.header().setSectionResizeMode(0, QHeaderView.Interactive)
         self.header().setSectionResizeMode(2, QHeaderView.Fixed)
         self.setHeaderLabels( ('Field Name', 'Value', 'Edit') );
+        self.setHeaderHidden(True)
         self.field_items = self.addParent(self, 0, 'Field Details', '')
     
         self.addChild(self.field_items, 'X',                  '')
