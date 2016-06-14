@@ -485,6 +485,9 @@ class MainWindow(QMainWindow):
         if Settings.contains('splitter'):
             self.Splitter.restoreState( Settings.value('splitter') )
             
+        if Settings.contains('inssplitter'):
+            self.InspectorSplit.restoreState( Settings.value('inssplitter') )
+            
         self.show()
         
                 
@@ -496,6 +499,7 @@ class MainWindow(QMainWindow):
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
         Settings.setValue( 'inspector', [self.Inspector.columnWidth(0), self.Inspector.columnWidth(1), self.Inspector.columnWidth(2)] )
         Settings.setValue( 'splitter', self.Splitter.saveState() )
+        Settings.setValue( 'inssplitter', self.InspectorSplit.saveState() )
         QWidget.closeEvent(self, event)
         
         
