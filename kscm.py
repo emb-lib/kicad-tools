@@ -296,8 +296,11 @@ class FieldInspector(QTreeWidget):
             if item.data(0, Qt.DisplayRole) == 'Font Italic':
                 item.setData(1, Qt.DisplayRole, f.FontItalic if f else '')
     
-    
+    #---------------------------------------------------------------------------    
+    def column_resize(self, idx, osize, nsize):
+        self.setColumnWidth(idx, nsize)
                     
+                                    
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
     
@@ -405,7 +408,7 @@ class MainWindow(QMainWindow):
                 
         #----------------------------------------------------
         #
-        #    Select View
+        #    Selector
         #
         self.SelectView = QTreeWidget(self)
         self.SelectView.setColumnCount(2)
@@ -434,8 +437,6 @@ class MainWindow(QMainWindow):
         self.InspectorLayout.setSpacing(2)
         
         
-        print(self.InspectorSplit.sizes())
-        
         self.InspectorSplit.addWidget(self.Inspector)
         self.InspectorSplit.addWidget(self.FieldInspector)
         self.InspectorLayout.addWidget(self.InspectorSplit)
@@ -457,6 +458,8 @@ class MainWindow(QMainWindow):
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
 
+        self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
+        
         #----------------------------------------------------
         #
         #    Window
