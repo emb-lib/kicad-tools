@@ -9,6 +9,7 @@ import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
+                             QAbstractItemDelegate,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
@@ -303,6 +304,14 @@ class FieldInspector(QTreeWidget):
             print('Prev: ' + prev.data(0, Qt.DisplayRole))
             #self.closePersistentEditor(prev, 1)
         
+        idx = self.indexFromItem(prev, 1)
+        print('*'*20)
+        editor = self.indexWidget(idx)
+        print(editor)
+        if type(editor) == QLineEdit:
+            self.commitData(editor)
+            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+            
         self.editItem(item, 1)
         self.handle_item(item)    
         self.setCurrentItem(item, 0)
