@@ -17,7 +17,12 @@ from PyQt5.QtGui  import  QIcon, QBrush, QColor
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent
 
 #-------------------------------------------------------------------------------
+colEDIT = 0
+colNAME = 0
+colDATA = 1
+#-------------------------------------------------------------------------------
 class Inspector(QTreeWidget):
+    
     
     load_field = pyqtSignal( [list], [str] )
     
@@ -38,20 +43,20 @@ class Inspector(QTreeWidget):
         super().__init__(parent)
         #self.setAlternatingRowColors(True)
         self.setIndentation(16)
-        self.setColumnCount(3)
+        self.setColumnCount(2)
         self.header().resizeSection(2, 10)
-        self.header().setSectionResizeMode(0, QHeaderView.Interactive)
-        self.header().setSectionResizeMode(2, QHeaderView.Fixed)
+        self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
         #self.header().setStretchLastSection(False)
-        self.setHeaderLabels( ('Property', 'Value', 'Edit') );
+        #self.setHeaderLabels( ('Edit', 'Property', 'Value') );
+        self.setHeaderLabels( ('Property', 'Value') );
         self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
         self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
         
         self.addChild(self.std_items, 'Ref',       '?')
         self.addChild(self.std_items, 'Lib Name',  '~')
-        self.addChild(self.std_items, 'Value',     '~', Qt.ItemIsEditable)
-        self.addChild(self.std_items, 'Footprint', '~', Qt.ItemIsEditable)
-        self.addChild(self.std_items, 'Doc Sheet', '~', Qt.ItemIsEditable)
+        self.addChild(self.std_items, 'Value',     '~')
+        self.addChild(self.std_items, 'Footprint', '~')
+        self.addChild(self.std_items, 'Doc Sheet', '~')
         self.addChild(self.std_items, 'X',         '~')
         self.addChild(self.std_items, 'Y',         '~')
         self.addChild(self.std_items, 'Timestamp', '~')
@@ -76,23 +81,23 @@ class Inspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
         item = QTreeWidgetItem(parent, [title])
-        item.setData(1, Qt.DisplayRole, data)
-        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | flags)
+        item.setData(colDATA, Qt.DisplayRole, data)
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
         
-        if flags & Qt.ItemIsEditable:
-            item.setCheckState (2, Qt.Checked)
-        else:
-            item.setCheckState (2, Qt.Unchecked)
+#       if flags & Qt.ItemIsEditable:
+#           item.setCheckState (colEDIT, Qt.Checked)
+#       else:
+#           item.setCheckState (colEDIT, Qt.Unchecked)
         return item
             
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
-        if item.checkState(2) == Qt.Checked:
-            item.setFlags( item.flags() | Qt.ItemIsEditable)
-        else:
-            item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
+#       if item.checkState(colEDIT) == Qt.Checked:
+#           item.setFlags( item.flags() | Qt.ItemIsEditable)
+#       else:
+#           item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
         
-        param = item.data(0, Qt.DisplayRole)
+        param = item.data(colNAME, Qt.DisplayRole)
         comp = self.comps[0]
         if item.parent() == self.topLevelItem(0):
             self.load_field.emit([comp, param])
@@ -102,11 +107,11 @@ class Inspector(QTreeWidget):
             
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
-        self.item_clicked(item, 0)
+        self.item_clicked(item, colNAME)
                 
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
-        self.editItem(item, 1)
+        self.editItem(item, colDATA)
             
     #---------------------------------------------------------------------------    
     def load_cmp(self, refs):
@@ -120,29 +125,29 @@ class Inspector(QTreeWidget):
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
 
-            if item.data(0, Qt.DisplayRole) == 'Ref':
-                item.setData(1, Qt.DisplayRole, comp.Ref)
+            if item.data(colNAME, Qt.DisplayRole) == 'Ref':
+                item.setData(colDATA, Qt.DisplayRole, comp.Ref)
                 
-            if item.data(0, Qt.DisplayRole) == 'Lib Name':
-                item.setData(1, Qt.DisplayRole, comp.LibName)
+            if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
+                item.setData(colDATA, Qt.DisplayRole, comp.LibName)
                 
-            if item.data(0, Qt.DisplayRole) == 'Value':
-                item.setData(1, Qt.DisplayRole, comp.Fields[1].Text)
+            if item.data(colNAME, Qt.DisplayRole) == 'Value':
+                item.setData(colDATA, Qt.DisplayRole, comp.Fields[1].Text)
                 
-            if item.data(0, Qt.DisplayRole) == 'Footprint':
-                item.setData(1, Qt.EditRole, comp.Fields[2].Text)
+            if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
+                item.setData(colDATA, Qt.EditRole, comp.Fields[2].Text)
                 
-            if item.data(0, Qt.DisplayRole) == 'Doc Sheet':
-                item.setData(1, Qt.DisplayRole, comp.Fields[3].Text)
+            if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
+                item.setData(colDATA, Qt.DisplayRole, comp.Fields[3].Text)
                 
-            if item.data(0, Qt.DisplayRole) == 'X':
-                item.setData(1, Qt.DisplayRole, comp.PosX)
+            if item.data(colNAME, Qt.DisplayRole) == 'X':
+                item.setData(colDATA, Qt.DisplayRole, comp.PosX)
                                 
-            if item.data(0, Qt.DisplayRole) == 'Y':
-                item.setData(1, Qt.DisplayRole, comp.PosY)
+            if item.data(colNAME, Qt.DisplayRole) == 'Y':
+                item.setData(colDATA, Qt.DisplayRole, comp.PosY)
                 
-            if item.data(0, Qt.DisplayRole) == 'Timestamp':
-                item.setData(1, Qt.DisplayRole, comp.Timestamp)
+            if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
+                item.setData(colDATA, Qt.DisplayRole, comp.Timestamp)
         
         self.topLevelItem(1).takeChildren()
                         
@@ -227,11 +232,10 @@ class FieldInspector(QTreeWidget):
         self.installEventFilter(self.EventFilter(self))
         
         self.setIndentation(16)
-        self.setColumnCount(3)
+        self.setColumnCount(2)
         self.header().resizeSection(2, 10)
-        self.header().setSectionResizeMode(0, QHeaderView.Interactive)
-        self.header().setSectionResizeMode(2, QHeaderView.Fixed)
-        self.setHeaderLabels( ('Field Name', 'Value', 'Edit') );
+        self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
+        self.setHeaderLabels( ('Field Name', 'Value' ) );
         self.setHeaderHidden(True)
         
         self.field_items = self.addParent(self, 0, 'Field Details', '')
@@ -264,13 +268,9 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
         item = self.TreeWidgetItem(parent, [title])
-        item.setData(1, Qt.DisplayRole, data)
-        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | flags)
+        item.setData(colDATA, Qt.DisplayRole, data)
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
     
-        if flags & Qt.ItemIsEditable:
-            item.setCheckState (2, Qt.Checked)
-        else:
-            item.setCheckState (2, Qt.Unchecked)
         return item
     
     #---------------------------------------------------------------------------    
@@ -286,25 +286,20 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
-        if item.checkState(2) == Qt.Checked:
-            item.setFlags( item.flags() | Qt.ItemIsEditable)
-        else:
-            item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
-   
-        if type(self.itemWidget(item, 1) ) is TComboBox:
-            self.cb.setEnabled( item.checkState(2) == Qt.Checked )
+        pass
+       # if type(self.itemWidget(item, colDATA) ) is TComboBox:
+       #     self.cb.setEnabled( item.checkState(colEDIT) == Qt.Checked )
             
        # self.view_field()
             
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         
-        print('Curr: ' + item.data(0, Qt.DisplayRole))
+        print('Curr: ' + item.data(colNAME, Qt.DisplayRole))
         if prev:
-            print('Prev: ' + prev.data(0, Qt.DisplayRole))
-            #self.closePersistentEditor(prev, 1)
+            print('Prev: ' + prev.data(colNAME, Qt.DisplayRole))
         
-        idx = self.indexFromItem(prev, 1)
+        idx = self.indexFromItem(prev, colDATA)
         print('*'*20)
         editor = self.indexWidget(idx)
         print(editor)
@@ -312,14 +307,13 @@ class FieldInspector(QTreeWidget):
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
             
-        self.editItem(item, 1)
+        self.editItem(item, colDATA)
         self.handle_item(item)    
-        self.setCurrentItem(item, 0)
-    #    self.item_clicked(item, 0)
+        self.setCurrentItem(item, colNAME)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
-        self.editItem(item, 1)
+        self.editItem(item, colDATA)
     
     #---------------------------------------------------------------------------    
     def load_field_slot(self, d):
@@ -330,38 +324,18 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def handle_item(self, item):
-        if item.data(0, Qt.DisplayRole) == 'X':
-            self.field.PosX = item.data(1, Qt.DisplayRole)
+        if item.data(colNAME, Qt.DisplayRole) == 'X':
+            self.field.PosX = item.data(colDATA, Qt.DisplayRole)
             print('X: ' + str(self.field.PosX))
 
-        if item.data(0, Qt.DisplayRole) == 'Y':
-            self.field.PosY = item.data(1, Qt.DisplayRole)
+        if item.data(colNAME, Qt.DisplayRole) == 'Y':
+            self.field.PosY = item.data(colDATA, Qt.DisplayRole)
             print('Y: ' + str(self.field.PosY))
 
-        if item.data(0, Qt.DisplayRole) == 'Orientation':
-            self.cb.setEnabled( item.checkState(2) == Qt.Checked )
-            print('Combo: ' + str(item.checkState(2)))
+        if item.data(colNAME, Qt.DisplayRole) == 'Orientation':
             self.field.Orientation = 'H' if self.cb.currentIndex() == 0 else 'V'
             if self.cb:
                 print('Orient: ' + str(self.cb.currentIndex()) )
-
-#       if item.data(0, Qt.DisplayRole) == 'Visible':
-#           item.setData(1, Qt.DisplayRole, str(f.Visible) if f else '')
-#
-#       if item.data(0, Qt.DisplayRole) == 'HJustify':
-#           item.setData(1, Qt.DisplayRole, f.HJustify if f else '')
-#
-#       if item.data(0, Qt.DisplayRole) == 'VJustify':
-#           item.setData(1, Qt.DisplayRole, f.VJustify if f else '')
-#
-#       if item.data(0, Qt.DisplayRole) == 'Font Size':
-#           item.setData(1, Qt.DisplayRole, f.FontSize if f else '')
-#
-#       if item.data(0, Qt.DisplayRole) == 'Font Bold':
-#           item.setData(1, Qt.DisplayRole, f.FontBold if f else '')
-#
-#       if item.data(0, Qt.DisplayRole) == 'Font Italic':
-#           item.setData(1, Qt.DisplayRole, f.FontItalic if f else '')
         
     #---------------------------------------------------------------------------    
     def view_field(self):
@@ -385,17 +359,17 @@ class FieldInspector(QTreeWidget):
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
     
-            if item.data(0, Qt.DisplayRole) == 'X':
-                item.setData(1, Qt.DisplayRole, f.PosX if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'X':
+                item.setData(colDATA, Qt.DisplayRole, f.PosX if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'Y':
-                item.setData(1, Qt.DisplayRole, f.PosY if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'Y':
+                item.setData(colDATA, Qt.DisplayRole, f.PosY if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'Orientation':
+            if item.data(colNAME, Qt.DisplayRole) == 'Orientation':
     
                 self.cb = TComboBox(self)
                 if f:
-                    self.cb.setEnabled( item.checkState(2) == Qt.Checked )
+                    self.cb.setEnabled(True)
                     self.cb.addItems( ['Horizontal', 'Vertical'] )
                     self.cb.setCurrentIndex( 0 if f.Orientation == 'H' else 1 ) 
                     self.setItemWidget(item, 1, self.cb)
@@ -404,23 +378,23 @@ class FieldInspector(QTreeWidget):
 #               if self.cb:
 #                   print(self.cb.currentIndex())
     
-            if item.data(0, Qt.DisplayRole) == 'Visible':
-                item.setData(1, Qt.DisplayRole, str(f.Visible) if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'Visible':
+                item.setData(colDATA, Qt.DisplayRole, str(f.Visible) if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'HJustify':
-                item.setData(1, Qt.DisplayRole, f.HJustify if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'HJustify':
+                item.setData(colDATA, Qt.DisplayRole, f.HJustify if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'VJustify':
-                item.setData(1, Qt.DisplayRole, f.VJustify if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'VJustify':
+                item.setData(colDATA, Qt.DisplayRole, f.VJustify if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'Font Size':
-                item.setData(1, Qt.DisplayRole, f.FontSize if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'Font Size':
+                item.setData(colDATA, Qt.DisplayRole, f.FontSize if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'Font Bold':
-                item.setData(1, Qt.DisplayRole, f.FontBold if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'Font Bold':
+                item.setData(colDATA, Qt.DisplayRole, f.FontBold if f else '')
     
-            if item.data(0, Qt.DisplayRole) == 'Font Italic':
-                item.setData(1, Qt.DisplayRole, f.FontItalic if f else '')
+            if item.data(colNAME, Qt.DisplayRole) == 'Font Italic':
+                item.setData(colDATA, Qt.DisplayRole, f.FontItalic if f else '')
     
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
