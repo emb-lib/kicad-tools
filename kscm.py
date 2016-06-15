@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui  import  QIcon, QBrush, QColor
-from PyQt5.QtCore import QSettings, pyqtSignal
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent
 
 #-------------------------------------------------------------------------------
 class Inspector(QTreeWidget):
@@ -151,6 +151,27 @@ class Inspector(QTreeWidget):
         
             
 #-------------------------------------------------------------------------------    
+class TComboBox(QComboBox):
+    
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setFocusPolicy(Qt.StrongFocus)
+        print('TComboBox')
+
+    def keyPressEvent(self, e):
+        print( e.key() )
+        if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
+            print('Up/Down')
+            print(type(self.parent()))
+            QApplication.sendEvent( self.parent(), e ) 
+            #self.parent().keyPressEvent(e)
+            return
+            
+        QComboBox.keyPressEvent(self, e)
+
+        #return e
+        
+#-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
 
     #---------------------------------------------------------------------------    
@@ -165,8 +186,45 @@ class FieldInspector(QTreeWidget):
                 return QStyledItemDelegate.createEditor(self, parent, option, idx)
 
     #---------------------------------------------------------------------------    
+    class TreeWidgetItem(QTreeWidgetItem):
+        
+        def __init__(self, parent, title):
+            super().__init__(parent, title)
+            
+        def focusOutEvent(self, event):
+            print(event)
+            
+            
+    #---------------------------------------------------------------------------    
+    class EventFilter(QObject):
+        def __init__(self, parent):
+            super().__init__(parent)
+
+        def eventFilter(self, obj, e):
+            if e.type() == QEvent.KeyPress:
+                print('Key Press')
+                
+                if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
+                    action = QAbstractItemView.MoveDown if e.key() == Qt.Key_Down else QAbstractItemView.MoveUp
+                    print('Down') if e.key() == Qt.Key_Down else print('Up')
+                    idx = obj.moveCursor(action, Qt.NoModifier)
+                    item = obj.itemFromIndex(idx)
+                    obj.setCurrentItem(item)
+                    return True
+                
+                
+#               if type(obj.itemWidget(obj.currentItem(), 1) ) is TComboBox:
+#                   print('Combo')
+#                   return True
+
+            return False
+
+    #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
+        
+        self.installEventFilter(self.EventFilter(self))
+        
         self.setIndentation(16)
         self.setColumnCount(3)
         self.header().resizeSection(2, 10)
@@ -174,6 +232,7 @@ class FieldInspector(QTreeWidget):
         self.header().setSectionResizeMode(2, QHeaderView.Fixed)
         self.setHeaderLabels( ('Field Name', 'Value', 'Edit') );
         self.setHeaderHidden(True)
+        
         self.field_items = self.addParent(self, 0, 'Field Details', '')
     
         self.addChild(self.field_items, 'X',                  '')
@@ -203,7 +262,7 @@ class FieldInspector(QTreeWidget):
     
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
-        item = QTreeWidgetItem(parent, [title])
+        item = self.TreeWidgetItem(parent, [title])
         item.setData(1, Qt.DisplayRole, data)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | flags)
     
@@ -214,17 +273,40 @@ class FieldInspector(QTreeWidget):
         return item
     
     #---------------------------------------------------------------------------    
+#   def keyPressEvent(self, e):
+#       if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
+#           action = QAbstractItemView.MoveDown if e.key() == Qt.Key_Down else QAbstractItemView.MoveUp
+#           print('Down') if e.key() == Qt.Key_Down else print('Up')
+#           idx = self.moveCursor(action, Qt.NoModifier)
+#           item = self.itemFromIndex(idx)
+#           self.setCurrentItem(item)
+#       else:
+#           QTreeWidget.keyPressEvent(self, e)
+        
+    #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
         if item.checkState(2) == Qt.Checked:
             item.setFlags( item.flags() | Qt.ItemIsEditable)
         else:
             item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
-    
-        self.load_field()
+   
+        if type(self.itemWidget(item, 1) ) is TComboBox:
+            self.cb.setEnabled( item.checkState(2) == Qt.Checked )
+            
+       # self.view_field()
             
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
-        self.item_clicked(item, 0)
+        
+        print('Curr: ' + item.data(0, Qt.DisplayRole))
+        if prev:
+            print('Prev: ' + prev.data(0, Qt.DisplayRole))
+            #self.closePersistentEditor(prev, 1)
+        
+        self.editItem(item, 1)
+        self.handle_item(item)    
+        self.setCurrentItem(item, 0)
+    #    self.item_clicked(item, 0)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
@@ -235,10 +317,45 @@ class FieldInspector(QTreeWidget):
         self.comp  = d[0]
         self.param = d[1]
         
-        self.load_field()
-
+        self.view_field()
+        
     #---------------------------------------------------------------------------    
-    def load_field(self):
+    def handle_item(self, item):
+        if item.data(0, Qt.DisplayRole) == 'X':
+            self.field.PosX = item.data(1, Qt.DisplayRole)
+            print('X: ' + str(self.field.PosX))
+
+        if item.data(0, Qt.DisplayRole) == 'Y':
+            self.field.PosY = item.data(1, Qt.DisplayRole)
+            print('Y: ' + str(self.field.PosY))
+
+        if item.data(0, Qt.DisplayRole) == 'Orientation':
+            self.cb.setEnabled( item.checkState(2) == Qt.Checked )
+            print('Combo: ' + str(item.checkState(2)))
+            self.field.Orientation = 'H' if self.cb.currentIndex() == 0 else 'V'
+            if self.cb:
+                print('Orient: ' + str(self.cb.currentIndex()) )
+
+#       if item.data(0, Qt.DisplayRole) == 'Visible':
+#           item.setData(1, Qt.DisplayRole, str(f.Visible) if f else '')
+#
+#       if item.data(0, Qt.DisplayRole) == 'HJustify':
+#           item.setData(1, Qt.DisplayRole, f.HJustify if f else '')
+#
+#       if item.data(0, Qt.DisplayRole) == 'VJustify':
+#           item.setData(1, Qt.DisplayRole, f.VJustify if f else '')
+#
+#       if item.data(0, Qt.DisplayRole) == 'Font Size':
+#           item.setData(1, Qt.DisplayRole, f.FontSize if f else '')
+#
+#       if item.data(0, Qt.DisplayRole) == 'Font Bold':
+#           item.setData(1, Qt.DisplayRole, f.FontBold if f else '')
+#
+#       if item.data(0, Qt.DisplayRole) == 'Font Italic':
+#           item.setData(1, Qt.DisplayRole, f.FontItalic if f else '')
+        
+    #---------------------------------------------------------------------------    
+    def view_field(self):
         
         comp  = self.comp
         param = self.param
@@ -256,7 +373,6 @@ class FieldInspector(QTreeWidget):
             
         self.field = f
             
-        
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
     
@@ -268,15 +384,16 @@ class FieldInspector(QTreeWidget):
     
             if item.data(0, Qt.DisplayRole) == 'Orientation':
     
-                self.cb = QComboBox(self)
+                self.cb = TComboBox(self)
                 if f:
                     self.cb.setEnabled( item.checkState(2) == Qt.Checked )
-                    self.cb.addItems( ['Vertical', 'Horizontal'] )
+                    self.cb.addItems( ['Horizontal', 'Vertical'] )
+                    self.cb.setCurrentIndex( 0 if f.Orientation == 'H' else 1 ) 
                     self.setItemWidget(item, 1, self.cb)
                 else:
                     self.removeItemWidget(item, 1)
-                if self.cb:
-                    print(self.cb.currentIndex())
+#               if self.cb:
+#                   print(self.cb.currentIndex())
     
             if item.data(0, Qt.DisplayRole) == 'Visible':
                 item.setData(1, Qt.DisplayRole, str(f.Visible) if f else '')
@@ -704,6 +821,12 @@ if __name__ == '__main__':
                         QTreeWidget::item:hover {\
                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
                            border: 1px solid #bfcde4;\
+                        }\
+                        QComboBox {\
+                            border: 1px solid gray;\
+                            border-radius: 1px;\
+                            padding: 1px 18px 1px 3px;\
+                            min-width: 6em;\
                         }\
                       '
                       )
