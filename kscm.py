@@ -321,6 +321,8 @@ class FieldInspector(QTreeWidget):
         self.currentItemChanged.connect(self.item_changed)
         self.itemActivated.connect(self.item_activated)
     
+        self.field = None
+        
         #self.setItemDelegate(self.ItemDelegate(self))
     
     #---------------------------------------------------------------------------    
@@ -351,7 +353,7 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
-        pass
+        print('item_clicked')
        # if type(self.itemWidget(item, colDATA) ) is TComboBox:
        #     self.cb.setEnabled( item.checkState(colEDIT) == Qt.Checked )
             
@@ -360,6 +362,9 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         
+        if not self.field:
+            return 
+                
         idx = self.indexFromItem(prev, colDATA)
         print('*'*20)
         editor = self.indexWidget(idx)
@@ -372,11 +377,13 @@ class FieldInspector(QTreeWidget):
         self.editItem(item, colDATA)
         self.handle_item(item)    
         self.setCurrentItem(item, colNAME)
-        selModel = self.selectionModel()
-        selModel.setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
+        self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
+        if not self.field:
+            return 
+
         self.editItem(item, colDATA)
     
     #---------------------------------------------------------------------------    
@@ -388,6 +395,9 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def handle_item(self, item):
+        if not self.field:
+            return 
+            
         if item.data(colNAME, Qt.DisplayRole) == 'X':
             self.field.PosX = item.data(colDATA, Qt.DisplayRole)
 
