@@ -799,14 +799,22 @@ if __name__ == '__main__':
                            left: 20px;\
                         }\
                         QTableWidget::item:selected {\
+                            color: white;\
+                            background-color: green;\
                             border: 1px solid #567dbc;\
                         }\
                         QTableWidget::item:selected:active{\
+                            color: white;\
                             background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
+                            background: navy;\
                         }\
                         QTableWidget::item:selected:!active {\
                             color: black;\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3DB9E0, stop: 1 #D8ECF3);\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);\
+                        }\
+                        QLineEdit{\
+                            color: white;\
+                            selection-background-color: navy;\
                         }\
                         Inspector {\
                         alternate-background-color: #ffffd0;\
@@ -856,10 +864,11 @@ if __name__ == '__main__':
                         }\
                         QTreeWidget::item:selected:active{\
                             background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
+                            background: navy;\
                         }\
                         QTreeWidget::item:selected:!active {\
                             color: black;\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3DB9E0, stop: 1 #D8ECF3);\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);\
                         }\
                         QTreeWidget::branch {\
                             color: black;\
@@ -870,10 +879,19 @@ if __name__ == '__main__':
                             border-radius: 1px;\
                             padding: 1px 18px 1px 3px;\
                             min-width: 6em;\
+                            color: white;\
+                            background: navy;\
                         }\
+                       QComboBox QAbstractItemView{\
+                           background: gray;\
+                       }\
                       '
                       )
     
+#   QComboBox:!editable:on{\
+#       background: navy;\
+#   }\
+
     
 #   QTreeWidget::item:hover {\
 #      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
