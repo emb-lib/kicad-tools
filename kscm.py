@@ -253,6 +253,9 @@ class FieldInspector(QTreeWidget):
             editor.set_index(value)
             
     #---------------------------------------------------------------------------    
+    #
+    #              Title              Field Name         Delegate         Delegate Data
+    #
     ItemsTable = [ ['X',                'PosX',        'TextItemDelegate', None],
                    ['Y',                'PosY',        'TextItemDelegate', None],
                    ['Orientation',      'Orientation', 'CBoxItemDelegate', ['Horizontal', 'Vertical']],
@@ -260,7 +263,7 @@ class FieldInspector(QTreeWidget):
                    ['Horizontal Align', 'HJustify',    'CBoxItemDelegate', ['Left', 'Center', 'Right']],
                    ['Vertical Align',   'VJustify',    'CBoxItemDelegate', ['Top', 'Center', 'Bottom']],
                    ['Font Size',        'FontSize',    'TextItemDelegate', None],
-                   ['Font Bold',        'Font Bold',   'CBoxItemDelegate', ['Yes', 'No']],
+                   ['Font Bold',        'FontBold',    'CBoxItemDelegate', ['Yes', 'No']],
                    ['Font Italic',      'FontItalic',  'CBoxItemDelegate', ['Yes', 'No']] ]
     
     #---------------------------------------------------------------------------    
@@ -288,11 +291,6 @@ class FieldInspector(QTreeWidget):
                     item = obj.itemFromIndex(idx)
                     obj.setCurrentItem(item)
                     return True
-                
-                
-#               if type(obj.itemWidget(obj.currentItem(), 1) ) is TComboBox:
-#                   print('Combo')
-#                   return True
 
             return False
 
@@ -312,19 +310,6 @@ class FieldInspector(QTreeWidget):
         self.field_items = self.addParent(self, 0, 'Field Details', '')
     
         print('#'*30)
-#       self.addChild(self.field_items, 'X',                '')
-#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.TextItemDelegate(self))
-#       self.addChild(self.field_items, 'Y',                '')
-#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.TextItemDelegate(self))
-#       self.addChild(self.field_items, 'Orientation',      '')
-#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.CBoxItemDelegate(self, ['Horizontal', 'Vertical']))
-#       self.addChild(self.field_items, 'Visible',          '')
-#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.ItemDelegate(self))
-#       self.addChild(self.field_items, 'Horizontal Align', '')
-#       self.addChild(self.field_items, 'Vertical Align',   '')
-#       self.addChild(self.field_items, 'Font Size',        '')
-#       self.addChild(self.field_items, 'Font Bold',        '')
-#       self.addChild(self.field_items, 'Font Italic',      '')
 
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.field_items, i[0], '')
@@ -342,7 +327,6 @@ class FieldInspector(QTreeWidget):
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
         item.setData(column, Qt.UserRole, data)
-        #item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         item.setExpanded (True)
         item.setFlags(Qt.ItemIsEnabled)
         return item
@@ -379,14 +363,6 @@ class FieldInspector(QTreeWidget):
         idx = self.indexFromItem(prev, colDATA)
         print('*'*20)
         editor = self.indexWidget(idx)
-
-#       if type(editor) == QLineEdit:
-#           self.commitData(editor)
-#           self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-#
-#       if type(editor) == TComboBox:
-#           self.commitData(editor)
-#           self.closeEditor(editor, QAbstractItemDelegate.NoHint)
             
         if editor:
             self.commitData(editor)
@@ -442,57 +418,6 @@ class FieldInspector(QTreeWidget):
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
-#       for i in range( self.topLevelItem(0).childCount() ):
-#           item = self.topLevelItem(0).child(i)
-#
-#           if f:
-#               self.editItem(item, colDATA)
-#               idx = self.indexFromItem(item, colDATA)
-#               editor = self.indexWidget(idx)
-#               if editor:
-#                   self.commitData(editor)
-#                   self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-#           else:
-                
-                
-                    
-#           if item.data(colNAME, Qt.DisplayRole) == 'X':
-#               item.setData(colDATA, Qt.DisplayRole, f.PosX if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Y':
-#               item.setData(colDATA, Qt.DisplayRole, f.PosY if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Orientation':
-#               item.setData(colDATA, Qt.DisplayRole, f.Orientation if f else '')
-                
-#               self.cb = TComboBox(self)
-#               if f:
-#                   self.cb.setEnabled(True)
-#                   self.cb.addItems( ['Horizontal', 'Vertical'] )
-#                   self.cb.setCurrentIndex( 0 if f.Orientation == 'H' else 1 )
-#                   self.setItemWidget(item, 1, self.cb)
-#               else:
-#                   self.removeItemWidget(item, 1)
-#               if self.cb:
-#                   print(self.cb.currentIndex())
-    
-#           if item.data(colNAME, Qt.DisplayRole) == 'Visible':
-#               item.setData(colDATA, Qt.DisplayRole, str(f.Visible) if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'HJustify':
-#               item.setData(colDATA, Qt.DisplayRole, f.HJustify if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'VJustify':
-#               item.setData(colDATA, Qt.DisplayRole, f.VJustify if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Font Size':
-#               item.setData(colDATA, Qt.DisplayRole, f.FontSize if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Font Bold':
-#               item.setData(colDATA, Qt.DisplayRole, f.FontBold if f else '')
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Font Italic':
-#               item.setData(colDATA, Qt.DisplayRole, f.FontItalic if f else '')
     
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
@@ -727,15 +652,15 @@ class ComponentField:
             self.Name = rec[11]
             
         self.Text        = rec[1]
-        self.Orientation = rec[2]
+        self.Orientation = 'Horizontal' if rec[2] == 'H' else 'Vertical'
         self.PosX        = rec[3]
         self.PosY        = rec[4]
         self.FontSize    = rec[5]
-        self.Visible     = True if int(rec[6]) == 0 else False
-        self.HJustify    = rec[7]
-        self.VJustify    = rec[8]
-        self.FontItalic  = rec[9]
-        self.FontBold    = rec[10]
+        self.Visible     = 'Yes'  if int(rec[6]) == 0 else 'No'
+        self.HJustify    = 'Left' if rec[7]  == 'L' else 'Center' if rec[7] == 'C' else 'Right'
+        self.VJustify    = 'Top'  if rec[8]  == 'T' else 'Center' if rec[8] == 'C' else 'Bottom'
+        self.FontItalic  = 'Yes'  if rec[9]  == 'I' else 'No'
+        self.FontBold    = 'Yes'  if rec[10] == 'B' else 'No'
     
 class Component:
     
