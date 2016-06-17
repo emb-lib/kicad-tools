@@ -9,12 +9,12 @@ import yaml
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate,
+                             QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui  import  QIcon, QBrush, QColor
-from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex
 
 #-------------------------------------------------------------------------------
 colEDIT = 0
@@ -175,11 +175,20 @@ class TComboBox(QComboBox):
             
         QComboBox.keyPressEvent(self, e)
 
-        #return e
+    def set_index(self, text):
+        items = [self.itemText(i) for i in range(self.count()) ]
+        self.setCurrentIndex( items.index(text) )
         
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
+    class FieldParam:
+    
+        def __init__(self, name, title, editor, values):
+            self.name   = name
+            self.title  = title
+            self.editor = editor
+            self.values = values
     
     #---------------------------------------------------------------------------    
     class ItemDelegate(QStyledItemDelegate):
@@ -204,19 +213,56 @@ class FieldInspector(QTreeWidget):
                     cb.setEnabled(True)
                     cb.addItems( self.params[param][1] )
                     cb.setCurrentIndex( 0 ) # if f.Orientation == 'H' else 1 )
+                    f = parent.parent().field
+                    print(eval('f.' + param) )
                     return cb
-                    
-
-
-#               tli = parent.parent().topLevelItem(0)
-#               print(tli.data(0, Qt.DisplayRole) )
-#               print(tli.childCount() )
-#               for i in range( tli.childCount() ):
-#                   print(tli.child(i).data(0, Qt.DisplayRole))
-                
 
                 return QStyledItemDelegate.createEditor(self, parent, option, idx)
 
+        def setEditorData(self, editor, idx):
+            print(editor.metaObject().className() )
+
+    #---------------------------------------------------------------------------    
+    class TextItemDelegate(QStyledItemDelegate):
+
+
+        def __init__(self, parent, values):
+            super().__init__(parent)
+
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                return QStyledItemDelegate.createEditor(self, parent, option, idx)
+    
+    #---------------------------------------------------------------------------    
+    class CBoxItemDelegate(QStyledItemDelegate):
+
+        def __init__(self, parent, values):
+            super().__init__(parent)
+            self.values = values
+
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                editor = TComboBox(parent.parent())
+                editor.setEnabled(True)
+                editor.addItems( self.values )
+                return editor
+
+        def setEditorData(self, editor, idx):
+            print(editor.metaObject().className() )
+            value = idx.model().data(idx, Qt.EditRole)
+            editor.set_index(value)
+            
+    #---------------------------------------------------------------------------    
+    ItemsTable = [ ['X',                'PosX',        'TextItemDelegate', None],
+                   ['Y',                'PosY',        'TextItemDelegate', None],
+                   ['Orientation',      'Orientation', 'CBoxItemDelegate', ['Horizontal', 'Vertical']],
+                   ['Visible',          'Visible',     'CBoxItemDelegate', ['Yes', 'No']],
+                   ['Horizontal Align', 'HJustify',    'CBoxItemDelegate', ['Left', 'Center', 'Right']],
+                   ['Vertical Align',   'VJustify',    'CBoxItemDelegate', ['Top', 'Center', 'Bottom']],
+                   ['Font Size',        'FontSize',    'TextItemDelegate', None],
+                   ['Font Bold',        'Font Bold',   'CBoxItemDelegate', ['Yes', 'No']],
+                   ['Font Italic',      'FontItalic',  'CBoxItemDelegate', ['Yes', 'No']] ]
+    
     #---------------------------------------------------------------------------    
     class TreeWidgetItem(QTreeWidgetItem):
         
@@ -265,21 +311,32 @@ class FieldInspector(QTreeWidget):
         
         self.field_items = self.addParent(self, 0, 'Field Details', '')
     
-        self.addChild(self.field_items, 'X',                '')
-        self.addChild(self.field_items, 'Y',                '')
-        self.addChild(self.field_items, 'Orientation',      '')
-        self.addChild(self.field_items, 'Visible',          '')
-        self.addChild(self.field_items, 'Horizontal Align', '')
-        self.addChild(self.field_items, 'Vertical Align',   '')
-        self.addChild(self.field_items, 'Font Size',        '')
-        self.addChild(self.field_items, 'Font Bold',        '')
-        self.addChild(self.field_items, 'Font Italic',      '')
+        print('#'*30)
+#       self.addChild(self.field_items, 'X',                '')
+#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.TextItemDelegate(self))
+#       self.addChild(self.field_items, 'Y',                '')
+#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.TextItemDelegate(self))
+#       self.addChild(self.field_items, 'Orientation',      '')
+#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.CBoxItemDelegate(self, ['Horizontal', 'Vertical']))
+#       self.addChild(self.field_items, 'Visible',          '')
+#       self.setItemDelegateForRow(self.topLevelItem(0).childCount(), self.ItemDelegate(self))
+#       self.addChild(self.field_items, 'Horizontal Align', '')
+#       self.addChild(self.field_items, 'Vertical Align',   '')
+#       self.addChild(self.field_items, 'Font Size',        '')
+#       self.addChild(self.field_items, 'Font Bold',        '')
+#       self.addChild(self.field_items, 'Font Italic',      '')
+
+        for idx, i in enumerate(self.ItemsTable):
+            self.addChild(self.field_items, i[0], '')
+            self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
+            
+        print('#'*30)
     
         self.itemClicked.connect(self.item_clicked)
         self.currentItemChanged.connect(self.item_changed)
         self.itemActivated.connect(self.item_activated)
     
-        self.setItemDelegate(self.ItemDelegate(self))
+        #self.setItemDelegate(self.ItemDelegate(self))
     
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
@@ -295,7 +352,6 @@ class FieldInspector(QTreeWidget):
         item = self.TreeWidgetItem(parent, [title])
         item.setData(colDATA, Qt.DisplayRole, data)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
-    
         return item
     
     #---------------------------------------------------------------------------    
@@ -320,22 +376,23 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         
-#       print('Curr: ' + item.data(colNAME, Qt.DisplayRole))
-#       if prev:
-#           print('Prev: ' + prev.data(colNAME, Qt.DisplayRole))
-        
         idx = self.indexFromItem(prev, colDATA)
         print('*'*20)
         editor = self.indexWidget(idx)
-        #print(editor)
-        if type(editor) == QLineEdit:
+
+#       if type(editor) == QLineEdit:
+#           self.commitData(editor)
+#           self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+#
+#       if type(editor) == TComboBox:
+#           self.commitData(editor)
+#           self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+            
+        if editor:
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
             
-        if type(editor) == TComboBox:
-            self.commitData(editor)
-            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-            
+                        
         self.editItem(item, colDATA)
         self.handle_item(item)    
         self.setCurrentItem(item, colNAME)
@@ -349,25 +406,18 @@ class FieldInspector(QTreeWidget):
         self.comp  = d[0]
         self.param = d[1]
         
-        self.view_field()
+        self.load_field()
         
     #---------------------------------------------------------------------------    
     def handle_item(self, item):
         if item.data(colNAME, Qt.DisplayRole) == 'X':
             self.field.PosX = item.data(colDATA, Qt.DisplayRole)
-            #print('X: ' + str(self.field.PosX))
 
         if item.data(colNAME, Qt.DisplayRole) == 'Y':
             self.field.PosY = item.data(colDATA, Qt.DisplayRole)
-           # print('Y: ' + str(self.field.PosY))
 
-#       if item.data(colNAME, Qt.DisplayRole) == 'Orientation':
-#           self.field.Orientation = 'H' if self.cb.currentIndex() == 0 else 'V'
-#           if self.cb:
-#               print('Orient: ' + str(self.cb.currentIndex()) )
-        
     #---------------------------------------------------------------------------    
-    def view_field(self):
+    def load_field(self):
         
         comp  = self.comp
         param = self.param
@@ -377,7 +427,7 @@ class FieldInspector(QTreeWidget):
         elif param == 'Value':
             f = self.comp.Fields[1]
         elif param == 'Footprint':
-            f =  self.comp.Fields[2]
+            f = self.comp.Fields[2]
         elif param == 'Doc Sheet':
             f = self.comp.Fields[3]
         else:
@@ -387,24 +437,23 @@ class FieldInspector(QTreeWidget):
             
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
-    
             if f:
-                self.editItem(item, colDATA)
-                idx = self.indexFromItem(item, colDATA)
-                editor = self.indexWidget(idx)
-                if editor:
-                    self.commitData(editor)
-                    self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-                    
-#               if type(editor) == QLineEdit:
-#                   self.commitData(editor)
-#                   self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-#
-#               if type(editor) == TComboBox:
-#                   self.commitData(editor)
-#                   self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+                item.setData( colDATA, Qt.DisplayRole, eval('f.' + self.ItemsTable[i][1]) )
             else:
-                item.setData(colDATA, Qt.DisplayRole, '')
+                item.setData( colDATA, Qt.DisplayRole, '' )
+                    
+#       for i in range( self.topLevelItem(0).childCount() ):
+#           item = self.topLevelItem(0).child(i)
+#
+#           if f:
+#               self.editItem(item, colDATA)
+#               idx = self.indexFromItem(item, colDATA)
+#               editor = self.indexWidget(idx)
+#               if editor:
+#                   self.commitData(editor)
+#                   self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+#           else:
+                
                 
                     
 #           if item.data(colNAME, Qt.DisplayRole) == 'X':
