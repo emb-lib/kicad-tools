@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui  import  QIcon, QBrush, QColor
-from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 
 #-------------------------------------------------------------------------------
 colEDIT = 0
@@ -307,7 +307,7 @@ class FieldInspector(QTreeWidget):
         self.setHeaderLabels( ('Field Name', 'Value' ) );
         self.setHeaderHidden(True)
         
-        self.field_items = self.addParent(self, 0, 'Field Details', '')
+        self.field_items = self.addParent(self, 0, 'Field', '')
     
         print('#'*30)
 
@@ -372,6 +372,8 @@ class FieldInspector(QTreeWidget):
         self.editItem(item, colDATA)
         self.handle_item(item)    
         self.setCurrentItem(item, colNAME)
+        selModel = self.selectionModel()
+        selModel.setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
@@ -808,7 +810,7 @@ if __name__ == '__main__':
                         }\
                         FieldInspector::item:has-children {\
                            left: 18px;\
-                           background-color: #21E96C;\
+                           background-color: #96F9BB;\
                            border: 1px solid #d9d9d9;\
                            border-top-color: #d9d9d9;\
                            border-left-color: transparent;\
