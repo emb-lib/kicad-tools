@@ -119,7 +119,7 @@ class Inspector(QTreeWidget):
         self.comps = refs[0]
         comp = self.comps[0]
         
-        print( (comp.__dict__) )
+        #print( (comp.__dict__) )
         #print(self.topLevelItem(0).childCount())
         
         for i in range( self.topLevelItem(0).childCount() ):
@@ -152,7 +152,7 @@ class Inspector(QTreeWidget):
         self.topLevelItem(1).takeChildren()
                         
         for f in comp.Fields[4:]:
-            print( f.InnerCode )
+            #print( f.InnerCode )
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
         
             
@@ -162,13 +162,13 @@ class TComboBox(QComboBox):
     def __init__(self, parent):
         super().__init__(parent)
         self.setFocusPolicy(Qt.StrongFocus)
-        print('TComboBox')
+        #print('TComboBox')
 
     def keyPressEvent(self, e):
-        print( e.key() )
+        #print( e.key() )
         if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
-            print('Up/Down')
-            print(type(self.parent()))
+            #print('Up/Down')
+            #print(type(self.parent()))
             QApplication.sendEvent( self.parent(), e ) 
             #self.parent().keyPressEvent(e)
             return
@@ -248,7 +248,7 @@ class FieldInspector(QTreeWidget):
                 return editor
 
         def setEditorData(self, editor, idx):
-            print(editor.metaObject().className() )
+            #print(editor.metaObject().className() )
             value = idx.model().data(idx, Qt.EditRole)
             editor.set_index(value)
             
@@ -282,11 +282,9 @@ class FieldInspector(QTreeWidget):
 
         def eventFilter(self, obj, e):
             if e.type() == QEvent.KeyPress:
-                print('Key Press')
                 
                 if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
                     action = QAbstractItemView.MoveDown if e.key() == Qt.Key_Down else QAbstractItemView.MoveUp
-                    print('Down') if e.key() == Qt.Key_Down else print('Up')
                     idx = obj.moveCursor(action, Qt.NoModifier)
                     item = obj.itemFromIndex(idx)
                     obj.setCurrentItem(item)
@@ -309,15 +307,12 @@ class FieldInspector(QTreeWidget):
         
         self.field_items = self.addParent(self, 0, 'Field', '')
     
-        print('#'*30)
-
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.field_items, i[0], '')
             self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
-            
-        print('#'*30)
     
         self.itemClicked.connect(self.item_clicked)
+        self.itemPressed.connect(self.item_pressed)
         self.currentItemChanged.connect(self.item_changed)
         self.itemActivated.connect(self.item_activated)
     
@@ -354,11 +349,15 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
         print('item_clicked')
-       # if type(self.itemWidget(item, colDATA) ) is TComboBox:
-       #     self.cb.setEnabled( item.checkState(colEDIT) == Qt.Checked )
-            
-       # self.view_field()
-            
+        self.select_item(item)            
+        
+    #---------------------------------------------------------------------------    
+    def item_pressed(self, item, col):
+        print('item_pressed')
+        print(item)
+        print(col)
+        self.select_item(item)
+        
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         
@@ -366,7 +365,9 @@ class FieldInspector(QTreeWidget):
             return 
                 
         idx = self.indexFromItem(prev, colDATA)
-        print('*'*20)
+        print('item_changed')
+        print(prev)
+        print(item)
         editor = self.indexWidget(idx)
             
         if editor:
@@ -376,8 +377,7 @@ class FieldInspector(QTreeWidget):
                         
         self.editItem(item, colDATA)
         self.handle_item(item)    
-        self.setCurrentItem(item, colNAME)
-        self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
+        self.select_item(item)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
@@ -386,6 +386,11 @@ class FieldInspector(QTreeWidget):
 
         self.editItem(item, colDATA)
     
+    #---------------------------------------------------------------------------    
+    def select_item(self, item):
+        self.setCurrentItem(item, colNAME)
+        self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
+        
     #---------------------------------------------------------------------------    
     def load_field_slot(self, d):
         self.comp  = d[0]
