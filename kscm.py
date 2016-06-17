@@ -826,10 +826,6 @@ if __name__ == '__main__':
                         QTreeWidget::item:selected:!active {\
                             background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6b9be8, stop: 1 #577fbf);\
                         }\
-                        QTreeWidget::item:hover {\
-                           background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
-                           border: 1px solid #bfcde4;\
-                        }\
                         QComboBox {\
                             border: 1px solid gray;\
                             border-radius: 1px;\
@@ -840,6 +836,10 @@ if __name__ == '__main__':
                       )
     
     
+#   QTreeWidget::item:hover {\
+#      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
+#      border: 1px solid #bfcde4;\
+#   }\
         
     
      #background-color: #fffff0;\
