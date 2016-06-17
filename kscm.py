@@ -305,6 +305,8 @@ class FieldInspector(QTreeWidget):
         self.setHeaderLabels( ('Field Name', 'Value' ) );
         self.setHeaderHidden(True)
         
+        self.setFocusPolicy(Qt.WheelFocus)
+        
         self.field_items = self.addParent(self, 0, 'Field', '')
     
         for idx, i in enumerate(self.ItemsTable):
@@ -347,6 +349,12 @@ class FieldInspector(QTreeWidget):
 #           QTreeWidget.keyPressEvent(self, e)
         
     #---------------------------------------------------------------------------    
+    def focusOutEvent(self, e):
+        #self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.Deselect)
+        print('focusOutEvent')
+        self.clearSelection()
+        
+    #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
         print('item_clicked')
         self.select_item(item)            
@@ -366,8 +374,6 @@ class FieldInspector(QTreeWidget):
                 
         idx = self.indexFromItem(prev, colDATA)
         print('item_changed')
-        print(prev)
-        print(item)
         editor = self.indexWidget(idx)
             
         if editor:
@@ -377,7 +383,8 @@ class FieldInspector(QTreeWidget):
                         
         self.editItem(item, colDATA)
         self.handle_item(item)    
-        self.select_item(item)
+        self.item_clicked(item, colNAME)
+        #self.select_item(item)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
@@ -388,6 +395,7 @@ class FieldInspector(QTreeWidget):
     
     #---------------------------------------------------------------------------    
     def select_item(self, item):
+        pass
         self.setCurrentItem(item, colNAME)
         self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
         
@@ -790,6 +798,16 @@ if __name__ == '__main__':
                            padding: 0px;\
                            left: 20px;\
                         }\
+                        QTableWidget::item:selected {\
+                            border: 1px solid #567dbc;\
+                        }\
+                        QTableWidget::item:selected:active{\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
+                        }\
+                        QTableWidget::item:selected:!active {\
+                            color: black;\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3DB9E0, stop: 1 #D8ECF3);\
+                        }\
                         Inspector {\
                         alternate-background-color: #ffffd0;\
                         }\
@@ -815,7 +833,7 @@ if __name__ == '__main__':
                         alternate-background-color: #ffffd0;\
                         }\
                         Inspector {\
-                           show-decoration-selected: 1;\
+                           show-decoration-selected: 0;\
                         }\
                         FieldInspector::item {\
                            border: 1px solid #d9d9d9;\
@@ -834,12 +852,18 @@ if __name__ == '__main__':
                         }\
                         QTreeWidget::item:selected {\
                             border: 1px solid #567dbc;\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #C824CC);\
                         }\
                         QTreeWidget::item:selected:active{\
                             background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
                         }\
                         QTreeWidget::item:selected:!active {\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6b9be8, stop: 1 #577fbf);\
+                            color: black;\
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3DB9E0, stop: 1 #D8ECF3);\
+                        }\
+                        QTreeWidget::branch {\
+                            color: black;\
+                            background: white;\
                         }\
                         QComboBox {\
                             border: 1px solid gray;\
