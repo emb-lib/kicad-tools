@@ -446,6 +446,8 @@ class FieldInspector(QTreeWidget):
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
+                
+        self.clearSelection()
     
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
