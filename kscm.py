@@ -155,6 +155,9 @@ class Inspector(QTreeWidget):
             #print( f.InnerCode )
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
         
+        cur_item = self.topLevelItem(0).child(0)
+        self.setCurrentItem(cur_item)
+        self.item_clicked(cur_item, 0)
             
 #-------------------------------------------------------------------------------    
 class TComboBox(QComboBox):
@@ -457,7 +460,8 @@ class ComponentsTable(QTableWidget):
     def __init__(self, parent):
         super().__init__(0, 2, parent)
         
-        self.cellActivated.connect(self.cell_activated)
+        #self.cellActivated.connect(self.cell_activated)
+        self.cellClicked.connect(self.cell_clicked)
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
@@ -477,7 +481,8 @@ class ComponentsTable(QTableWidget):
         
                 
     #---------------------------------------------------------------------------    
-    def cell_activated(self, row, col):
+    #def cell_activated(self, row, col):
+    def cell_clicked(self, row, col):
         items = self.selectedItems()
         refs = []
         for i in items:
