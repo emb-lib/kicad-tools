@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.QtGui  import  QIcon, QBrush, QColor
-from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel, QFile
 
 #-------------------------------------------------------------------------------
 colEDIT = 0
@@ -783,125 +783,11 @@ def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
 if __name__ == '__main__':
 
     app  = QApplication(sys.argv)
-    app.setStyleSheet( 'QGroupBox {\
-                            border: 2px solid gray;\
-                            border-radius: 4px;\
-                            margin: 0px;\
-                            margin-top: 1ex;\
-                            padding: 0px;\
-                            font-size: 12pt;\
-                            font-weight: bold;\
-                        }\
-                        QGroupBox::title {\
-                           subcontrol-origin: margin;\
-                           subcontrol-position: top left;\
-                           padding: 0px;\
-                           left: 20px;\
-                        }\
-                        QTableWidget::item:selected {\
-                            color: white;\
-                            background-color: green;\
-                            border: 1px solid #567dbc;\
-                        }\
-                        QTableWidget::item:selected:active{\
-                            color: white;\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
-                            background: navy;\
-                        }\
-                        QTableWidget::item:selected:!active {\
-                            color: black;\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);\
-                        }\
-                        QLineEdit{\
-                            color: white;\
-                            selection-background-color: navy;\
-                        }\
-                        Inspector {\
-                        alternate-background-color: #ffffd0;\
-                        }\
-                        Inspector {\
-                           show-decoration-selected: 1;\
-                        }\
-                        Inspector::item {\
-                           border: 1px solid #d9d9d9;\
-                           border-top-color: #d9d9d9;\
-                           border-left-color: transparent;\
-                           border-bottom-color: transparent;\
-                        }\
-                        Inspector::item:has-children {\
-                           left: 18px;\
-                           background-color: #FFDCA4;\
-                           border: 1px solid #d9d9d9;\
-                           border-top-color: #d9d9d9;\
-                           border-left-color: transparent;\
-                           border-right-color: transparent;\
-                           border-bottom-color: transparent;\
-                        }\
-                        FieldInspector {\
-                        alternate-background-color: #ffffd0;\
-                        }\
-                        Inspector {\
-                           show-decoration-selected: 0;\
-                        }\
-                        FieldInspector::item {\
-                           border: 1px solid #d9d9d9;\
-                           border-top-color: #d9d9d9;\
-                           border-left-color: transparent;\
-                           border-bottom-color: transparent;\
-                        }\
-                        FieldInspector::item:has-children {\
-                           left: 18px;\
-                           background-color: #96F9BB;\
-                           border: 1px solid #d9d9d9;\
-                           border-top-color: #d9d9d9;\
-                           border-left-color: transparent;\
-                           border-right-color: transparent;\
-                           border-bottom-color: transparent;\
-                        }\
-                        QTreeWidget::item:selected {\
-                            border: 1px solid #567dbc;\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #C824CC);\
-                        }\
-                        QTreeWidget::item:selected:active{\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);\
-                            background: navy;\
-                        }\
-                        QTreeWidget::item:selected:!active {\
-                            color: black;\
-                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);\
-                        }\
-                        QTreeWidget::branch {\
-                            color: black;\
-                            background: white;\
-                        }\
-                        QComboBox {\
-                            border: 1px solid gray;\
-                            border-radius: 1px;\
-                            padding: 1px 18px 1px 3px;\
-                            min-width: 6em;\
-                            color: white;\
-                            background: navy;\
-                        }\
-                       QComboBox QAbstractItemView{\
-                           background: gray;\
-                       }\
-                      '
-                      )
     
-#   QComboBox:!editable:on{\
-#       background: navy;\
-#   }\
-
-    
-#   QTreeWidget::item:hover {\
-#      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);\
-#      border: 1px solid #bfcde4;\
-#   }\
-        
-    
-     #background-color: #fffff0;\
-    #                           border-top-color: transparent;\
-    #                           border-bottom-color: transparent;\
+    with open('kscm.qss', 'rb') as fqss:
+        qss = fqss.read().decode()
+        qss = re.sub(os.linesep, '', qss )
+    app.setStyleSheet(qss)
     
     mwin = MainWindow()
 
