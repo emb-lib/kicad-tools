@@ -13,8 +13,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
-from PyQt5.QtGui  import  QIcon, QBrush, QColor
-from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel, QFile
+from PyQt5.QtGui  import  QIcon, QBrush, QColor, QKeyEvent
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 
 #-------------------------------------------------------------------------------
 colEDIT = 0
@@ -165,16 +165,18 @@ class TComboBox(QComboBox):
     def __init__(self, parent):
         super().__init__(parent)
         self.setFocusPolicy(Qt.StrongFocus)
-        #print('TComboBox')
 
     def keyPressEvent(self, e):
-        #print( e.key() )
-        if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
-            #print('Up/Down')
-            #print(type(self.parent()))
-            QApplication.sendEvent( self.parent(), e ) 
-            #self.parent().keyPressEvent(e)
-            return
+        key = e.key()
+        mod = e.modifiers()
+        if key == Qt.Key_Down or key == Qt.Key_Up:
+            if not mod:
+                QApplication.sendEvent( self.parent(), e ) 
+                return
+            elif mod == Qt.AltModifier:
+                e = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
+            
+
             
         QComboBox.keyPressEvent(self, e)
 
@@ -353,12 +355,10 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
-        print('item_clicked')
         self.select_item(item)            
         
     #---------------------------------------------------------------------------    
     def item_pressed(self, item, col):
-        print('item_pressed')
         print(item)
         print(col)
         self.select_item(item)
@@ -370,7 +370,6 @@ class FieldInspector(QTreeWidget):
             return 
                 
         idx = self.indexFromItem(prev, colDATA)
-        print('item_changed')
         editor = self.indexWidget(idx)
             
         if editor:
@@ -381,7 +380,6 @@ class FieldInspector(QTreeWidget):
         self.editItem(item, colDATA)
         self.handle_item(item)    
         self.item_clicked(item, colNAME)
-        #self.select_item(item)
     
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
