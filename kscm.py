@@ -352,12 +352,6 @@ class FieldInspector(QTreeWidget):
 #           QTreeWidget.keyPressEvent(self, e)
         
     #---------------------------------------------------------------------------    
-    def focusOutEvent(self, e):
-        #self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.Deselect)
-        print('focusOutEvent')
-        self.clearSelection()
-        
-    #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
         print('item_clicked')
         self.select_item(item)            
@@ -452,7 +446,6 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
-                    
                                     
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
@@ -462,8 +455,8 @@ class ComponentsTable(QTableWidget):
     def __init__(self, parent):
         super().__init__(0, 2, parent)
         
-        #self.cellActivated.connect(self.cell_activated)
-        self.cellClicked.connect(self.cell_clicked)
+        self.cellActivated.connect(self.cell_chosen)
+        self.cellClicked.connect  (self.cell_chosen)
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
@@ -483,8 +476,7 @@ class ComponentsTable(QTableWidget):
         
                 
     #---------------------------------------------------------------------------    
-    #def cell_activated(self, row, col):
-    def cell_clicked(self, row, col):
+    def cell_chosen(self, row, col):
         items = self.selectedItems()
         refs = []
         for i in items:
@@ -494,7 +486,6 @@ class ComponentsTable(QTableWidget):
         print('emit "cells_chosen"')
         self.cells_chosen.emit(refs)
         
-                        
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 
