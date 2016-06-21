@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
+from PyQt5.Qt import QShortcut, QKeySequence
 from PyQt5.QtGui  import  QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 
@@ -187,45 +188,45 @@ class TComboBox(QComboBox):
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
-    class FieldParam:
-    
-        def __init__(self, name, title, editor, values):
-            self.name   = name
-            self.title  = title
-            self.editor = editor
-            self.values = values
+#   class FieldParam:
+#
+#       def __init__(self, name, title, editor, values):
+#           self.name   = name
+#           self.title  = title
+#           self.editor = editor
+#           self.values = values
     
     #---------------------------------------------------------------------------    
-    class ItemDelegate(QStyledItemDelegate):
-
-        params = {}
-        
-        def __init__(self, parent):
-            super().__init__(parent)
-            
-            self.params['Orientation']      = [TComboBox, ['Horizontal', 'Vertical']]
-            self.params['Visible']          = [TComboBox, ['Yes', 'No']]
-            self.params['Horizontal Align'] = [TComboBox, ['Left', 'Center', 'Right']]
-            self.params['Vertical Align']   = [TComboBox, ['Top', 'Center', 'Bottom']]
-
-        def createEditor(self, parent, option, idx):
-            if idx.column() == 1:
-                param = idx.sibling(idx.row(), 0).data() 
-
-                if param in self.params.keys():
-                    #cb = TComboBox(parent.parent())
-                    cb = self.params[param][0](parent.parent())
-                    cb.setEnabled(True)
-                    cb.addItems( self.params[param][1] )
-                    cb.setCurrentIndex( 0 ) # if f.Orientation == 'H' else 1 )
-                    f = parent.parent().field
-                    print(eval('f.' + param) )
-                    return cb
-
-                return QStyledItemDelegate.createEditor(self, parent, option, idx)
-
-        def setEditorData(self, editor, idx):
-            print(editor.metaObject().className() )
+#   class ItemDelegate(QStyledItemDelegate):
+#
+#       params = {}
+#
+#       def __init__(self, parent):
+#           super().__init__(parent)
+#
+#           self.params['Orientation']      = [TComboBox, ['Horizontal', 'Vertical']]
+#           self.params['Visible']          = [TComboBox, ['Yes', 'No']]
+#           self.params['Horizontal Align'] = [TComboBox, ['Left', 'Center', 'Right']]
+#           self.params['Vertical Align']   = [TComboBox, ['Top', 'Center', 'Bottom']]
+#
+#       def createEditor(self, parent, option, idx):
+#           if idx.column() == 1:
+#               param = idx.sibling(idx.row(), 0).data()
+#
+#               if param in self.params.keys():
+#                   #cb = TComboBox(parent.parent())
+#                   cb = self.params[param][0](parent.parent())
+#                   cb.setEnabled(True)
+#                   cb.addItems( self.params[param][1] )
+#                   cb.setCurrentIndex( 0 ) # if f.Orientation == 'H' else 1 )
+#                   f = parent.parent().field
+#                   print(eval('f.' + param) )
+#                   return cb
+#
+#               return QStyledItemDelegate.createEditor(self, parent, option, idx)
+#
+#       def setEditorData(self, editor, idx):
+#           print(editor.metaObject().className() )
 
     #---------------------------------------------------------------------------    
     class TextItemDelegate(QStyledItemDelegate):
@@ -278,7 +279,7 @@ class FieldInspector(QTreeWidget):
             super().__init__(parent, title)
             
         def focusOutEvent(self, event):
-            print(event)
+            print('TreeItem::focusOutEvetnevent ' + str(event))
             
     #---------------------------------------------------------------------------    
     class EventFilter(QObject):
@@ -369,7 +370,7 @@ class FieldInspector(QTreeWidget):
         if not self.field:
             return 
                 
-        idx = self.indexFromItem(prev, colDATA)
+        idx    = self.indexFromItem(prev, colDATA)
         editor = self.indexWidget(idx)
             
         if editor:
@@ -391,8 +392,8 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def select_item(self, item):
         pass
-        self.setCurrentItem(item, colNAME)
-        self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
+        #self.setCurrentItem(item, colNAME)
+        #self.selectionModel().setCurrentIndex(self.currentIndex(), QItemSelectionModel.ClearAndSelect)
         
     #---------------------------------------------------------------------------    
     def load_field_slot(self, d):
@@ -438,8 +439,10 @@ class FieldInspector(QTreeWidget):
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
-                
-        self.clearSelection()
+        if f:
+            cur_item = self.topLevelItem(0).child(0)
+        #    self.setCurrentItem(cur_item)
+        #self.clearSelection()
     
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
@@ -502,10 +505,91 @@ class ComponentsTable(QTableWidget):
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
+#    class EventFilter(QObject):
+#        def __init__(self, parent):
+#            super().__init__(parent)
+#
+#        def eventFilter(self, obj, e):
+#            #print(obj.metaObject().className())
+#
+#            if e.type() == QEvent.KeyPress or e.type() == QEvent.ShortcutOverride:
+#                key = e.key()
+#                mod = e.modifiers()
+#
+#                print(str(e) + ' ' + str(e.type()) )
+#
+#                if mod == Qt.AltModifier:
+#                    print('*'*30)
+#                    print('alt pressed')
+#                    if key == Qt.Key_Left or key == Qt.Key_Right:
+#                        print('alt-left') if key == Qt.Key_Left else print('alt-right')
+##                       action = QAbstractItemView.MoveLeft if key == Qt.Key_Left else QAbstractItemView.MoveRight
+##                       idx = obj.moveCursor(action, Qt.NoModifier)
+##                       item = obj.itemFromIndex(idx)
+##                       obj.setCurrentItem(item)
+#                        return True
+#
+#            return False
+
+    #-------------------------------------------------------------------------------    
+
+    class EventFilter(QObject):
+        def __init__(self, parent):
+            super().__init__(parent)
+
+        def eventFilter(self, obj, e):
+            if e.type() == QEvent.KeyPress or e.type() == QEvent.ShortcutOverride:
+                key = e.key()
+                mod = e.modifiers()
+
+                print(str(e) + ' ' + str(e.type()) )
+                print(obj.focusWidget())
+                #print(obj.metaObject().className())
+
+            return False
+
+    
+    def scroll_left(self):
+        print('Left')
+        #if self.ToolIndex == 3:
+            #self.ToolList[self.ToolIndex].clearSelection()
+            
+        self.ToolIndex -= 1
+        if self.ToolIndex < 0:
+            self.ToolIndex = len(self.ToolList) - 1
+            
+        print(self.ToolIndex)
+        self.ToolList[self.ToolIndex].setFocus()
+        
+    def scroll_right(self):
+        print('Right')
+#       if self.ToolIndex == 3:
+#           self.ToolList[self.ToolIndex].clearSelection()
+        self.ToolIndex += 1
+        if self.ToolIndex == len(self.ToolList):
+            self.ToolIndex = 0
+
+        print(self.ToolIndex)
+        self.ToolList[self.ToolIndex].setFocus()
+        
+        
     def __init__(self):
         super().__init__()
         
         self.initUI()
+
+        self.installEventFilter(self.EventFilter(self))
+
+        #----------------------------------------------------
+        #
+        #   Application hotkeys
+        #
+        self.shortcutLeft  = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Left), self)
+        self.shortcutRight = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Right), self)
+        self.shortcutLeft.setContext(Qt.ApplicationShortcut)
+        self.shortcutRight.setContext(Qt.ApplicationShortcut)
+        self.shortcutLeft.activated.connect(self.scroll_left)
+        self.shortcutRight.activated.connect(self.scroll_right)
         
         
     def initUI(self):
@@ -603,6 +687,14 @@ class MainWindow(QMainWindow):
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
+        
+        self.ToolList = []
+        self.ToolList.append(self.CmpTable)
+        self.ToolList.append(self.SelectView)
+        self.ToolList.append(self.Inspector)
+        self.ToolList.append(self.FieldInspector)
+        self.ToolIndex = 0
+        
         
         #----------------------------------------------------
         #
