@@ -25,8 +25,8 @@ colDATA = 1
 class Inspector(QTreeWidget):
     
     
-    load_field = pyqtSignal( [list], [str] )
-    
+    load_field  = pyqtSignal( [list], [str] )
+    mouse_click = pyqtSignal([str])
         
     class ItemDelegate(QStyledItemDelegate):
 
@@ -40,6 +40,11 @@ class Inspector(QTreeWidget):
     
         
     #---------------------------------------------------------------------------    
+    def mousePressEvent(self, e):
+        print('--------------   mouse press event Inspector -------------')
+        self.mouse_click.emit('Inspector')
+        QTreeWidget.mousePressEvent(self, e)
+    #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
         #self.setAlternatingRowColors(True)
@@ -177,9 +182,8 @@ class TComboBox(QComboBox):
             elif mod == Qt.AltModifier:
                 e = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
             
-
-            
         QComboBox.keyPressEvent(self, e)
+        
 
     def set_index(self, text):
         items = [self.itemText(i) for i in range(self.count()) ]
@@ -188,46 +192,8 @@ class TComboBox(QComboBox):
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
-#   class FieldParam:
-#
-#       def __init__(self, name, title, editor, values):
-#           self.name   = name
-#           self.title  = title
-#           self.editor = editor
-#           self.values = values
+    mouse_click = pyqtSignal([str])
     
-    #---------------------------------------------------------------------------    
-#   class ItemDelegate(QStyledItemDelegate):
-#
-#       params = {}
-#
-#       def __init__(self, parent):
-#           super().__init__(parent)
-#
-#           self.params['Orientation']      = [TComboBox, ['Horizontal', 'Vertical']]
-#           self.params['Visible']          = [TComboBox, ['Yes', 'No']]
-#           self.params['Horizontal Align'] = [TComboBox, ['Left', 'Center', 'Right']]
-#           self.params['Vertical Align']   = [TComboBox, ['Top', 'Center', 'Bottom']]
-#
-#       def createEditor(self, parent, option, idx):
-#           if idx.column() == 1:
-#               param = idx.sibling(idx.row(), 0).data()
-#
-#               if param in self.params.keys():
-#                   #cb = TComboBox(parent.parent())
-#                   cb = self.params[param][0](parent.parent())
-#                   cb.setEnabled(True)
-#                   cb.addItems( self.params[param][1] )
-#                   cb.setCurrentIndex( 0 ) # if f.Orientation == 'H' else 1 )
-#                   f = parent.parent().field
-#                   print(eval('f.' + param) )
-#                   return cb
-#
-#               return QStyledItemDelegate.createEditor(self, parent, option, idx)
-#
-#       def setEditorData(self, editor, idx):
-#           print(editor.metaObject().className() )
-
     #---------------------------------------------------------------------------    
     class TextItemDelegate(QStyledItemDelegate):
 
@@ -251,6 +217,7 @@ class FieldInspector(QTreeWidget):
                 editor = TComboBox(parent.parent())
                 editor.setEnabled(True)
                 editor.addItems( self.values )
+                #editor.setFocusPolicy(Qt.ClickFocus)
                 return editor
 
         def setEditorData(self, editor, idx):
@@ -296,8 +263,23 @@ class FieldInspector(QTreeWidget):
                     obj.setCurrentItem(item)
                     return True
 
+                            
+            if e.type() == QEvent.Leave:
+                print('======== mouse leave')
+                self.parent().close_item_edit()
+                return False
+                
             return False
-
+            
+    #-------------------------------------------------------------------------------    
+    def mousePressEvent(self, e):
+        print('--------------   mouse press event FieldInspector -------------')
+        self.mouse_click.emit('FieldInspector')
+        QTreeWidget.mousePressEvent(self, e)
+    #-------------------------------------------------------------------------------    
+    def mouseMoveEvent(self, e):
+        print('--------------   mouse move event FieldInspector -------------')
+        QTreeWidget.mouseMoveEvent(self, e)
     #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -312,6 +294,7 @@ class FieldInspector(QTreeWidget):
         self.setHeaderHidden(True)
         
         self.setFocusPolicy(Qt.WheelFocus)
+        #self.setTabKeyNavigation(False)
         
         self.field_items = self.addParent(self, 0, 'Field', '')
     
@@ -360,8 +343,6 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def item_pressed(self, item, col):
-        print(item)
-        print(col)
         self.select_item(item)
         
     #---------------------------------------------------------------------------    
@@ -382,6 +363,19 @@ class FieldInspector(QTreeWidget):
         self.handle_item(item)    
         self.item_clicked(item, colNAME)
     
+    #---------------------------------------------------------------------------    
+    def close_item_edit(self):
+        print('close_item_edit')
+        idx    = self.indexFromItem(self.currentItem(), colDATA)
+        editor = self.indexWidget(idx)
+
+        print(editor)
+        
+        if editor:
+            print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
+            self.commitData(editor)
+            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+        
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
         if not self.field:
@@ -439,8 +433,8 @@ class FieldInspector(QTreeWidget):
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
-        if f:
-            cur_item = self.topLevelItem(0).child(0)
+        #if f:
+        #    cur_item = self.topLevelItem(0).child(0)
         #    self.setCurrentItem(cur_item)
         #self.clearSelection()
     
@@ -448,10 +442,20 @@ class FieldInspector(QTreeWidget):
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
                                     
+#-------------------------------------------------------------------------------    
+class Selector(QTreeWidget):
+    
+    #-------------------------------------------------------------------------------    
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    
+
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
     
     cells_chosen = pyqtSignal([list])
+    mouse_click  = pyqtSignal([str])
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -475,7 +479,18 @@ class ComponentsTable(QTableWidget):
         self.CmpDict = cmp_dict(rcl, ipl)
         self.update_cmp_list(self.CmpDict)
         
-                
+        self.setTabKeyNavigation(False)        
+#       for r in range(self.rowCount()):
+#           for c in range(self.columnCount()):
+#               self.item(r, c).setFocusPolicy(Qt.NoFocus)
+        
+           
+    #---------------------------------------------------------------------------    
+    def mousePressEvent(self, e):
+        print('--------------   mouse press event CmpTable -------------')
+        self.mouse_click.emit('CmpTable')
+        QTableWidget.mousePressEvent(self, e)
+
     #---------------------------------------------------------------------------    
     def cell_chosen(self, row, col):
         items = self.selectedItems()
@@ -484,7 +499,6 @@ class ComponentsTable(QTableWidget):
             if i.column() == 0:
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
-        print('emit "cells_chosen"')
         self.cells_chosen.emit(refs)
         
     #---------------------------------------------------------------------------    
@@ -542,17 +556,18 @@ class MainWindow(QMainWindow):
                 key = e.key()
                 mod = e.modifiers()
 
-                print(str(e) + ' ' + str(e.type()) )
-                print(obj.focusWidget())
-                #print(obj.metaObject().className())
+                #print(obj.focusWidget().metaObject().className())
+            if e.type() == QEvent.MouseMove:
+                print(e.pos())
 
             return False
 
     
     def scroll_left(self):
-        print('Left')
-        #if self.ToolIndex == 3:
+        print('alt-left')
+        if self.ToolIndex == 3:
             #self.ToolList[self.ToolIndex].clearSelection()
+            self.ToolList[self.ToolIndex].close_item_edit()
             
         self.ToolIndex -= 1
         if self.ToolIndex < 0:
@@ -562,15 +577,31 @@ class MainWindow(QMainWindow):
         self.ToolList[self.ToolIndex].setFocus()
         
     def scroll_right(self):
-        print('Right')
-#       if self.ToolIndex == 3:
+        print('alt-right')
+        if self.ToolIndex == 3:
 #           self.ToolList[self.ToolIndex].clearSelection()
+            self.ToolList[self.ToolIndex].close_item_edit()
+            
         self.ToolIndex += 1
         if self.ToolIndex == len(self.ToolList):
             self.ToolIndex = 0
 
         print(self.ToolIndex)
         self.ToolList[self.ToolIndex].setFocus()
+        
+    def mouse_change_tool(self, s):
+        print('Tool ' + s)
+        if s == 'CmpTable':
+            self.ToolIndex = 0
+        elif s == 'Selector':
+            self.ToolIndex = 1
+        elif s == 'Inspector':
+            self.ToolIndex = 2
+        elif s == 'FieldInspector':
+            self.ToolIndex = 3
+            
+        if self.ToolIndex != 3:
+            self.ToolList[3].close_item_edit()
         
         
     def __init__(self):
@@ -579,6 +610,12 @@ class MainWindow(QMainWindow):
         self.initUI()
 
         self.installEventFilter(self.EventFilter(self))
+        
+        self.setFocusPolicy(Qt.WheelFocus)
+        self.setTabOrder(self.CmpTable,      self.Inspector )
+        self.setTabOrder(self.Inspector,     self.Selector)
+        self.setTabOrder(self.Selector,      self.FieldInspector)
+        #self.setTabOrder(self.FieldInspector, self.CmpTable)
 
         #----------------------------------------------------
         #
@@ -638,15 +675,7 @@ class MainWindow(QMainWindow):
         #
         #    Selector
         #
-        self.SelectView = QTreeWidget(self)
-        self.SelectView.setColumnCount(2)
-        self.SelectView.setHeaderLabels( ('Property', 'Value') );
-
-        self.SVTopItem = QTreeWidgetItem(self.SelectView)
-        self.SVTopItem.setText(1, 'Standard')
-        
-        self.SVItem1 = QTreeWidgetItem(self.SVTopItem)
-        self.SVItem1.setText(0, 'sub-slonick')
+        self.Selector = Selector(self)
         
         #----------------------------------------------------
         #
@@ -676,7 +705,7 @@ class MainWindow(QMainWindow):
 
         self.Splitter = QSplitter(self)
         self.Splitter.addWidget(self.CmpTabBox)
-        self.Splitter.addWidget(self.SelectView)   
+        self.Splitter.addWidget(self.Selector)   
         self.Splitter.addWidget(self.InspectorBox) 
                  
         self.centralWidget().layout().addWidget(self.Splitter)
@@ -685,12 +714,16 @@ class MainWindow(QMainWindow):
         #----------------------------------------------------
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
+        
+        self.CmpTable.mouse_click.connect(self.mouse_change_tool)
+        self.Inspector.mouse_click.connect(self.mouse_change_tool)
+        self.FieldInspector.mouse_click.connect(self.mouse_change_tool)
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
         
         self.ToolList = []
         self.ToolList.append(self.CmpTable)
-        self.ToolList.append(self.SelectView)
+        self.ToolList.append(self.Selector)
         self.ToolList.append(self.Inspector)
         self.ToolList.append(self.FieldInspector)
         self.ToolIndex = 0
