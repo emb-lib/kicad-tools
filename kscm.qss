@@ -28,7 +28,7 @@ QTableWidget::item:selected:!active {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);
 }
 QLineEdit{
-    color: white;
+    /*color: white;*/
     selection-background-color: navy;
 }
 Inspector {
@@ -89,6 +89,16 @@ QTreeWidget::branch {
     color: black;
     background: white;
 }
+/*
+QTreeWidget QHeaderView::section:on {
+    color: red;
+    background-color: yellow;
+}
+QTreeWidget QHeaderView::section:off {
+    color: gray;
+    background-color: cyan;
+}
+*/
 QComboBox {
     border: 1px solid gray;
     border-radius: 1px;

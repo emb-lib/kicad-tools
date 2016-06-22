@@ -449,6 +449,13 @@ class Selector(QTreeWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.setIndentation(16)
+        self.setColumnCount(2)
+        self.header().resizeSection(2, 10)
+        self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
+        self.setHeaderLabels( ('Parameter', 'Value' ) );
+        
+        self.model().setHeaderData(0, Qt.Horizontal, QColor('red'), Qt.BackgroundColorRole)
     
 
 #-------------------------------------------------------------------------------
