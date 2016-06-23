@@ -5,15 +5,15 @@
 import sys
 import os
 import re
-import yaml
-from PyQt5.Qt import Qt
+#import yaml
+from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
-from PyQt5.Qt import QShortcut, QKeySequence
+from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import  QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 
