@@ -816,7 +816,7 @@ class MainWindow(QMainWindow):
 #-------------------------------------------------------------------------------
 class ComponentField:
     
-    def __init__(self, rec):
+    def __init__(self, comp, rec):
 
         self.InnerCode = rec[0]
         
@@ -833,8 +833,8 @@ class ComponentField:
             
         self.Text        = rec[1]
         self.Orientation = 'Horizontal' if rec[2] == 'H' else 'Vertical'
-        self.PosX        = rec[3]
-        self.PosY        = rec[4]
+        self.PosX        = str( int(rec[3]) - int(comp.PosX) )
+        self.PosY        = str( int(rec[4]) - int(comp.PosY) )
         self.FontSize    = rec[5]
         self.Visible     = 'Yes'  if int(rec[6]) == 0 else 'No'
         self.HJustify    = 'Left' if rec[7]  == 'L' else 'Center' if rec[7] == 'C' else 'Right'
@@ -882,7 +882,7 @@ class Component:
         
         self.Fields = []
         for i in r:
-            self.Fields.append( ComponentField(i) )
+            self.Fields.append( ComponentField(self, i) )
         
 #       for i in self.Fields:
 #           print(vars(i))
