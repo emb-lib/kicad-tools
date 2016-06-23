@@ -24,26 +24,40 @@ colDATA = 1
 #-------------------------------------------------------------------------------
 class Inspector(QTreeWidget):
     
+    #---------------------------------------------------------------------------    
+    #
+    #              Title                  Delegate         Delegate Data
+    #
+    ItemsTable = [ ['Ref',              'TextItemDelegate', None],
+                   ['Lib Name',         'TextItemDelegate', None],
+                   ['Value',            'TextItemDelegate', None],
+                   ['Footprint',        'TextItemDelegate', None],
+                   ['Doc Sheet',        'TextItemDelegate', None],
+                   ['X',                'TextItemDelegate', None],
+                   ['Y',                'TextItemDelegate', None],
+                   ['Timestamp',        'TextItemDelegate', None] ]
+
     
+    #---------------------------------------------------------------------------    
     load_field  = pyqtSignal( [list], [str] )
     mouse_click = pyqtSignal([str])
         
-    class ItemDelegate(QStyledItemDelegate):
+    #---------------------------------------------------------------------------    
+    class TextItemDelegate(QStyledItemDelegate):
 
-        def __init__(self, parent):
+
+        def __init__(self, parent, values):
             super().__init__(parent)
-            
+
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
-                print( idx.column() )
                 return QStyledItemDelegate.createEditor(self, parent, option, idx)
-    
         
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
-        print('--------------   mouse press event Inspector -------------')
         self.mouse_click.emit('Inspector')
         QTreeWidget.mousePressEvent(self, e)
+        
     #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -57,29 +71,22 @@ class Inspector(QTreeWidget):
         self.setHeaderLabels( ('Property', 'Value') );
         self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
         self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
-        
-        self.addChild(self.std_items, 'Ref',       '?')
-        self.addChild(self.std_items, 'Lib Name',  '~')
-        self.addChild(self.std_items, 'Value',     '~')
-        self.addChild(self.std_items, 'Footprint', '~')
-        self.addChild(self.std_items, 'Doc Sheet', '~')
-        self.addChild(self.std_items, 'X',         '~')
-        self.addChild(self.std_items, 'Y',         '~')
-        self.addChild(self.std_items, 'Timestamp', '~')
     
+        for idx, i in enumerate(self.ItemsTable):
+            self.addChild(self.std_items, i[0], '')
+            self.setItemDelegateForRow( idx, eval('self.' + i[1])(self, i[2]) )
+            
         self.addChild(self.usr_items, '<empty>', '')
             
         self.itemClicked.connect(self.item_clicked)
         self.currentItemChanged.connect(self.item_changed)
         self.itemActivated.connect(self.item_activated)
         
-        self.setItemDelegate(self.ItemDelegate(self))
-        
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
         item.setData(column, Qt.UserRole, data)
-        item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+        #item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         item.setExpanded (True)
         item.setFlags(Qt.ItemIsEnabled)
         return item
@@ -90,26 +97,18 @@ class Inspector(QTreeWidget):
         item.setData(colDATA, Qt.DisplayRole, data)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
         
-#       if flags & Qt.ItemIsEditable:
-#           item.setCheckState (colEDIT, Qt.Checked)
-#       else:
-#           item.setCheckState (colEDIT, Qt.Unchecked)
         return item
-            
+        
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
-#       if item.checkState(colEDIT) == Qt.Checked:
-#           item.setFlags( item.flags() | Qt.ItemIsEditable)
-#       else:
-#           item.setFlags( item.flags() & (-Qt.ItemIsEditable - 1) )
         
         param = item.data(colNAME, Qt.DisplayRole)
-        comp = self.comps[0]
+        comps = self.comps
         if item.parent() == self.topLevelItem(0):
-            self.load_field.emit([comp, param])
+            self.load_field.emit([comps, param])
                 
         if item.parent() == self.topLevelItem(1):
-            print('user defined')
+            self.load_field.emit([comps, param])
             
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
@@ -120,9 +119,24 @@ class Inspector(QTreeWidget):
         self.editItem(item, colDATA)
             
     #---------------------------------------------------------------------------    
-    def load_cmp(self, refs):
+    def item_changed(self, item, prev):
+
+        idx    = self.indexFromItem(prev, colDATA)
+        editor = self.indexWidget(idx)
+
+        if editor:
+            self.commitData(editor)
+            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+
+
+        self.editItem(item, colDATA)
+     #   self.handle_item(item)    
+        self.item_clicked(item, colNAME)
+
+    #---------------------------------------------------------------------------    
+    def load_cmp(self, comps):
         
-        self.comps = refs[0]
+        self.comps = comps
         comp = self.comps[0]
         
         #print( (comp.__dict__) )
@@ -132,32 +146,32 @@ class Inspector(QTreeWidget):
             item = self.topLevelItem(0).child(i)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Ref':
-                item.setData(colDATA, Qt.DisplayRole, comp.Ref)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].Ref)
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
-                item.setData(colDATA, Qt.DisplayRole, comp.LibName)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].LibName)
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Value':
-                item.setData(colDATA, Qt.DisplayRole, comp.Fields[1].Text)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[1].Text)
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
-                item.setData(colDATA, Qt.EditRole, comp.Fields[2].Text)
+                item.setData(colDATA, Qt.EditRole, comp[0].Fields[2].Text)
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
-                item.setData(colDATA, Qt.DisplayRole, comp.Fields[3].Text)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[3].Text)
                 
             if item.data(colNAME, Qt.DisplayRole) == 'X':
-                item.setData(colDATA, Qt.DisplayRole, comp.PosX)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].PosX)
                                 
             if item.data(colNAME, Qt.DisplayRole) == 'Y':
-                item.setData(colDATA, Qt.DisplayRole, comp.PosY)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].PosY)
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
-                item.setData(colDATA, Qt.DisplayRole, comp.Timestamp)
+                item.setData(colDATA, Qt.DisplayRole, comp[0].Timestamp)
         
         self.topLevelItem(1).takeChildren()
                         
-        for f in comp.Fields[4:]:
+        for f in comp[0].Fields[4:]:
             #print( f.InnerCode )
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
         
@@ -273,13 +287,9 @@ class FieldInspector(QTreeWidget):
             
     #-------------------------------------------------------------------------------    
     def mousePressEvent(self, e):
-        print('--------------   mouse press event FieldInspector -------------')
         self.mouse_click.emit('FieldInspector')
         QTreeWidget.mousePressEvent(self, e)
-    #-------------------------------------------------------------------------------    
-    def mouseMoveEvent(self, e):
-        print('--------------   mouse move event FieldInspector -------------')
-        QTreeWidget.mouseMoveEvent(self, e)
+        
     #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -391,7 +401,7 @@ class FieldInspector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def load_field_slot(self, d):
-        self.comp  = d[0]
+        self.comps = d[0]
         self.param = d[1]
         
         self.load_field()
@@ -410,19 +420,26 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def load_field(self):
         
-        comp  = self.comp
+        comps = self.comps
         param = self.param
         
+        comp = comps[0]
+        print(comp)
+        print(param)
+        
         if param == 'Ref':
-            f = self.comp.Fields[0]
+            f = comp[0].Fields[0]
         elif param == 'Value':
-            f = self.comp.Fields[1]
+            f = comp[0].Fields[1]
         elif param == 'Footprint':
-            f = self.comp.Fields[2]
+            f = comp[0].Fields[2]
         elif param == 'Doc Sheet':
-            f = self.comp.Fields[3]
+            f = comp[0].Fields[3]
         else:
             f = None
+            for field in comp[0].Fields[4:]:
+                if field.Name == param:
+                    f = field
             
         self.field = f
             
