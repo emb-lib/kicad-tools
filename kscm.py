@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
-from PyQt5.QtGui  import  QIcon, QBrush, QColor, QKeyEvent
+from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 
 #-------------------------------------------------------------------------------
@@ -134,6 +134,18 @@ class Inspector(QTreeWidget):
         self.item_clicked(item, colNAME)
 
     #---------------------------------------------------------------------------    
+    def close_item_edit(self):
+        print('Inspector::close_item_edit')
+        idx    = self.indexFromItem(self.currentItem(), colDATA)
+        editor = self.indexWidget(idx)
+
+        print(editor)
+
+        if editor:
+            print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
+            self.commitData(editor)
+            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+    #---------------------------------------------------------------------------    
     def load_cmp(self, comps):
         
         self.comps = comps
@@ -175,9 +187,9 @@ class Inspector(QTreeWidget):
             #print( f.InnerCode )
             self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
         
-        cur_item = self.topLevelItem(0).child(0)
-        self.setCurrentItem(cur_item)
-        self.item_clicked(cur_item, 0)
+        #cur_item = self.topLevelItem(0).child(0)
+        #self.setCurrentItem(cur_item)
+        #self.item_clicked(cur_item, 0)
             
 #-------------------------------------------------------------------------------    
 class TComboBox(QComboBox):
@@ -375,7 +387,7 @@ class FieldInspector(QTreeWidget):
     
     #---------------------------------------------------------------------------    
     def close_item_edit(self):
-        print('close_item_edit')
+        print('FieldInspector::close_item_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
@@ -450,9 +462,9 @@ class FieldInspector(QTreeWidget):
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
-        #if f:
-        #    cur_item = self.topLevelItem(0).child(0)
-        #    self.setCurrentItem(cur_item)
+#       if f:
+#           cur_item = self.topLevelItem(0).child(0)
+#           self.setCurrentItem(cur_item)
         #self.clearSelection()
     
     #---------------------------------------------------------------------------    
@@ -589,8 +601,7 @@ class MainWindow(QMainWindow):
     
     def scroll_left(self):
         print('alt-left')
-        if self.ToolIndex == 3:
-            #self.ToolList[self.ToolIndex].clearSelection()
+        if self.ToolIndex == 3 or self.ToolIndex == 2:
             self.ToolList[self.ToolIndex].close_item_edit()
             
         self.ToolIndex -= 1
@@ -602,8 +613,7 @@ class MainWindow(QMainWindow):
         
     def scroll_right(self):
         print('alt-right')
-        if self.ToolIndex == 3:
-#           self.ToolList[self.ToolIndex].clearSelection()
+        if self.ToolIndex == 3 or self.ToolIndex == 2:
             self.ToolList[self.ToolIndex].close_item_edit()
             
         self.ToolIndex += 1
