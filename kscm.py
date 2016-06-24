@@ -862,7 +862,7 @@ class ComponentField:
         
     def dump_line(self):
         print(self.Name        + ' '*(12 - len(self.Name)) +
-              self.Text        + ' '*(12 - len(self.Text)) +
+              self.Text[0:11]  + ' '*(12 - len(self.Text[0:11])) +
               self.Orientation + ' '*(14 - len(self.Orientation)) + 
               self.PosX        + ' '*(6  - len(self.PosX)) + 
               self.PosY        + ' '*(6  - len(self.PosY)) + 
@@ -871,7 +871,8 @@ class ComponentField:
               self.VJustify    + ' '*(9  - len(self.VJustify)) + 
               self.FontSize    + ' '*(7  - len(self.FontSize)) + 
               self.FontItalic  + ' '*(8  - len(self.FontItalic)) + 
-              self.FontBold)
+              self.FontBold    + ' '*(5  - len(self.FontBold)) + 
+              'F' + self.InnerCode)
         
 class Component:
     
@@ -921,19 +922,21 @@ class Component:
 #       print('***********************')
          
     def dump(self):
+        print('===================================================================================================')
         print('Ref       : ' + self.Ref)
         print('Lib Name  : ' + self.LibName)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)
         
-        print('----------------------------------------------------------------------------------------------')
-        print('Name         Text       Orientation    X     Y   Visible  H Align  V Align  Font  Italic  Bold')
-        print('----------------------------------------------------------------------------------------------')
+        print('--------------------------------------------------------------------------------------------------')
+        print('Name         Text       Orientation    X     Y   Visible  H Align  V Align  Font  Italic  Bold  ID')
+        print('--------------------------------------------------------------------------------------------------')
         for f in self.Fields:
             f.dump_line()
             #f.dump()
    
+        print('===================================================================================================')
         
 #-------------------------------------------------------------------------------
 def split_alphanumeric(x):
