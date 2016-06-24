@@ -52,6 +52,14 @@ class Inspector(QTreeWidget):
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
                 return QStyledItemDelegate.createEditor(self, parent, option, idx)
+                
+        def setModelData(self, editor, model, idx):
+            print('Inspector::TextItemDelegate::setModelData')
+            print(editor.text())
+            print(self.parent().comps)
+            self.parent().comps[0][0].dump()
+            
+            QStyledItemDelegate.setModelData(self, editor, model, idx)
         
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
@@ -66,8 +74,6 @@ class Inspector(QTreeWidget):
         self.setColumnCount(2)
         self.header().resizeSection(2, 10)
         self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
-        #self.header().setStretchLastSection(False)
-        #self.setHeaderLabels( ('Edit', 'Property', 'Value') );
         self.setHeaderLabels( ('Property', 'Value') );
         self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
         self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
@@ -86,7 +92,6 @@ class Inspector(QTreeWidget):
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
         item.setData(column, Qt.UserRole, data)
-        #item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         item.setExpanded (True)
         item.setFlags(Qt.ItemIsEnabled)
         return item
@@ -117,10 +122,13 @@ class Inspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
         self.editItem(item, colDATA)
+        #print('Inspector::item_activated')
             
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
 
+        #print('Inspector::item_changed')
+        
         idx    = self.indexFromItem(prev, colDATA)
         editor = self.indexWidget(idx)
 
@@ -135,14 +143,14 @@ class Inspector(QTreeWidget):
 
     #---------------------------------------------------------------------------    
     def close_item_edit(self):
-        print('Inspector::close_item_edit')
+        #print('Inspector::close_item_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
-        print(editor)
+       # print(editor)
 
         if editor:
-            print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
+            #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
     #---------------------------------------------------------------------------    
@@ -291,7 +299,7 @@ class FieldInspector(QTreeWidget):
 
                             
             if e.type() == QEvent.Leave:
-                print('======== mouse leave')
+                #print('======== mouse leave')
                 self.parent().close_item_edit()
                 return False
                 
@@ -387,14 +395,14 @@ class FieldInspector(QTreeWidget):
     
     #---------------------------------------------------------------------------    
     def close_item_edit(self):
-        print('FieldInspector::close_item_edit')
+        #print('FieldInspector::close_item_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
-        print(editor)
+        #print(editor)
         
         if editor:
-            print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
+            #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
         
@@ -436,8 +444,8 @@ class FieldInspector(QTreeWidget):
         param = self.param
         
         comp = comps[0]
-        print(comp)
-        print(param)
+        #print(comp)
+        #print(param)
         
         if param == 'Ref':
             f = comp[0].Fields[0]
@@ -593,8 +601,6 @@ class MainWindow(QMainWindow):
                 mod = e.modifiers()
 
                 #print(obj.focusWidget().metaObject().className())
-            if e.type() == QEvent.MouseMove:
-                print(e.pos())
 
             return False
 
@@ -608,7 +614,7 @@ class MainWindow(QMainWindow):
         if self.ToolIndex < 0:
             self.ToolIndex = len(self.ToolList) - 1
             
-        print(self.ToolIndex)
+        print('Tool Index: ' + str(self.ToolIndex))
         self.ToolList[self.ToolIndex].setFocus()
         
     def scroll_right(self):
@@ -620,7 +626,7 @@ class MainWindow(QMainWindow):
         if self.ToolIndex == len(self.ToolList):
             self.ToolIndex = 0
 
-        print(self.ToolIndex)
+        print('Tool Index: ' + str(self.ToolIndex))
         self.ToolList[self.ToolIndex].setFocus()
         
     def mouse_change_tool(self, s):
@@ -769,7 +775,7 @@ class MainWindow(QMainWindow):
         #
         self.setWindowTitle('KiCad Schematic Component Manager')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
-        print(Settings.allKeys())
+        #print(Settings.allKeys())
         if Settings.contains('geometry'):
             self.restoreGeometry( Settings.value('geometry') )
         else:
@@ -799,7 +805,7 @@ class MainWindow(QMainWindow):
                 
     #---------------------------------------------------------------------------    
     def closeEvent(self, event):
-        print('close app')
+        #print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
@@ -842,6 +848,31 @@ class ComponentField:
         self.FontItalic  = 'Yes'  if rec[9]  == 'I' else 'No'
         self.FontBold    = 'Yes'  if rec[10] == 'B' else 'No'
     
+    def dump(self):
+        print('Text        : ' + self.Text)
+        print('Orientation : ' + self.Orientation)
+        print('X           : ' + self.PosX)
+        print('Y           : ' + self.PosY)
+        print('Visible     : ' + self.Visible)
+        print('H Justify   : ' + self.HJustify)
+        print('V Justify   : ' + self.VJustify)
+        print('Font Size   : ' + self.FontSize)
+        print('Font Italic : ' + self.FontItalic)
+        print('Font Bold   : ' + self.FontBold)
+        
+    def dump_line(self):
+        print(self.Name        + ' '*(12 - len(self.Name)) +
+              self.Text        + ' '*(12 - len(self.Text)) +
+              self.Orientation + ' '*(14 - len(self.Orientation)) + 
+              self.PosX        + ' '*(6  - len(self.PosX)) + 
+              self.PosY        + ' '*(6  - len(self.PosY)) + 
+              self.Visible     + ' '*(8  - len(self.Visible)) + 
+              self.HJustify    + ' '*(9  - len(self.HJustify)) + 
+              self.VJustify    + ' '*(9  - len(self.VJustify)) + 
+              self.FontSize    + ' '*(7  - len(self.FontSize)) + 
+              self.FontItalic  + ' '*(8  - len(self.FontItalic)) + 
+              self.FontBold)
+        
 class Component:
     
     def __init__(self):
@@ -888,7 +919,21 @@ class Component:
 #           print(vars(i))
 #
 #       print('***********************')
-            
+         
+    def dump(self):
+        print('Ref       : ' + self.Ref)
+        print('Lib Name  : ' + self.LibName)
+        print('X         : ' + self.PosX)
+        print('Y         : ' + self.PosY)
+        print('Timestump : ' + self.Timestamp)
+        
+        print('----------------------------------------------------------------------------------------------')
+        print('Name         Text       Orientation    X     Y   Visible  H Align  V Align  Font  Italic  Bold')
+        print('----------------------------------------------------------------------------------------------')
+        for f in self.Fields:
+            f.dump_line()
+            #f.dump()
+   
         
 #-------------------------------------------------------------------------------
 def split_alphanumeric(x):
