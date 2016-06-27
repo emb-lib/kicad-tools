@@ -52,12 +52,28 @@ class Inspector(QTreeWidget):
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
                 return QStyledItemDelegate.createEditor(self, parent, option, idx)
+              
                 
+        def setEditorData(self, editor, idx):
+#           value = idx.model().data(idx, Qt.EditRole)
+#           editor.set_index(value)
+            comps = []
+            for c in self.parent().comps:
+                if len(c) > 1:
+                    comps += c
+                else:
+                    comps.append(c[0])
+                    
+            for c in comps:
+                c.dump()
+                    
+            QStyledItemDelegate.setEditorData(self, editor, idx)
+            
+                  
         def setModelData(self, editor, model, idx):
             print('Inspector::TextItemDelegate::setModelData')
-            print(editor.text())
-            print(self.parent().comps)
-            self.parent().comps[0][0].dump()
+#           for c in self.parent().comps:
+#               c[0].dump()
             
             QStyledItemDelegate.setModelData(self, editor, model, idx)
         
@@ -916,14 +932,24 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
-#       for i in self.Fields:
-#           print(vars(i))
-#
-#       print('***********************')
-         
+        #self.dump()
+
+    def field(self, field):
+        for f in self.Fields:
+            if field == f.Name:
+                return f
+                
+        return None
+    
+
     def dump(self):
+        if int(self.PartNo) > 1:
+            part = '.' + self.PartNo
+        else:
+            part = ''
+            
         print('===================================================================================================')
-        print('Ref       : ' + self.Ref)
+        print('Ref       : ' + self.Ref + part)
         print('Lib Name  : ' + self.LibName)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
