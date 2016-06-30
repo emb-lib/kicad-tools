@@ -201,6 +201,8 @@ class Inspector(QTreeWidget):
             #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+            
+        
     #---------------------------------------------------------------------------    
     def prepare_item(self, item, param):
         l = []
@@ -208,13 +210,14 @@ class Inspector(QTreeWidget):
             l.append( eval('c.' + param) )
 
         vals = list(set(l))
+        vals.sort()
         row  = self.indexFromItem(item, colDATA).row()
         if len(vals) == 1:
             self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
             item.setData(colDATA, Qt.DisplayRole, vals[0])
 
         else:
-            vals.insert(0, '[...]')
+            vals.insert(0, '<...>')
             self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )
             item.setData(colDATA, Qt.DisplayRole, vals[0])
         
@@ -247,27 +250,21 @@ class Inspector(QTreeWidget):
 
             if item.data(colNAME, Qt.DisplayRole) == 'Value':
                 self.prepare_item(item, 'Fields[1].Text')
-                #item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[1].Text)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
                 self.prepare_item(item, 'Fields[2].Text')
-                #item.setData(colDATA, Qt.EditRole, comp[0].Fields[2].Text)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
                 self.prepare_item(item, 'Fields[3].Text')
-                #item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[3].Text)
 
             if item.data(colNAME, Qt.DisplayRole) == 'X':
                 self.prepare_item(item, 'PosX')
-                #item.setData(colDATA, Qt.DisplayRole, comp[0].PosX)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Y':
                 self.prepare_item(item, 'PosY')
-                #item.setData(colDATA, Qt.DisplayRole, comp[0].PosY)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
                 self.prepare_item(item, 'Timestamp')
-                #item.setData(colDATA, Qt.DisplayRole, comp[0].Timestamp)
         
 #       self.topLevelItem(1).takeChildren()
 #
