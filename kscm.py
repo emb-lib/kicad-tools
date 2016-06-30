@@ -22,6 +22,30 @@ colEDIT = 0
 colNAME = 0
 colDATA = 1
 #-------------------------------------------------------------------------------
+class TComboBox(QComboBox):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setFocusPolicy(Qt.StrongFocus)
+
+    def keyPressEvent(self, e):
+        key = e.key()
+        mod = e.modifiers()
+        if key == Qt.Key_Down or key == Qt.Key_Up:
+            if not mod:
+                QApplication.sendEvent( self.parent(), e ) 
+                return
+            elif mod == Qt.AltModifier:
+                e = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
+
+        QComboBox.keyPressEvent(self, e)
+
+
+    def set_index(self, text):
+        items = [self.itemText(i) for i in range(self.count()) ]
+        self.setCurrentIndex( items.index(text) )
+
+#-------------------------------------------------------------------------------    
 class Inspector(QTreeWidget):
     
     #---------------------------------------------------------------------------    
@@ -51,21 +75,19 @@ class Inspector(QTreeWidget):
 
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
-                return QStyledItemDelegate.createEditor(self, parent, option, idx)
+                editor = QStyledItemDelegate.createEditor(self, parent, option, idx)
+                return editor
               
                 
         def setEditorData(self, editor, idx):
 #           value = idx.model().data(idx, Qt.EditRole)
 #           editor.set_index(value)
-            comps = []
-            for c in self.parent().comps:
-                if len(c) > 1:
-                    comps += c
-                else:
-                    comps.append(c[0])
-                    
-            for c in comps:
-                c.dump()
+             
+            name = idx.sibling(idx.row(), 0).data()
+            print(name)
+                           
+            #for c in comps:
+            #    c.dump()
                     
             QStyledItemDelegate.setEditorData(self, editor, idx)
             
@@ -77,6 +99,32 @@ class Inspector(QTreeWidget):
             
             QStyledItemDelegate.setModelData(self, editor, model, idx)
         
+    class CBoxItemDelegate(QStyledItemDelegate):
+
+        def __init__(self, parent, values):
+            super().__init__(parent)
+            self.values = values
+
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                editor = TComboBox(parent)
+                editor.setEnabled(True)
+                editor.setEditable(True)
+                editor.addItems( self.values )
+                #editor.setFocusPolicy(Qt.ClickFocus)
+
+                print('pos:  ' + str(editor.pos().x()) + ' ' + str(editor.pos().y()) )
+                print('pos2: ' + str(parent.pos().x()) + ' ' + str(parent.pos().y()) )
+                print('pos3: ' + str(parent.parent().pos().x()) + ' ' + str(parent.pos().y()) )
+                print(parent.parent().metaObject().className() )
+                
+                return editor
+
+        def setEditorData(self, editor, idx):
+            #print(editor.metaObject().className() )
+            value = idx.model().data(idx, Qt.EditRole)
+            editor.set_index(value)
+            
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -91,8 +139,8 @@ class Inspector(QTreeWidget):
         self.header().resizeSection(2, 10)
         self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
         self.setHeaderLabels( ('Property', 'Value') );
-        self.std_items   = self.addParent(self, 0, 'Standard', 'slon')
-        self.usr_items   = self.addParent(self, 0, 'User Defined', 'mamont')
+        self.std_items = self.addParent(self, 0, 'Standard', 'slon')
+        self.usr_items = self.addParent(self, 0, 'User Defined', 'mamont')
     
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.std_items, i[0], '')
@@ -170,75 +218,81 @@ class Inspector(QTreeWidget):
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
     #---------------------------------------------------------------------------    
-    def load_cmp(self, comps):
+    def load_cmp(self, cmps):
+        
+        #-------------------------------------
+        #
+        #    Create selected components list including parts
+        #
+        comps = []
+        for c in cmps:
+            if len(c) > 1:
+                comps += c
+            else:
+                comps.append(c[0])
         
         self.comps = comps
         comp = self.comps[0]
         
-        #print( (comp.__dict__) )
-        #print(self.topLevelItem(0).childCount())
         
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Ref':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].Ref)
+                print('top level: ' + str( self.indexFromItem(item.parent()).row() ))
+                
+                l = []
+                for c in comps:
+                    l.append(c.Ref)
+                    
+                vals = list(set(l))
+                row  = self.indexFromItem(item, colDATA).row()
+                print('ref row: ' + str(row))
+                if len(vals) == 1:
+                    self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
+                    item.setData(colDATA, Qt.DisplayRole, vals[0])
+                    
+                else:
+                    vals.insert(0, '[...]')
+                    self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )
+                    item.setData(colDATA, Qt.DisplayRole, vals[0])
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].LibName)
-                
-            if item.data(colNAME, Qt.DisplayRole) == 'Value':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[1].Text)
-                
-            if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
-                item.setData(colDATA, Qt.EditRole, comp[0].Fields[2].Text)
-                
-            if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[3].Text)
-                
-            if item.data(colNAME, Qt.DisplayRole) == 'X':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].PosX)
-                                
-            if item.data(colNAME, Qt.DisplayRole) == 'Y':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].PosY)
-                
-            if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
-                item.setData(colDATA, Qt.DisplayRole, comp[0].Timestamp)
+                row  = self.indexFromItem(item, colDATA).row()
+                print('libname row: ' + str(row))
+                    
+                                    
+#           if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
+#               item.setData(colDATA, Qt.DisplayRole, comp[0].LibName)
+#
+#           if item.data(colNAME, Qt.DisplayRole) == 'Value':
+#               item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[1].Text)
+#
+#           if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
+#               item.setData(colDATA, Qt.EditRole, comp[0].Fields[2].Text)
+#
+#           if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
+#               item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[3].Text)
+#
+#           if item.data(colNAME, Qt.DisplayRole) == 'X':
+#               item.setData(colDATA, Qt.DisplayRole, comp[0].PosX)
+#
+#           if item.data(colNAME, Qt.DisplayRole) == 'Y':
+#               item.setData(colDATA, Qt.DisplayRole, comp[0].PosY)
+#
+#           if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
+#               item.setData(colDATA, Qt.DisplayRole, comp[0].Timestamp)
         
-        self.topLevelItem(1).takeChildren()
-                        
-        for f in comp[0].Fields[4:]:
-            #print( f.InnerCode )
-            self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
+#       self.topLevelItem(1).takeChildren()
+#
+#       for f in comp[0].Fields[4:]:
+#           #print( f.InnerCode )
+#           self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
         
         #cur_item = self.topLevelItem(0).child(0)
         #self.setCurrentItem(cur_item)
         #self.item_clicked(cur_item, 0)
             
-#-------------------------------------------------------------------------------    
-class TComboBox(QComboBox):
-    
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setFocusPolicy(Qt.StrongFocus)
-
-    def keyPressEvent(self, e):
-        key = e.key()
-        mod = e.modifiers()
-        if key == Qt.Key_Down or key == Qt.Key_Up:
-            if not mod:
-                QApplication.sendEvent( self.parent(), e ) 
-                return
-            elif mod == Qt.AltModifier:
-                e = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
-            
-        QComboBox.keyPressEvent(self, e)
-        
-
-    def set_index(self, text):
-        items = [self.itemText(i) for i in range(self.count()) ]
-        self.setCurrentIndex( items.index(text) )
-        
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
@@ -264,7 +318,7 @@ class FieldInspector(QTreeWidget):
 
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
-                editor = TComboBox(parent.parent())
+                editor = TComboBox(parent)
                 editor.setEnabled(True)
                 editor.addItems( self.values )
                 #editor.setFocusPolicy(Qt.ClickFocus)
@@ -464,16 +518,16 @@ class FieldInspector(QTreeWidget):
         #print(param)
         
         if param == 'Ref':
-            f = comp[0].Fields[0]
+            f = comp.Fields[0]
         elif param == 'Value':
-            f = comp[0].Fields[1]
+            f = comp.Fields[1]
         elif param == 'Footprint':
-            f = comp[0].Fields[2]
+            f = comp.Fields[2]
         elif param == 'Doc Sheet':
-            f = comp[0].Fields[3]
+            f = comp.Fields[3]
         else:
             f = None
-            for field in comp[0].Fields[4:]:
+            for field in comp.Fields[4:]:
                 if field.Name == param:
                     f = field
             
