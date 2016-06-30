@@ -36,7 +36,7 @@ class TComboBox(QComboBox):
                 QApplication.sendEvent( self.parent(), e ) 
                 return
             elif mod == Qt.AltModifier:
-                e = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
+                self.showPopup()
 
         QComboBox.keyPressEvent(self, e)
 
@@ -80,23 +80,14 @@ class Inspector(QTreeWidget):
               
                 
         def setEditorData(self, editor, idx):
-#           value = idx.model().data(idx, Qt.EditRole)
-#           editor.set_index(value)
-             
             name = idx.sibling(idx.row(), 0).data()
             print(name)
-                           
-            #for c in comps:
-            #    c.dump()
                     
             QStyledItemDelegate.setEditorData(self, editor, idx)
             
                   
         def setModelData(self, editor, model, idx):
-            print('Inspector::TextItemDelegate::setModelData')
-#           for c in self.parent().comps:
-#               c[0].dump()
-            
+            #print('Inspector::TextItemDelegate::setModelData')
             QStyledItemDelegate.setModelData(self, editor, model, idx)
         
     class CBoxItemDelegate(QStyledItemDelegate):
@@ -111,13 +102,6 @@ class Inspector(QTreeWidget):
                 editor.setEnabled(True)
                 editor.setEditable(True)
                 editor.addItems( self.values )
-                #editor.setFocusPolicy(Qt.ClickFocus)
-
-                print('pos:  ' + str(editor.pos().x()) + ' ' + str(editor.pos().y()) )
-                print('pos2: ' + str(parent.pos().x()) + ' ' + str(parent.pos().y()) )
-                print('pos3: ' + str(parent.parent().pos().x()) + ' ' + str(parent.pos().y()) )
-                print(parent.parent().metaObject().className() )
-                
                 return editor
 
         def setEditorData(self, editor, idx):
