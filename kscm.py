@@ -190,8 +190,8 @@ class Inspector(QTreeWidget):
         self.item_clicked(item, colNAME)
 
     #---------------------------------------------------------------------------    
-    def close_item_edit(self):
-        #print('Inspector::close_item_edit')
+    def finish_edit(self):
+        print('Inspector::finish_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
@@ -201,6 +201,23 @@ class Inspector(QTreeWidget):
             #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+    #---------------------------------------------------------------------------    
+    def prepare_item(self, item, param):
+        l = []
+        for c in self.comps:
+            l.append( eval('c.' + param) )
+
+        vals = list(set(l))
+        row  = self.indexFromItem(item, colDATA).row()
+        if len(vals) == 1:
+            self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
+            item.setData(colDATA, Qt.DisplayRole, vals[0])
+
+        else:
+            vals.insert(0, '[...]')
+            self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )
+            item.setData(colDATA, Qt.DisplayRole, vals[0])
+        
     #---------------------------------------------------------------------------    
     def load_cmp(self, cmps):
         
@@ -218,54 +235,39 @@ class Inspector(QTreeWidget):
         self.comps = comps
         comp = self.comps[0]
         
-        
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
 
             if item.data(colNAME, Qt.DisplayRole) == 'Ref':
-                print('top level: ' + str( self.indexFromItem(item.parent()).row() ))
-                
-                l = []
-                for c in comps:
-                    l.append(c.Ref)
-                    
-                vals = list(set(l))
-                row  = self.indexFromItem(item, colDATA).row()
-                print('ref row: ' + str(row))
-                if len(vals) == 1:
-                    self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
-                    item.setData(colDATA, Qt.DisplayRole, vals[0])
-                    
-                else:
-                    vals.insert(0, '[...]')
-                    self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )
-                    item.setData(colDATA, Qt.DisplayRole, vals[0])
+                self.prepare_item(item, 'Ref')
                 
             if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
-                row  = self.indexFromItem(item, colDATA).row()
-                print('libname row: ' + str(row))
+                self.prepare_item(item, 'LibName')
                     
-                                    
-#           if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
-#               item.setData(colDATA, Qt.DisplayRole, comp[0].LibName)
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Value':
-#               item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[1].Text)
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
-#               item.setData(colDATA, Qt.EditRole, comp[0].Fields[2].Text)
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
-#               item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[3].Text)
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'X':
-#               item.setData(colDATA, Qt.DisplayRole, comp[0].PosX)
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Y':
-#               item.setData(colDATA, Qt.DisplayRole, comp[0].PosY)
-#
-#           if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
-#               item.setData(colDATA, Qt.DisplayRole, comp[0].Timestamp)
+
+            if item.data(colNAME, Qt.DisplayRole) == 'Value':
+                self.prepare_item(item, 'Fields[1].Text')
+                #item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[1].Text)
+
+            if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
+                self.prepare_item(item, 'Fields[2].Text')
+                #item.setData(colDATA, Qt.EditRole, comp[0].Fields[2].Text)
+
+            if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
+                self.prepare_item(item, 'Fields[3].Text')
+                #item.setData(colDATA, Qt.DisplayRole, comp[0].Fields[3].Text)
+
+            if item.data(colNAME, Qt.DisplayRole) == 'X':
+                self.prepare_item(item, 'PosX')
+                #item.setData(colDATA, Qt.DisplayRole, comp[0].PosX)
+
+            if item.data(colNAME, Qt.DisplayRole) == 'Y':
+                self.prepare_item(item, 'PosY')
+                #item.setData(colDATA, Qt.DisplayRole, comp[0].PosY)
+
+            if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
+                self.prepare_item(item, 'Timestamp')
+                #item.setData(colDATA, Qt.DisplayRole, comp[0].Timestamp)
         
 #       self.topLevelItem(1).takeChildren()
 #
@@ -448,8 +450,8 @@ class FieldInspector(QTreeWidget):
         self.item_clicked(item, colNAME)
     
     #---------------------------------------------------------------------------    
-    def close_item_edit(self):
-        #print('FieldInspector::close_item_edit')
+    def finish_edit(self):
+        #print('FieldInspector::finish_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
@@ -662,7 +664,7 @@ class MainWindow(QMainWindow):
     def scroll_left(self):
         print('alt-left')
         if self.ToolIndex == 3 or self.ToolIndex == 2:
-            self.ToolList[self.ToolIndex].close_item_edit()
+            self.ToolList[self.ToolIndex].finish_edit()
             
         self.ToolIndex -= 1
         if self.ToolIndex < 0:
@@ -674,7 +676,7 @@ class MainWindow(QMainWindow):
     def scroll_right(self):
         print('alt-right')
         if self.ToolIndex == 3 or self.ToolIndex == 2:
-            self.ToolList[self.ToolIndex].close_item_edit()
+            self.ToolList[self.ToolIndex].finish_edit()
             
         self.ToolIndex += 1
         if self.ToolIndex == len(self.ToolList):
@@ -695,7 +697,7 @@ class MainWindow(QMainWindow):
             self.ToolIndex = 3
             
         if self.ToolIndex != 3:
-            self.ToolList[3].close_item_edit()
+            self.ToolList[3].finish_edit()
         
         
     def __init__(self):
