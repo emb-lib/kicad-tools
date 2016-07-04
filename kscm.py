@@ -295,14 +295,16 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     class CBoxItemDelegate(QStyledItemDelegate):
 
-        def __init__(self, parent, values):
+        def __init__(self, parent, values, editable=False):
             super().__init__(parent)
             self.values = values
+            self.editable = editable
 
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
                 editor = TComboBox(parent)
                 editor.setEnabled(True)
+                editor.setEditable(self.editable)
                 editor.addItems( self.values )
                 #editor.setFocusPolicy(Qt.ClickFocus)
                 return editor
@@ -353,7 +355,7 @@ class FieldInspector(QTreeWidget):
                             
             if e.type() == QEvent.Leave:
                 #print('======== mouse leave')
-                self.parent().close_item_edit()
+                self.parent().finish_edit()
                 return False
                 
             return False
@@ -431,7 +433,7 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def item_changed(self, item, prev):
         
-        if not self.field:
+        if not item.data(colDATA, Qt.DisplayRole):
             return 
                 
         idx    = self.indexFromItem(prev, colDATA)
@@ -447,21 +449,8 @@ class FieldInspector(QTreeWidget):
         self.item_clicked(item, colNAME)
     
     #---------------------------------------------------------------------------    
-    def finish_edit(self):
-        #print('FieldInspector::finish_edit')
-        idx    = self.indexFromItem(self.currentItem(), colDATA)
-        editor = self.indexWidget(idx)
-
-        #print(editor)
-        
-        if editor:
-            #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
-            self.commitData(editor)
-            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-        
-    #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
-        if not self.field:
+        if not item.data(colDATA, Qt.DisplayRole):
             return 
 
         self.editItem(item, colDATA)
@@ -491,35 +480,90 @@ class FieldInspector(QTreeWidget):
             self.field.PosY = item.data(colDATA, Qt.DisplayRole)
 
     #---------------------------------------------------------------------------    
+    def finish_edit(self):
+        #print('FieldInspector::finish_edit')
+        idx    = self.indexFromItem(self.currentItem(), colDATA)
+        editor = self.indexWidget(idx)
+
+        #print(editor)
+
+        if editor:
+            #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
+            self.commitData(editor)
+            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+
+    #---------------------------------------------------------------------------    
+    def prepare_item(self, item, pindex):
+        l = []
+        for fg in self.fgroup:
+            if len(fg) == 2:
+                fstr = 'fg[0].Fields[fg[1]].'  
+            else:
+                fstr = 'fg[2].'
+                
+                
+            #print(fstr + ' ' + str(pindex))
+            p = eval( fstr + self.ItemsTable[pindex][1] ) # p means 'parameter'
+                
+            l.append( p )
+
+        vals = list(set(l))
+        vals.sort()
+        row  = self.indexFromItem(item, colDATA).row()
+        if len(vals) == 1:
+            s = 'self.' + self.ItemsTable[pindex][2]
+            self.setItemDelegateForRow( row, eval( s )(self, self.ItemsTable[pindex][3]) ) 
+        else:
+            vals.insert(0, '<...>')
+            
+            if self.ItemsTable[pindex][2] == 'TextItemDelegate':
+                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )   # True - editable combobox
+            else:
+                self.setItemDelegateForRow( row, eval('self.' + self.ItemsTable[pindex][2])(self, ['<...>'] + self.ItemsTable[pindex][3]) )  
+                
+        item.setData(colDATA, Qt.DisplayRole, vals[0])
+            
+    #---------------------------------------------------------------------------    
     def load_field(self):
         
         comps = self.comps
         param = self.param
         
-        comp = comps[0]
-        #print(comp)
+        #comp = comps[0]
+        #print(comps)
         #print(param)
         
-        if param == 'Ref':
-            f = comp.Fields[0]
-        elif param == 'Value':
-            f = comp.Fields[1]
-        elif param == 'Footprint':
-            f = comp.Fields[2]
-        elif param == 'Doc Sheet':
-            f = comp.Fields[3]
-        else:
-            f = None
-            for field in comp.Fields[4:]:
-                if field.Name == param:
-                    f = field
-            
-        self.field = f
-            
+        self.fgroup = []       # list of items 'Component:Fn[:Field]', 
+                               # where Fn - field number of parameter, Field - optional part
+        
+        no_field_params = ['Lib Name', 'X', 'Y', 'Timestamp']
+        std_params      = ['Ref', 'Value', 'Footprint', 'Doc Sheet']
+        
+        if param not in no_field_params:
+            for c in comps:
+                Fn = None
+                if param in std_params:
+
+                    Fn = std_params.index(param)
+                    print('Index Fn: ' + str(Fn))
+                else:
+                    for idx, field in enumerate(c.Fields[4:], start=4):
+                        if field.Name == param:
+                            Fn = idx
+                            break
+                if Fn != None:
+                    self.fgroup.append([c, Fn])
+                else:
+                    Fn = len(c.Fields)
+                    field = ComponentField.default(c, param, Fn)
+                    self.fgroup.append([c, Fn, field])
+             
+        print(self.fgroup)
+                                       
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
-            if f:
-                item.setData( colDATA, Qt.DisplayRole, eval('f.' + self.ItemsTable[i][1]) )
+            if len(self.fgroup) > 0:
+                self.prepare_item(item, i)
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
@@ -875,6 +919,7 @@ class MainWindow(QMainWindow):
 #-------------------------------------------------------------------------------
 class ComponentField:
     
+    #--------------------------------------------------------------
     def __init__(self, comp, rec):
 
         self.InnerCode = rec[0]
@@ -901,6 +946,25 @@ class ComponentField:
         self.FontItalic  = 'Yes'  if rec[9]  == 'I' else 'No'
         self.FontBold    = 'Yes'  if rec[10] == 'B' else 'No'
     
+    #--------------------------------------------------------------
+    @classmethod
+    def default(cls, comp, name, Fn):
+        rec = []
+        rec.append( str(Fn) )
+        rec.append( '~' )
+        rec.append( 'H' )
+        rec.append( comp.PosX )
+        rec.append( comp.PosY )
+        rec.append( comp.Fields[0].FontSize )
+        rec.append( '0000' )
+        rec.append( 'C' )
+        rec.append( 'C' )
+        rec.append( 'N' )
+        rec.append( 'N' )
+        rec.append( name )
+        return cls(comp, rec)
+        
+   #--------------------------------------------------------------
     def dump(self):
         print('Text        : ' + self.Text)
         print('Orientation : ' + self.Orientation)
@@ -913,6 +977,7 @@ class ComponentField:
         print('Font Italic : ' + self.FontItalic)
         print('Font Bold   : ' + self.FontBold)
         
+    #--------------------------------------------------------------
     def dump_line(self):
         print(self.Name        + ' '*(12 - len(self.Name)) +
               self.Text[0:11]  + ' '*(12 - len(self.Text[0:11])) +
@@ -927,6 +992,7 @@ class ComponentField:
               self.FontBold    + ' '*(5  - len(self.FontBold)) + 
               'F' + self.InnerCode)
         
+#-------------------------------------------------------------------------------
 class Component:
     
     def __init__(self):
@@ -964,6 +1030,7 @@ class Component:
         r = re.findall(cfre, rec)
         
         r.sort(key=lambda x: int(x[0]))
+        #print(r)
         
         self.Fields = []
         for i in r:
@@ -971,14 +1038,19 @@ class Component:
         
         #self.dump()
 
-    def field(self, field):
+    #--------------------------------------------------------------
+    def field(self, fname):
         for f in self.Fields:
-            if field == f.Name:
+            if fname == f.Name:
                 return f
                 
         return None
-    
-
+        
+    #--------------------------------------------------------------
+    def add_field(self, f):
+        self.Fields.append(f)
+        
+    #--------------------------------------------------------------
     def dump(self):
         if int(self.PartNo) > 1:
             part = '.' + self.PartNo
