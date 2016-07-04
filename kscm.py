@@ -109,6 +109,14 @@ class Inspector(QTreeWidget):
             value = idx.model().data(idx, Qt.EditRole)
             editor.set_index(value)
             
+        def setModelData(self, editor, model, idx):
+            value = editor.currentText()
+            if value not in self.values:
+                self.values.append(value)
+                
+            QStyledItemDelegate.setModelData(self, editor, model, idx)
+            
+            
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -314,6 +322,13 @@ class FieldInspector(QTreeWidget):
             value = idx.model().data(idx, Qt.EditRole)
             editor.set_index(value)
             
+        def setModelData(self, editor, model, idx):
+            value = editor.currentText()
+            if value not in self.values:
+                self.values.append(value)
+
+            QStyledItemDelegate.setModelData(self, editor, model, idx)
+                
     #---------------------------------------------------------------------------    
     #
     #              Title              Field Name         Delegate         Delegate Data
@@ -517,7 +532,7 @@ class FieldInspector(QTreeWidget):
             vals.insert(0, '<...>')
             
             if self.ItemsTable[pindex][2] == 'TextItemDelegate':
-                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )   # True - editable combobox
+                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals, True) )   # True - editable combobox
             else:
                 self.setItemDelegateForRow( row, eval('self.' + self.ItemsTable[pindex][2])(self, ['<...>'] + self.ItemsTable[pindex][3]) )  
                 
