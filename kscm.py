@@ -274,6 +274,8 @@ class Inspector(QTreeWidget):
             if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
                 self.prepare_item(item, 'Timestamp')
         
+        self.item_clicked(self.currentItem(), colDATA)
+                
 #       self.topLevelItem(1).takeChildren()
 #
 #       for f in comp[0].Fields[4:]:
