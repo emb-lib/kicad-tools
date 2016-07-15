@@ -90,6 +90,7 @@ class Inspector(QTreeWidget):
             #print('Inspector::TextItemDelegate::setModelData')
             QStyledItemDelegate.setModelData(self, editor, model, idx)
         
+#---------------------------------------------------------------------------    
     class CBoxItemDelegate(QStyledItemDelegate):
 
         def __init__(self, parent, values):
@@ -225,9 +226,46 @@ class Inspector(QTreeWidget):
             item.setData(colDATA, Qt.DisplayRole, vals[0])
 
         else:
+
             vals.insert(0, '<...>')
             self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )
             item.setData(colDATA, Qt.DisplayRole, vals[0])
+        
+    #---------------------------------------------------------------------------    
+    def reduce_list(self, l):
+        l = list(set(l))
+        l.sort()
+        return l
+        
+    #---------------------------------------------------------------------------    
+    def user_defined_params(self):
+        
+        l = []
+        for c in self.comps:
+            l += c.Fields[4:]
+           
+        fnames  = [ i.Name for i in l]
+        fvalues = [ i.Text for i in l]
+        
+        field_names = self.reduce_list(fnames)
+        
+        fdict = {}
+        for fn in field_names:
+            indices = [i for i, x in enumerate(fnames) if x == fn]
+            fdict[fn] = self.reduce_list( [fvalues[i] for i in indices] )
+            
+
+        for c in self.comps:
+            for f in fdict.keys():
+                if not c.field(f):
+                    fdict[f].append('~')
+                    
+        for f in fdict.keys():
+            if len(fdict[f]) > 1:
+                fdict[f] = self.reduce_list(fdict[f])
+                fdict[f].insert(0, '<...>')
+        
+        return fdict
         
     #---------------------------------------------------------------------------    
     def load_cmp(self, cmps):
@@ -273,18 +311,23 @@ class Inspector(QTreeWidget):
 
             if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
                 self.prepare_item(item, 'Timestamp')
-        
-        self.item_clicked(self.currentItem(), colDATA)
                 
-#       self.topLevelItem(1).takeChildren()
-#
-#       for f in comp[0].Fields[4:]:
-#           #print( f.InnerCode )
-#           self.addChild(self.usr_items, f.Name, f.Text, Qt.ItemIsEditable)
+        if self.currentItem():
+            self.item_clicked(self.currentItem(), colDATA)
         
-        #cur_item = self.topLevelItem(0).child(0)
-        #self.setCurrentItem(cur_item)
-        #self.item_clicked(cur_item, 0)
+            
+        self.topLevelItem(1).takeChildren()
+        user_fields = self.user_defined_params()        
+
+        for name in user_fields.keys():
+            item = self.addChild(self.usr_items, name, user_fields[name][0])
+            row  = self.indexFromItem(item, colDATA).row()
+
+            if len(user_fields[name]) == 1:
+                self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
+            else:
+                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, user_fields[name] ) )
+        
             
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
@@ -498,7 +541,7 @@ class FieldInspector(QTreeWidget):
 
     #---------------------------------------------------------------------------    
     def finish_edit(self):
-        #print('FieldInspector::finish_edit')
+        print('FieldInspector::finish_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
