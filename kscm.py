@@ -62,62 +62,78 @@ class Inspector(QTreeWidget):
                    ['Timestamp',        'TextItemDelegate', None] ]
 
     
+    StdParamsNameMap =\
+    {
+        'Ref'       : 'Ref',
+        'Lib Name'  : 'LibName',
+        'Value'     : 'Fields[1].Text',
+        'Footprint' : 'Fields[2].Text',
+        'Doc Sheet' : 'Fields[3].Text',
+        'X'         : 'PosX',
+        'Y'         : 'PosY',
+        'Timestamp' : 'Timestamp'
+    }
+    
+    
     #---------------------------------------------------------------------------    
     load_field  = pyqtSignal( [list], [str] )
     mouse_click = pyqtSignal([str])
-        
     #---------------------------------------------------------------------------    
-    class TextItemDelegate(QStyledItemDelegate):
-
-
-        def __init__(self, parent, values):
-            super().__init__(parent)
-
-        def createEditor(self, parent, option, idx):
-            if idx.column() == 1:
-                editor = QStyledItemDelegate.createEditor(self, parent, option, idx)
-                return editor
-              
-                
-        def setEditorData(self, editor, idx):
-            name = idx.sibling(idx.row(), 0).data()
-            print(name)
-                    
-            QStyledItemDelegate.setEditorData(self, editor, idx)
             
-                  
-        def setModelData(self, editor, model, idx):
-            #print('Inspector::TextItemDelegate::setModelData')
-            QStyledItemDelegate.setModelData(self, editor, model, idx)
+#-------------------------------------------------------------------------------    
+    class InspectorItemsDelegate(QStyledItemDelegate):
+
+        TEXT_DELEGATE = 0
+        CBOX_DELEGATE = 1
         
-#---------------------------------------------------------------------------    
-    class CBoxItemDelegate(QStyledItemDelegate):
-
-        def __init__(self, parent, values):
+        
+        
+        def __init__(self, parent):
             super().__init__(parent)
-            self.values = values
-
+            self.editors = {}
+        
+        def clear_editor_data(self):
+            self.editors = {}
+            
+        def add_editor_data(self, name, editor_type, editor_data = []):
+            self.editors[name] = [editor_type, editor_data]
+            
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
-                editor = TComboBox(parent)
-                editor.setEnabled(True)
-                editor.setEditable(True)
-                editor.addItems( self.values )
-                return editor
+                name = idx.sibling(idx.row(), 0).data()
+                etype = self.editors[name][0]
+                if etype == self.TEXT_DELEGATE:
+                    editor = QStyledItemDelegate.createEditor(self, parent, option, idx)
+                    return editor
+                else:
+                    editor = TComboBox(parent)
+                    editor.setEnabled(True)
+                    editor.setEditable(True)
+                    editor.addItems( self.editors[name][1] )
+                    return editor
+                
 
         def setEditorData(self, editor, idx):
             #print(editor.metaObject().className() )
-            value = idx.model().data(idx, Qt.EditRole)
-            editor.set_index(value)
-            
+            name = idx.sibling(idx.row(), 0).data()
+            if self.editors[name][0] == self.TEXT_DELEGATE:
+                QStyledItemDelegate.setEditorData(self, editor, idx)
+            else:
+                value = idx.model().data(idx, Qt.EditRole)
+                editor.set_index(value)
+
         def setModelData(self, editor, model, idx):
-            value = editor.currentText()
-            if value not in self.values:
-                self.values.append(value)
-                
-            QStyledItemDelegate.setModelData(self, editor, model, idx)
-            
-            
+            name = idx.sibling(idx.row(), 0).data()
+            if self.editors[name][0] == self.TEXT_DELEGATE:
+                QStyledItemDelegate.setModelData(self, editor, model, idx)
+            else:
+                value = editor.currentText()
+                values = self.editors[name][1]
+                if value not in values:
+                    values.append(value)
+
+                QStyledItemDelegate.setModelData(self, editor, model, idx)
+
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -137,10 +153,12 @@ class Inspector(QTreeWidget):
     
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.std_items, i[0], '')
-            self.setItemDelegateForRow( idx, eval('self.' + i[1])(self, i[2]) )
             
         self.addChild(self.usr_items, '<empty>', '')
-            
+        
+        self.ItemsDelegate = self.InspectorItemsDelegate(self)
+        self.setItemDelegate(self.ItemsDelegate)
+        
         self.itemClicked.connect(self.item_clicked)
         self.currentItemChanged.connect(self.item_changed)
         self.itemActivated.connect(self.item_activated)
@@ -162,6 +180,18 @@ class Inspector(QTreeWidget):
         return item
         
     #---------------------------------------------------------------------------    
+    def item_row(self, item):
+        parent = item.parent()
+        
+        for i in range( self.topLevelItemCount() ):
+            if parent == self.topLevelItem(i):
+                row = self.indexFromItem(item, colDATA).row()
+                for j in range(i):
+                    row += self.topLevelItem(j).childCount()
+                
+                return row
+                
+    #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
         
         param = item.data(colNAME, Qt.DisplayRole)
@@ -173,10 +203,6 @@ class Inspector(QTreeWidget):
             self.load_field.emit([comps, param])
             
     #---------------------------------------------------------------------------    
-    def item_changed(self, item, prev):
-        self.item_clicked(item, colNAME)
-                
-    #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
         self.editItem(item, colDATA)
         #print('Inspector::item_activated')
@@ -185,17 +211,18 @@ class Inspector(QTreeWidget):
     def item_changed(self, item, prev):
 
         #print('Inspector::item_changed')
-        
+                
         idx    = self.indexFromItem(prev, colDATA)
         editor = self.indexWidget(idx)
 
+        
         if editor:
+            print(editor)
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
 
         self.editItem(item, colDATA)
-     #   self.handle_item(item)    
         self.item_clicked(item, colNAME)
 
     #---------------------------------------------------------------------------    
@@ -210,26 +237,27 @@ class Inspector(QTreeWidget):
             #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-            
         
     #---------------------------------------------------------------------------    
-    def prepare_item(self, item, param):
+    def prepare_std_params(self, item):
+        name  = item.data(colNAME, Qt.DisplayRole)
+        param = self.StdParamsNameMap[name]
+        
         l = []
         for c in self.comps:
             l.append( eval('c.' + param) )
 
         vals = list(set(l))
         vals.sort()
-        row  = self.indexFromItem(item, colDATA).row()
         if len(vals) == 1:
-            self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
+            self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
 
         else:
-
             vals.insert(0, '<...>')
-            self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals) )
+            self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
+        
         
     #---------------------------------------------------------------------------    
     def reduce_list(self, l):
@@ -282,53 +310,28 @@ class Inspector(QTreeWidget):
                 comps.append(c[0])
         
         self.comps = comps
+        self.ItemsDelegate.clear_editor_data()
         comp = self.comps[0]
         
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
-
-            if item.data(colNAME, Qt.DisplayRole) == 'Ref':
-                self.prepare_item(item, 'Ref')
-                
-            if item.data(colNAME, Qt.DisplayRole) == 'Lib Name':
-                self.prepare_item(item, 'LibName')
-                    
-
-            if item.data(colNAME, Qt.DisplayRole) == 'Value':
-                self.prepare_item(item, 'Fields[1].Text')
-
-            if item.data(colNAME, Qt.DisplayRole) == 'Footprint':
-                self.prepare_item(item, 'Fields[2].Text')
-
-            if item.data(colNAME, Qt.DisplayRole) == 'Doc Sheet':
-                self.prepare_item(item, 'Fields[3].Text')
-
-            if item.data(colNAME, Qt.DisplayRole) == 'X':
-                self.prepare_item(item, 'PosX')
-
-            if item.data(colNAME, Qt.DisplayRole) == 'Y':
-                self.prepare_item(item, 'PosY')
-
-            if item.data(colNAME, Qt.DisplayRole) == 'Timestamp':
-                self.prepare_item(item, 'Timestamp')
-                
-        if self.currentItem():
-            self.item_clicked(self.currentItem(), colDATA)
-        
+            self.prepare_std_params(item)
             
+                        
         self.topLevelItem(1).takeChildren()
         user_fields = self.user_defined_params()        
-
+        row_offset  = self.topLevelItem(0).childCount()
+        
         for name in user_fields.keys():
             item = self.addChild(self.usr_items, name, user_fields[name][0])
-            row  = self.indexFromItem(item, colDATA).row()
-
-            if len(user_fields[name]) == 1:
-                self.setItemDelegateForRow( row, self.TextItemDelegate(self, None) )
-            else:
-                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, user_fields[name] ) )
-        
             
+            if len(user_fields[name]) == 1:
+                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
+            else:
+                vals = user_fields[name]
+                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+            
+                            
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
@@ -605,7 +608,7 @@ class FieldInspector(QTreeWidget):
                 if param in std_params:
 
                     Fn = std_params.index(param)
-                    print('Index Fn: ' + str(Fn))
+                    #print('Index Fn: ' + str(Fn))
                 else:
                     for idx, field in enumerate(c.Fields[4:], start=4):
                         if field.Name == param:
@@ -618,7 +621,7 @@ class FieldInspector(QTreeWidget):
                     field = ComponentField.default(c, param, Fn)
                     self.fgroup.append([c, Fn, field])
              
-        print(self.fgroup)
+        #print(self.fgroup)
                                        
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
