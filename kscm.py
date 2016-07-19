@@ -16,6 +16,9 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
+from PyQt5.QtCore import QT_VERSION_STR
+
+print('Qt Version: ' + QT_VERSION_STR)
 
 #-------------------------------------------------------------------------------
 colEDIT = 0
