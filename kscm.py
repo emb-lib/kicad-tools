@@ -1102,6 +1102,15 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
+        r = re.search('(\s+\d\s+\d+\s+\d+\n\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s*)', rec)
+        if r:
+            self.Trailer = r.groups()[0]
+            print(self.Trailer)
+        else:
+            print('E: invalid component trailer record, rec: "' + rec + '"')
+            sys.exit(1)
+         
+            
         #self.dump()
 
     #--------------------------------------------------------------
