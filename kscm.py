@@ -680,11 +680,13 @@ class ComponentsTable(QTableWidget):
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Name') )
 
-        b   = read_file('det-1/det-1.sch')
-        rcl = raw_cmp_list(b)
-        ipl = ['LBL'] 
-        self.CmpDict = cmp_dict(rcl, ipl)
-        self.update_cmp_list(self.CmpDict)
+        if len(sys.argv) > 1:
+            fname = sys.argv[1]
+            if os.path.exists(fname):
+                self.load_file(fname)
+            else:
+                print('E: input file "' + fname + '"does not exist')
+        
         
         self.setTabKeyNavigation(False)        
 #       for r in range(self.rowCount()):
@@ -707,6 +709,15 @@ class ComponentsTable(QTableWidget):
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
         self.cells_chosen.emit(refs)
+        
+    #---------------------------------------------------------------------------    
+    def load_file(self, fname):
+        #b   = read_file('det-1/det-1.sch')
+        b   = read_file(fname)
+        rcl = raw_cmp_list(b)                 # rcl - raw component list
+        ipl = ['LBL']                         # ipl - ignored pattern list
+        self.CmpDict = cmp_dict(rcl, ipl)
+        self.update_cmp_list(self.CmpDict)
         
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
@@ -811,7 +822,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         self.initUI()
-
+        
         self.installEventFilter(self.EventFilter(self))
         
         self.setFocusPolicy(Qt.WheelFocus)
@@ -1187,10 +1198,9 @@ def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
             cdict[cmp.Ref] = []
 
         cdict[cmp.Ref].append(cmp)
-     
-        
            
     return cdict
+    
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
