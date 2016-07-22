@@ -714,10 +714,8 @@ class ComponentsTable(QTableWidget):
     #---------------------------------------------------------------------------    
     def load_file(self, fname):
         #b   = read_file('det-1/det-1.sch')
-        b   = read_file(fname)
-        rcl = raw_cmp_list(b)                 # rcl - raw component list
-        ipl = ['LBL']                         # ipl - ignored pattern list
-        self.CmpDict = cmp_dict(rcl, ipl)
+        #self.CmpDict = cmp_dict(rcl, ipl)
+        self.CmpDict = CmpMgr.load_file(fname)
         self.update_cmp_list(self.CmpDict)
         
     #---------------------------------------------------------------------------    
@@ -856,12 +854,13 @@ class MainWindow(QMainWindow):
         
         openAction = QAction(QIcon('open24.png'), 'Open', self)
         openAction.setShortcut('Ctrl+O')
-        openAction.setStatusTip('Open schematic file')
+        openAction.setStatusTip('Open Schematic File')
         openAction.triggered.connect(self.open_file)
         
         saveAction = QAction(QIcon('save24.png'), 'Save', self)
         saveAction.setShortcut('Ctrl+S')
-        saveAction.setStatusTip('Save schematic file')
+        saveAction.setStatusTip('Save Schematic File')
+        saveAction.triggered.connect(self.save_file)
                 
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -1022,10 +1021,12 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             filenames = dialog.selectedFiles()
         
-        self.current_file = filenames[0]
-        self.CmpTable.load_file(self.current_file)
-        #self.fileSelected.emit(self.current_file)
+        CmpMgr.set_curr_file_name( filenames[0] )
+        self.CmpTable.load_file( filenames[0] )
             
+    #---------------------------------------------------------------------------
+    def save_file(self):
+        CmpMgr.save_file('det-1/det-1-1.sch')
 
 #-------------------------------------------------------------------------------
 class ComponentField:
@@ -1154,8 +1155,9 @@ class Component:
             print('E: invalid component trailer record, rec: "' + rec + '"')
             sys.exit(1)
          
-            
-        #self.dump()
+        
+        if self.Ref == 'A1':
+            self.dump()
 
     #--------------------------------------------------------------
     def field(self, fname):
@@ -1192,49 +1194,88 @@ class Component:
    
         print('===================================================================================================')
         
+    #--------------------------------------------------------------
+    def create_cmp_rec(self):
+        print(self.Ref)
+        pass
+                
 #-------------------------------------------------------------------------------
 def split_alphanumeric(x):
     r = re.split('(\d+)', x)
-    
+
     return ( r[0], int(r[1]) )
 #-------------------------------------------------------------------------------
-def read_file(fname):
-    with open(fname, 'rb') as f:
-        b = f.read()
+class ComponentManager:
+    
+    def __init__(self):
+        self.current_file_name = ''
         
-    return b.decode()
-#-------------------------------------------------------------------------------
-def raw_cmp_list(s):
-    pattern = '\$Comp\n((?:.*\n)+?)\$EndComp'
-    res = re.findall(pattern, s)
-    
-    return res
+    #---------------------------------------------------------------------------
+    def set_curr_file_name(self, fname):
+        self.current_file_name = fname
+        
+    #---------------------------------------------------------------------------
+    def read_file(self, fname):
+        with open(fname, 'rb') as f:
+            b = f.read()
 
-#-------------------------------------------------------------------------------
-def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
+        self.infile = b.decode()
+        return self.infile
     
-    cdict = {}
-    
-    for i in rcl:
-        cmp = Component()
-        cmp.parse_comp(i)
-        ignore = False
-        for ip in ipl:
-            r = re.search(ip+'.*\d+', cmp.Ref)
-            if r:
-                ignore = True
+    #---------------------------------------------------------------------------
+    def raw_cmp_list(self, s):
+        pattern = '\$Comp\n((?:.*\n)+?)\$EndComp'
+        res = re.findall(pattern, s)
+
+        return res
+        
+    #---------------------------------------------------------------------------
+    def load_file(self, fname):
+        b   = self.read_file(fname)
+        rcl = self.raw_cmp_list(b)                     # rcl - raw component list
+        ipl = ['LBL']                                  # ipl - ignored pattern list
+        self.current_file_name = fname
+        return self.cmp_dict(rcl, ipl)
+        
+    #---------------------------------------------------------------------------
+    def cmp_dict(self, rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
+
+        cdict = {}
+
+        for i in rcl:
+            cmp = Component()
+            cmp.parse_comp(i)
+            ignore = False
+            for ip in ipl:
+                r = re.search(ip+'.*\d+', cmp.Ref)
+                if r:
+                    ignore = True
+                    continue
+
+            if ignore:
                 continue
-           
-        if ignore:
-            continue
-            
-        if not cmp.Ref in cdict:
-            cdict[cmp.Ref] = []
 
-        cdict[cmp.Ref].append(cmp)
-           
-    return cdict
-    
+            if not cmp.Ref in cdict:
+                cdict[cmp.Ref] = []
+
+            cdict[cmp.Ref].append(cmp)
+
+        self.cdict = cdict
+        return self.cdict
+
+    #---------------------------------------------------------------------------
+    def save_file(self, fname):
+
+        cl = list(self.cdict.keys())
+        cl.sort()
+        for k in cl:
+            clist = self.cdict[k]
+            for c in clist:
+                c.create_cmp_rec()
+        
+#-------------------------------------------------------------------------------
+CmpMgr = ComponentManager()     
+
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
