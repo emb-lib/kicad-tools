@@ -11,7 +11,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication)
+                             QAbstractItemView, QHeaderView, QMainWindow, QApplication,
+                             QFileDialog)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
@@ -853,18 +854,31 @@ class MainWindow(QMainWindow):
         Layout    = QHBoxLayout(work_zone)
         self.setCentralWidget(work_zone)
         
+        openAction = QAction(QIcon('open24.png'), 'Open', self)
+        openAction.setShortcut('Ctrl+O')
+        openAction.setStatusTip('Open schematic file')
+        openAction.triggered.connect(self.open_file)
+        
+        saveAction = QAction(QIcon('save24.png'), 'Save', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.setStatusTip('Save schematic file')
+                
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(self.close)        
+        exitAction.triggered.connect(self.close)
         
         self.statusBar().showMessage('Ready')
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(saveAction)
         fileMenu.addAction(exitAction)
 
         toolbar = self.addToolBar('Exit')
+        toolbar.addAction(openAction)        
+        toolbar.addAction(saveAction)        
         toolbar.addAction(exitAction)        
         
         self.CmpTabBox    = QGroupBox('Components', self)
@@ -926,6 +940,9 @@ class MainWindow(QMainWindow):
         
         
         #----------------------------------------------------
+        #
+        #     Signals and Slots connections
+        #
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         
@@ -935,6 +952,7 @@ class MainWindow(QMainWindow):
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
         
+        #----------------------------------------------------
         self.ToolList = []
         self.ToolList.append(self.CmpTable)
         self.ToolList.append(self.Selector)
@@ -977,7 +995,7 @@ class MainWindow(QMainWindow):
         self.show()
         
                 
-    #---------------------------------------------------------------------------    
+    #---------------------------------------------------------------------------
     def closeEvent(self, event):
         #print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
@@ -992,6 +1010,22 @@ class MainWindow(QMainWindow):
 #       for ref in self.CmpTable.CmpDict.keys():
 #           print( ref + ' ' + self.CmpTable.CmpDict[ref][0].Fields[2].Text)
         
+
+    #---------------------------------------------------------------------------
+    def open_file(self):
+        #filename = QFileDialog.getOpenFileName(self, 'Open schematic file', '/opt/cad/kicad', 'KiCad Schematic Files (*.sch)')
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setNameFilter('KiCad Schematic Files (*.sch)')
+        
+        filenames = []
+        if dialog.exec_():
+            filenames = dialog.selectedFiles()
+        
+        self.current_file = filenames[0]
+        self.CmpTable.load_file(self.current_file)
+        #self.fileSelected.emit(self.current_file)
+            
 
 #-------------------------------------------------------------------------------
 class ComponentField:
