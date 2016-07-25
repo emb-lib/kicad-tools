@@ -1148,7 +1148,7 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
-        r = re.search('(\s+\d\s+\d+\s+\d+\n\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s*)', rec)
+        r = re.search('([ \t]+\d\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01][ \t]*)', rec)
         if r:
             self.Trailer = r.groups()[0]
         else:
@@ -1195,9 +1195,46 @@ class Component:
         print('===================================================================================================')
         
     #--------------------------------------------------------------
+    def join_rec(self, l, s = ' '):
+        res = ''
+        for idx, i in enumerate(l, start = 1):
+            sep = s
+            if idx == len(l):
+                sep = ''
+            res += str(i) + sep
+
+        return res.strip()
+
+    #--------------------------------------------------------------
     def create_cmp_rec(self):
-        print(self.Ref)
-        pass
+        #print(self.Ref)
+        rec_list = []
+        rec_list.append('$Comp')
+        rec_list.append('L ' + self.LibName + ' ' + self.Ref)
+        rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
+        rec_list.append('P ' + self.PosX + ' ' + self.PosY)
+        
+        for f in self.Fields:
+            frec = ['F', 
+                    f.InnerCode,
+                    '"' + f.Text +'"',
+                    f.Orientation[0],
+                    int(self.PosX) + int(f.PosX),
+                    int(self.PosY) + int(f.PosY),
+                    f.FontSize,
+                    '0000' if f.Visible == 'Yes' else '0001',
+                    f.HJustify[0],
+                    f.VJustify[0] + ('I' if f.FontItalic == 'Yes' else 'N') + ('B' if f.FontBold == 'Yes' else 'N'),
+                    '"' + f.Name + '"' if f.Name not in ['Ref', 'Value', 'Footprint', 'DocSheet'] else '']
+            
+            rec_list.append( self.join_rec(frec) )
+            
+        rec_list.append(self.Trailer)
+        rec_list.append('$EndComp')
+        
+        rec = self.join_rec(rec_list, os.linesep)
+        
+        return rec
                 
 #-------------------------------------------------------------------------------
 def split_alphanumeric(x):
@@ -1271,7 +1308,9 @@ class ComponentManager:
         for k in cl:
             clist = self.cdict[k]
             for c in clist:
-                c.create_cmp_rec()
+                crec = c.create_cmp_rec()
+                if c.Ref == 'D71':
+                    print(crec)
         
 #-------------------------------------------------------------------------------
 CmpMgr = ComponentManager()     
