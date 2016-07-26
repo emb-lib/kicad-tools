@@ -5,7 +5,7 @@
 import sys
 import os
 import re
-#import yaml
+import shutil
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
@@ -862,6 +862,12 @@ class MainWindow(QMainWindow):
         saveAction.setStatusTip('Save Schematic File')
         saveAction.triggered.connect(self.save_file)
                 
+        saveAsAction = QAction(QIcon('save-as24.png'), 'Save As...', self)
+        saveAsAction.setShortcut('Ctrl+Shift+S')
+        saveAsAction.setStatusTip('Save Schematic File As...')
+        saveAsAction.triggered.connect(self.save_as_file)
+        
+                        
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
@@ -878,6 +884,7 @@ class MainWindow(QMainWindow):
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(openAction)        
         toolbar.addAction(saveAction)        
+        toolbar.addAction(saveAsAction)        
         toolbar.addAction(exitAction)        
         
         self.CmpTabBox    = QGroupBox('Components', self)
@@ -1021,13 +1028,30 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             filenames = dialog.selectedFiles()
         
-        CmpMgr.set_curr_file_name( filenames[0] )
+        CmpMgr.set_curr_file_path( filenames[0] )
         self.CmpTable.load_file( filenames[0] )
             
     #---------------------------------------------------------------------------
     def save_file(self):
-        CmpMgr.save_file('det-1-1/det-1-1.sch')
+        curr_file = CmpMgr.curr_file_path()
+        print('Save File "' + curr_file + '"')
+        
+        CmpMgr.save_file(curr_file)
 
+    #---------------------------------------------------------------------------
+    def save_as_file(self):
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setNameFilter('KiCad Schematic Files (*.sch)')
+
+        filenames = []
+        if dialog.exec_():
+            filenames = dialog.selectedFiles()
+
+        print('Save File As "' + filenames[0] + '"')
+        CmpMgr.save_file(filenames[0])
+        CmpMgr.set_curr_file_path( filenames[0] )
+                                     
 #-------------------------------------------------------------------------------
 class ComponentField:
     
@@ -1244,12 +1268,16 @@ def split_alphanumeric(x):
 class ComponentManager:
     
     def __init__(self):
-        self.current_file_name = ''
+        self.current_file_path = ''
         
     #---------------------------------------------------------------------------
-    def set_curr_file_name(self, fname):
-        self.current_file_name = fname
+    def set_curr_file_path(self, fname):
+        self.current_file_path = fname
         
+    #---------------------------------------------------------------------------
+    def curr_file_path(self):
+        return self.current_file_path
+
     #---------------------------------------------------------------------------
     def read_file(self, fname):
         with open(fname, 'rb') as f:
@@ -1270,7 +1298,7 @@ class ComponentManager:
         b   = self.read_file(fname)
         rcl = self.raw_cmp_list(b)                     # rcl - raw component list
         ipl = ['LBL']                                  # ipl - ignored pattern list
-        self.current_file_name = fname
+        self.current_file_path = fname
         return self.cmp_dict(rcl, ipl)
         
     #---------------------------------------------------------------------------
@@ -1302,6 +1330,13 @@ class ComponentManager:
     #---------------------------------------------------------------------------
     def save_file(self, fname):
 
+        dirname  = os.path.dirname(fname)
+        basename = os.path.basename(fname)
+        name     = os.path.splitext(basename)[0]
+        newname  = name + os.path.extsep + '~'
+        newpath  = os.path.join(dirname, newname)
+        shutil.copy(self.current_file_path, newpath)
+        
         cl = list(self.cdict.keys())
         cl.sort()
         outfile = self.infile
