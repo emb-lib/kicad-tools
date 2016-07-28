@@ -6,6 +6,7 @@ import sys
 import os
 import re
 import shutil
+
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
@@ -25,6 +26,7 @@ print('Qt Version: ' + QT_VERSION_STR)
 colEDIT = 0
 colNAME = 0
 colDATA = 1
+MULTIVALUE = '<...>'
 #-------------------------------------------------------------------------------
 class TComboBox(QComboBox):
 
@@ -89,8 +91,6 @@ class Inspector(QTreeWidget):
 
         TEXT_DELEGATE = 0
         CBOX_DELEGATE = 1
-        
-        
         
         def __init__(self, parent):
             super().__init__(parent)
@@ -242,6 +242,8 @@ class Inspector(QTreeWidget):
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
         
+        self.save_cmps()
+            
     #---------------------------------------------------------------------------    
     def prepare_std_params(self, item):
         name  = item.data(colNAME, Qt.DisplayRole)
@@ -258,7 +260,7 @@ class Inspector(QTreeWidget):
             item.setData(colDATA, Qt.DisplayRole, vals[0])
 
         else:
-            vals.insert(0, '<...>')
+            vals.insert(0, MULTIVALUE)
             self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
         
@@ -295,11 +297,11 @@ class Inspector(QTreeWidget):
         for f in fdict.keys():
             if len(fdict[f]) > 1:
                 fdict[f] = self.reduce_list(fdict[f])
-                fdict[f].insert(0, '<...>')
+                fdict[f].insert(0, MULTIVALUE)
         
         return fdict
         
-    #---------------------------------------------------------------------------    
+    #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
         
         #-------------------------------------
@@ -321,7 +323,6 @@ class Inspector(QTreeWidget):
             item = self.topLevelItem(0).child(i)
             self.prepare_std_params(item)
             
-                        
         self.topLevelItem(1).takeChildren()
         user_fields = self.user_defined_params()        
         row_offset  = self.topLevelItem(0).childCount()
@@ -335,7 +336,18 @@ class Inspector(QTreeWidget):
                 vals = user_fields[name]
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
             
-                            
+    #---------------------------------------------------------------------------                            
+    def save_cmps(self):
+        for c in self.comps:
+            for i in range( self.topLevelItem(0).childCount() ):
+                item = self.topLevelItem(0).child(i)
+                item_name  = item.data(colNAME, Qt.DisplayRole)
+                item_value = item.data(colDATA, Qt.DisplayRole)
+                if item_value != MULTIVALUE:
+                    exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                
+        
+                                            
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
@@ -581,12 +593,12 @@ class FieldInspector(QTreeWidget):
             s = 'self.' + self.ItemsTable[pindex][2]
             self.setItemDelegateForRow( row, eval( s )(self, self.ItemsTable[pindex][3]) ) 
         else:
-            vals.insert(0, '<...>')
+            vals.insert(0, MULTIVALUE)
             
             if self.ItemsTable[pindex][2] == 'TextItemDelegate':
                 self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals, True) )   # True - editable combobox
             else:
-                self.setItemDelegateForRow( row, eval('self.' + self.ItemsTable[pindex][2])(self, ['<...>'] + self.ItemsTable[pindex][3]) )  
+                self.setItemDelegateForRow( row, eval('self.' + self.ItemsTable[pindex][2])(self, [MULTIVALUE] + self.ItemsTable[pindex][3]) )  
                 
         item.setData(colDATA, Qt.DisplayRole, vals[0])
             
@@ -1253,6 +1265,11 @@ class Component:
             
             rec_list.append( self.join_rec(frec).strip() )
             
+            
+        pattern = '([ \t]+\d\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
+        r = re.match(pattern, self.Trailer).groups()
+        self.Trailer = r[0] + str(self.PosX) + r[1] + str(self.PosY) + r[2]
+        
         rec_list.append(self.Trailer)
         
         rec = self.join_rec(rec_list, os.linesep)
