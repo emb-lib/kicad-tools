@@ -275,24 +275,21 @@ class Inspector(QTreeWidget):
     def user_defined_params(self):
         
         l = []
-        for c in self.comps:
-            l += c.Fields[4:]
+        fnames_set = set([ i.Name for i in self.comps[0].Fields[4:]])
+        for c in self.comps[1:]:
+            fnames_set &= set( [ i.Name for i in c.Fields[4:]] )
            
-        fnames  = [ i.Name for i in l]
-        fvalues = [ i.Text for i in l]
-        
-        field_names = self.reduce_list(fnames)
+        fnames = list(fnames_set)
         
         fdict = {}
-        for fn in field_names:
-            indices = [i for i, x in enumerate(fnames) if x == fn]
-            fdict[fn] = self.reduce_list( [fvalues[i] for i in indices] )
-            
-
-        for c in self.comps:
-            for f in fdict.keys():
-                if not c.field(f):
-                    fdict[f].append('~')
+        for fn in fnames:
+            fvalues =  []
+            for c in self.comps:
+                f = c.field(fn)
+                if f:
+                    fvalues.append(f.Text)
+            fdict[fn] = self.reduce_list(fvalues)
+        
                     
         for f in fdict.keys():
             if len(fdict[f]) > 1:
@@ -346,6 +343,17 @@ class Inspector(QTreeWidget):
                 if item_value != MULTIVALUE:
                     exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
                 
+#           for i in range( self.topLevelItem(1).childCount() ):
+#               item = self.topLevelItem(1).child(i)
+#               item_name  = item.data(colNAME, Qt.DisplayRole)
+#               item_value = item.data(colDATA, Qt.DisplayRole)
+#               if item_value != MULTIVALUE:
+#                   for i in FieldInspector.fgroup:
+#                   f = c.field(item_name)
+#                   if f:
+#                       f.Text = item_value
+#                   else:
+                        
         
                                             
 #-------------------------------------------------------------------------------    
@@ -622,9 +630,7 @@ class FieldInspector(QTreeWidget):
             for c in comps:
                 Fn = None
                 if param in std_params:
-
                     Fn = std_params.index(param)
-                    #print('Index Fn: ' + str(Fn))
                 else:
                     for idx, field in enumerate(c.Fields[4:], start=4):
                         if field.Name == param:
@@ -637,7 +643,6 @@ class FieldInspector(QTreeWidget):
                     field = ComponentField.default(c, param, Fn)
                     self.fgroup.append([c, Fn, field])
              
-        #print(self.fgroup)
                                        
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
@@ -646,11 +651,6 @@ class FieldInspector(QTreeWidget):
             else:
                 item.setData( colDATA, Qt.DisplayRole, '' )
                     
-#       if f:
-#           cur_item = self.topLevelItem(0).child(0)
-#           self.setCurrentItem(cur_item)
-        #self.clearSelection()
-    
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
