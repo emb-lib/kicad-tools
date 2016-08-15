@@ -664,6 +664,7 @@ class FieldInspector(QTreeWidget):
             vals.append( eval('f.' + fparam_name) )
                 
         vals = self.reduce_list(vals)
+        #print(vals)
                      
         if len( self.ItemsParamNameMap[item_name] ) == 1:
             if len(vals) == 1:
@@ -671,15 +672,25 @@ class FieldInspector(QTreeWidget):
             else:
                 vals.insert(0, MULTIVALUE)
                 self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
+                
+            data_val = vals[0]
         else:
-            vals = self.ItemsParamNameMap[item_name][1]
+            print('*'*20)
+            print(item_name)
+            print(fparam_name)
+            data_val = vals[0]
             if len(vals) > 1:
-                vals.insert(0, MULTIVALUE)
-            
+                vals = [MULTIVALUE] + self.ItemsParamNameMap[item_name][1] 
+                data_val = vals[0]
+            else:
+                vals = self.ItemsParamNameMap[item_name][1] 
+
             self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
             
             
-        item.setData(colDATA, Qt.DisplayRole, vals[0])
+        print(item_name + ' : ' + data_val)
+        print(vals)
+        item.setData(colDATA, Qt.DisplayRole, data_val)
             
     #---------------------------------------------------------------------------    
     def load_field(self):
@@ -692,12 +703,12 @@ class FieldInspector(QTreeWidget):
         if param in NO_FIELD_PARAMS:
             return
         
-        print(param)
+        #print(param)
         
         flist = []
         for c in comps:
             flist.append( c.field(param) )
-            print(c.field(param))
+            #print(c.field(param))
                         
                         
         for i in range( self.topLevelItem(0).childCount() ):
