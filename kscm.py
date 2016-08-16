@@ -507,8 +507,8 @@ class FieldInspector(QTreeWidget):
 
                             
             if e.type() == QEvent.Leave:
-                #print('======== mouse leave')
-                self.parent().finish_edit()
+                print('======== mouse leave')
+               # self.parent().finish_edit()
                 return False
                 
             return False
@@ -701,6 +701,10 @@ class FieldInspector(QTreeWidget):
         param = self.param
         
         if param in NO_FIELD_PARAMS:
+            for i in range( self.topLevelItem(0).childCount() ):
+                item = self.topLevelItem(0).child(i)
+                item.setData(colDATA, Qt.DisplayRole, '')
+                
             return
         
         #print(param)
@@ -894,7 +898,7 @@ class MainWindow(QMainWindow):
             self.ToolIndex = 3
             
         if self.ToolIndex != 3:
-            self.ToolList[3].finish_edit()
+            self.ToolList[3].finish_edit()  # save field properties when leave field inspector
         
         
     def __init__(self):
