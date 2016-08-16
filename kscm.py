@@ -59,10 +59,10 @@ class Inspector(QTreeWidget):
     #              Title                  Delegate         Delegate Data
     #
     ItemsTable = [ ['Ref',              'TextItemDelegate', None],
-                   ['Lib Name',         'TextItemDelegate', None],
+                   ['LibName',          'TextItemDelegate', None],
                    ['Value',            'TextItemDelegate', None],
                    ['Footprint',        'TextItemDelegate', None],
-                   ['Doc Sheet',        'TextItemDelegate', None],
+                   ['DocSheet',         'TextItemDelegate', None],
                    ['X',                'TextItemDelegate', None],
                    ['Y',                'TextItemDelegate', None],
                    ['Timestamp',        'TextItemDelegate', None] ]
@@ -71,10 +71,10 @@ class Inspector(QTreeWidget):
     StdParamsNameMap =\
     {
         'Ref'       : 'Ref',
-        'Lib Name'  : 'LibName',
+        'LibName'   : 'LibName',
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
-        'Doc Sheet' : 'Fields[3].Text',
+        'DocSheet'  : 'Fields[3].Text',
         'X'         : 'PosX',
         'Y'         : 'PosY',
         'Timestamp' : 'Timestamp'
@@ -275,24 +275,21 @@ class Inspector(QTreeWidget):
     def user_defined_params(self):
         
         l = []
-        for c in self.comps:
-            l += c.Fields[4:]
+        fnames_set = set([ i.Name for i in self.comps[0].Fields[4:]])
+        for c in self.comps[1:]:
+            fnames_set &= set( [ i.Name for i in c.Fields[4:]] )
            
-        fnames  = [ i.Name for i in l]
-        fvalues = [ i.Text for i in l]
-        
-        field_names = self.reduce_list(fnames)
+        fnames = list(fnames_set)
         
         fdict = {}
-        for fn in field_names:
-            indices = [i for i, x in enumerate(fnames) if x == fn]
-            fdict[fn] = self.reduce_list( [fvalues[i] for i in indices] )
-            
-
-        for c in self.comps:
-            for f in fdict.keys():
-                if not c.field(f):
-                    fdict[f].append('~')
+        for fn in fnames:
+            fvalues =  []
+            for c in self.comps:
+                f = c.field(fn)
+                if f:
+                    fvalues.append(f.Text)
+            fdict[fn] = self.reduce_list(fvalues)
+        
                     
         for f in fdict.keys():
             if len(fdict[f]) > 1:
@@ -325,7 +322,7 @@ class Inspector(QTreeWidget):
             
         self.topLevelItem(1).takeChildren()
         user_fields = self.user_defined_params()        
-        row_offset  = self.topLevelItem(0).childCount()
+        #row_offset  = self.topLevelItem(0).childCount()
         
         for name in user_fields.keys():
             item = self.addChild(self.usr_items, name, user_fields[name][0])
@@ -346,6 +343,17 @@ class Inspector(QTreeWidget):
                 if item_value != MULTIVALUE:
                     exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
                 
+#           for i in range( self.topLevelItem(1).childCount() ):
+#               item = self.topLevelItem(1).child(i)
+#               item_name  = item.data(colNAME, Qt.DisplayRole)
+#               item_value = item.data(colDATA, Qt.DisplayRole)
+#               if item_value != MULTIVALUE:
+#                   for i in FieldInspector.fgroup:
+#                   f = c.field(item_name)
+#                   if f:
+#                       f.Text = item_value
+#                   else:
+                        
         
                                             
 #-------------------------------------------------------------------------------    
@@ -393,6 +401,59 @@ class FieldInspector(QTreeWidget):
 
             QStyledItemDelegate.setModelData(self, editor, model, idx)
                 
+            
+    class FieldInspectorItemsDelegate(QStyledItemDelegate):
+
+        TEXT_DELEGATE = 0
+        CBOX_DELEGATE = 1
+
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.editors = {}
+
+        def clear_editor_data(self):
+            self.editors = {}
+
+        def add_editor_data(self, name, editor_type, editor_data = []):
+            self.editors[name] = [editor_type, editor_data]
+
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                name = idx.sibling(idx.row(), 0).data()
+                etype = self.editors[name][0]
+                if etype == self.TEXT_DELEGATE:
+                    editor = QStyledItemDelegate.createEditor(self, parent, option, idx)
+                    return editor
+                else:
+                    editor = TComboBox(parent)
+                    editor.setEnabled(True)
+                    editor.setEditable(True)
+                    editor.addItems( self.editors[name][1] )
+                    return editor
+
+
+        def setEditorData(self, editor, idx):
+            #print(editor.metaObject().className() )
+            name = idx.sibling(idx.row(), 0).data()
+            if self.editors[name][0] == self.TEXT_DELEGATE:
+                QStyledItemDelegate.setEditorData(self, editor, idx)
+            else:
+                value = idx.model().data(idx, Qt.EditRole)
+                editor.set_index(value)
+
+        def setModelData(self, editor, model, idx):
+            name = idx.sibling(idx.row(), 0).data()
+            if self.editors[name][0] == self.TEXT_DELEGATE:
+                QStyledItemDelegate.setModelData(self, editor, model, idx)
+            else:
+                value = editor.currentText()
+                values = self.editors[name][1]
+                if value not in values:
+                    values.append(value)
+
+                QStyledItemDelegate.setModelData(self, editor, model, idx)
+            
+            
     #---------------------------------------------------------------------------    
     #
     #              Title              Field Name         Delegate         Delegate Data
@@ -400,12 +461,25 @@ class FieldInspector(QTreeWidget):
     ItemsTable = [ ['X',                'PosX',        'TextItemDelegate', None],
                    ['Y',                'PosY',        'TextItemDelegate', None],
                    ['Orientation',      'Orientation', 'CBoxItemDelegate', ['Horizontal', 'Vertical']],
-                   ['Visible',          'Visible',     'CBoxItemDelegate', ['Yes', 'No']],
+                   ['Visible',          'Visible',     'CBoxItemDelegate', ['Yes',  'No']],
                    ['Horizontal Align', 'HJustify',    'CBoxItemDelegate', ['Left', 'Center', 'Right']],
-                   ['Vertical Align',   'VJustify',    'CBoxItemDelegate', ['Top', 'Center', 'Bottom']],
+                   ['Vertical Align',   'VJustify',    'CBoxItemDelegate', ['Top',  'Center', 'Bottom']],
                    ['Font Size',        'FontSize',    'TextItemDelegate', None],
                    ['Font Bold',        'FontBold',    'CBoxItemDelegate', ['Yes', 'No']],
                    ['Font Italic',      'FontItalic',  'CBoxItemDelegate', ['Yes', 'No']] ]
+    
+    ItemsParamNameMap =\
+    {
+        'X'                : [ 'PosX'                                      ],
+        'Y'                : [ 'PosY'                                      ], 
+        'Orientation'      : [ 'Orientation', ['Horizontal', 'Vertical']   ],
+        'Visible'          : [ 'Visible',     ['Yes',  'No']               ],
+        'Horizontal Align' : [ 'HJustify',    ['Left', 'Center', 'Right']  ],
+        'Vertical Align'   : [ 'VJustify',    ['Top',  'Center', 'Bottom'] ],
+        'Font Size'        : [ 'FontSize'                                  ],
+        'Font Bold'        : [ 'FontBold',    ['Yes',  'No']               ],
+        'Font Italic'      : [ 'FontItalic',  ['Yes',  'No']               ]
+    }
     
     #---------------------------------------------------------------------------    
     class TreeWidgetItem(QTreeWidgetItem):
@@ -433,8 +507,8 @@ class FieldInspector(QTreeWidget):
 
                             
             if e.type() == QEvent.Leave:
-                #print('======== mouse leave')
-                self.parent().finish_edit()
+                print('======== mouse leave')
+               # self.parent().finish_edit()
                 return False
                 
             return False
@@ -464,8 +538,11 @@ class FieldInspector(QTreeWidget):
     
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.field_items, i[0], '')
-            self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
-    
+            #self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
+            
+        self.ItemsDelegate = self.FieldInspectorItemsDelegate(self)
+        self.setItemDelegate(self.ItemsDelegate)
+                
         self.itemClicked.connect(self.item_clicked)
         self.itemPressed.connect(self.item_pressed)
         self.currentItemChanged.connect(self.item_changed)
@@ -572,85 +649,80 @@ class FieldInspector(QTreeWidget):
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
     #---------------------------------------------------------------------------    
-    def prepare_item(self, item, pindex):
-        l = []
-        for fg in self.fgroup:
-            if len(fg) == 2:
-                fstr = 'fg[0].Fields[fg[1]].'  
+    def reduce_list(self, l):
+        l = list(set(l))
+        l.sort()
+        return l
+    
+    #---------------------------------------------------------------------------    
+    def prepare_item(self, item, flist):
+        item_name   = item.data(colNAME, Qt.DisplayRole)
+        fparam_name = self.ItemsParamNameMap[item_name][0]
+        
+        vals = []
+        for f in flist:
+            vals.append( eval('f.' + fparam_name) )
+                
+        vals = self.reduce_list(vals)
+        #print(vals)
+                     
+        if len( self.ItemsParamNameMap[item_name] ) == 1:
+            if len(vals) == 1:
+                self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.TEXT_DELEGATE)
             else:
-                fstr = 'fg[2].'
+                vals.insert(0, MULTIVALUE)
+                self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
                 
-                
-            #print(fstr + ' ' + str(pindex))
-            p = eval( fstr + self.ItemsTable[pindex][1] ) # p means 'parameter'
-                
-            l.append( p )
-
-        vals = list(set(l))
-        vals.sort()
-        row  = self.indexFromItem(item, colDATA).row()
-        if len(vals) == 1:
-            s = 'self.' + self.ItemsTable[pindex][2]
-            self.setItemDelegateForRow( row, eval( s )(self, self.ItemsTable[pindex][3]) ) 
+            data_val = vals[0]
         else:
-            vals.insert(0, MULTIVALUE)
-            
-            if self.ItemsTable[pindex][2] == 'TextItemDelegate':
-                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals, True) )   # True - editable combobox
+            print('*'*20)
+            print(item_name)
+            print(fparam_name)
+            data_val = vals[0]
+            if len(vals) > 1:
+                vals = [MULTIVALUE] + self.ItemsParamNameMap[item_name][1] 
+                data_val = vals[0]
             else:
-                self.setItemDelegateForRow( row, eval('self.' + self.ItemsTable[pindex][2])(self, [MULTIVALUE] + self.ItemsTable[pindex][3]) )  
-                
-        item.setData(colDATA, Qt.DisplayRole, vals[0])
+                vals = self.ItemsParamNameMap[item_name][1] 
+
+            self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
+            
+            
+        print(item_name + ' : ' + data_val)
+        print(vals)
+        item.setData(colDATA, Qt.DisplayRole, data_val)
             
     #---------------------------------------------------------------------------    
     def load_field(self):
         
+        NO_FIELD_PARAMS = ['LibName', 'X', 'Y', 'Timestamp']
+
         comps = self.comps
         param = self.param
         
-        #comp = comps[0]
-        #print(comps)
+        if param in NO_FIELD_PARAMS:
+            for i in range( self.topLevelItem(0).childCount() ):
+                item = self.topLevelItem(0).child(i)
+                item.setData(colDATA, Qt.DisplayRole, '')
+                
+            return
+        
         #print(param)
         
-        self.fgroup = []       # list of items 'Component:Fn[:Field]', 
-                               # where Fn - field number of parameter, Field - optional part
-        
-        no_field_params = ['Lib Name', 'X', 'Y', 'Timestamp']
-        std_params      = ['Ref', 'Value', 'Footprint', 'Doc Sheet']
-        
-        if param not in no_field_params:
-            for c in comps:
-                Fn = None
-                if param in std_params:
-
-                    Fn = std_params.index(param)
-                    #print('Index Fn: ' + str(Fn))
-                else:
-                    for idx, field in enumerate(c.Fields[4:], start=4):
-                        if field.Name == param:
-                            Fn = idx
-                            break
-                if Fn != None:
-                    self.fgroup.append([c, Fn])
-                else:
-                    Fn = len(c.Fields)
-                    field = ComponentField.default(c, param, Fn)
-                    self.fgroup.append([c, Fn, field])
-             
-        #print(self.fgroup)
-                                       
+        flist = []
+        for c in comps:
+            flist.append( c.field(param) )
+            #print(c.field(param))
+                        
+                        
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
-            if len(self.fgroup) > 0:
-                self.prepare_item(item, i)
-            else:
-                item.setData( colDATA, Qt.DisplayRole, '' )
+            self.prepare_item(item, flist)
+            
+#           if len(self.fgroup) > 0:
+#           else:
+#               item.setData( colDATA, Qt.DisplayRole, '' )
                     
-#       if f:
-#           cur_item = self.topLevelItem(0).child(0)
-#           self.setCurrentItem(cur_item)
-        #self.clearSelection()
-    
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
@@ -826,7 +898,7 @@ class MainWindow(QMainWindow):
             self.ToolIndex = 3
             
         if self.ToolIndex != 3:
-            self.ToolList[3].finish_edit()
+            self.ToolList[3].finish_edit()  # save field properties when leave field inspector
         
         
     def __init__(self):
@@ -1217,7 +1289,7 @@ class Component:
             
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
-        print('Lib Name  : ' + self.LibName)
+        print('LibName   : ' + self.LibName)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)
