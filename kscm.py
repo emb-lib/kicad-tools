@@ -648,6 +648,8 @@ class FieldInspector(QTreeWidget):
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
+        self.save_fields()
+            
     #---------------------------------------------------------------------------    
     def reduce_list(self, l):
         l = list(set(l))
@@ -718,11 +720,26 @@ class FieldInspector(QTreeWidget):
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
             self.prepare_item(item, flist)
-            
+        
+        self.field_list = flist
+                
 #           if len(self.fgroup) > 0:
 #           else:
 #               item.setData( colDATA, Qt.DisplayRole, '' )
                     
+    #---------------------------------------------------------------------------    
+    def save_fields(self):
+        
+        for i in range( self.topLevelItem(0).childCount() ):
+            item        = self.topLevelItem(0).child(i)
+            item_name   = item.data(colNAME, Qt.DisplayRole)
+            fparam_name = self.ItemsParamNameMap[item_name][0]
+            val         = item.data(colDATA, Qt.DisplayRole)
+            if val != MULTIVALUE:
+                for f in self.field_list:
+                    exec('f.' + fparam_name + ' = val')
+            
+        
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
