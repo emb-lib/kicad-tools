@@ -1140,6 +1140,9 @@ class MainWindow(QMainWindow):
             
     #---------------------------------------------------------------------------
     def save_file(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+        
         curr_file = CmpMgr.curr_file_path()
         print('Save File "' + curr_file + '"')
         
@@ -1147,6 +1150,9 @@ class MainWindow(QMainWindow):
 
     #---------------------------------------------------------------------------
     def save_file_as(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+        
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.AnyFile)
         dialog.setNameFilter('KiCad Schematic Files (*.sch)')
