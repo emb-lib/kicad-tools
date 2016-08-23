@@ -5,13 +5,15 @@
 import sys
 import os
 import re
-#import yaml
+import shutil
+
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication)
+                             QAbstractItemView, QHeaderView, QMainWindow, QApplication,
+                             QFileDialog)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
@@ -24,6 +26,7 @@ print('Qt Version: ' + QT_VERSION_STR)
 colEDIT = 0
 colNAME = 0
 colDATA = 1
+MULTIVALUE = '<...>'
 #-------------------------------------------------------------------------------
 class TComboBox(QComboBox):
 
@@ -56,10 +59,10 @@ class Inspector(QTreeWidget):
     #              Title                  Delegate         Delegate Data
     #
     ItemsTable = [ ['Ref',              'TextItemDelegate', None],
-                   ['Lib Name',         'TextItemDelegate', None],
+                   ['LibName',          'TextItemDelegate', None],
                    ['Value',            'TextItemDelegate', None],
                    ['Footprint',        'TextItemDelegate', None],
-                   ['Doc Sheet',        'TextItemDelegate', None],
+                   ['DocSheet',         'TextItemDelegate', None],
                    ['X',                'TextItemDelegate', None],
                    ['Y',                'TextItemDelegate', None],
                    ['Timestamp',        'TextItemDelegate', None] ]
@@ -68,10 +71,10 @@ class Inspector(QTreeWidget):
     StdParamsNameMap =\
     {
         'Ref'       : 'Ref',
-        'Lib Name'  : 'LibName',
+        'LibName'   : 'LibName',
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
-        'Doc Sheet' : 'Fields[3].Text',
+        'DocSheet'  : 'Fields[3].Text',
         'X'         : 'PosX',
         'Y'         : 'PosY',
         'Timestamp' : 'Timestamp'
@@ -88,8 +91,6 @@ class Inspector(QTreeWidget):
 
         TEXT_DELEGATE = 0
         CBOX_DELEGATE = 1
-        
-        
         
         def __init__(self, parent):
             super().__init__(parent)
@@ -241,6 +242,8 @@ class Inspector(QTreeWidget):
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
         
+        self.save_cmps()
+            
     #---------------------------------------------------------------------------    
     def prepare_std_params(self, item):
         name  = item.data(colNAME, Qt.DisplayRole)
@@ -257,7 +260,7 @@ class Inspector(QTreeWidget):
             item.setData(colDATA, Qt.DisplayRole, vals[0])
 
         else:
-            vals.insert(0, '<...>')
+            vals.insert(0, MULTIVALUE)
             self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
         
@@ -272,38 +275,35 @@ class Inspector(QTreeWidget):
     def user_defined_params(self):
         
         l = []
-        for c in self.comps:
-            l += c.Fields[4:]
+        fnames_set = set([ i.Name for i in self.comps[0].Fields[4:]])
+        for c in self.comps[1:]:
+            fnames_set &= set( [ i.Name for i in c.Fields[4:]] )
            
-        fnames  = [ i.Name for i in l]
-        fvalues = [ i.Text for i in l]
-        
-        field_names = self.reduce_list(fnames)
+        fnames = list(fnames_set)
         
         fdict = {}
-        for fn in field_names:
-            indices = [i for i, x in enumerate(fnames) if x == fn]
-            fdict[fn] = self.reduce_list( [fvalues[i] for i in indices] )
-            
-
-        for c in self.comps:
-            for f in fdict.keys():
-                if not c.field(f):
-                    fdict[f].append('~')
+        for fn in fnames:
+            fvalues =  []
+            for c in self.comps:
+                f = c.field(fn)
+                if f:
+                    fvalues.append(f.Text)
+            fdict[fn] = self.reduce_list(fvalues)
+        
                     
         for f in fdict.keys():
             if len(fdict[f]) > 1:
                 fdict[f] = self.reduce_list(fdict[f])
-                fdict[f].insert(0, '<...>')
+                fdict[f].insert(0, MULTIVALUE)
         
         return fdict
         
-    #---------------------------------------------------------------------------    
+    #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
         
         #-------------------------------------
         #
-        #    Create selected components list including parts
+        #    Create selected components list including component parts
         #
         comps = []
         for c in cmps:
@@ -320,10 +320,9 @@ class Inspector(QTreeWidget):
             item = self.topLevelItem(0).child(i)
             self.prepare_std_params(item)
             
-                        
         self.topLevelItem(1).takeChildren()
         user_fields = self.user_defined_params()        
-        row_offset  = self.topLevelItem(0).childCount()
+        #row_offset  = self.topLevelItem(0).childCount()
         
         for name in user_fields.keys():
             item = self.addChild(self.usr_items, name, user_fields[name][0])
@@ -334,7 +333,32 @@ class Inspector(QTreeWidget):
                 vals = user_fields[name]
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
             
-                            
+    #---------------------------------------------------------------------------                            
+    def save_cmps(self):
+        for c in self.comps:
+            for i in range( self.topLevelItem(0).childCount() ):
+                item = self.topLevelItem(0).child(i)
+                item_name  = item.data(colNAME, Qt.DisplayRole)
+                item_value = item.data(colDATA, Qt.DisplayRole)
+                if item_value != MULTIVALUE:
+                    exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                
+            for i in range( self.topLevelItem(1).childCount() ):
+                item = self.topLevelItem(1).child(i)
+                item_name  = item.data(colNAME, Qt.DisplayRole)
+                item_value = item.data(colDATA, Qt.DisplayRole)
+                if item_value != MULTIVALUE:
+                    f = c.field(item_name)
+                    f.Text = item_value
+                    
+#                   for i in FieldInspector.fgroup:
+#                   f = c.field(item_name)
+#                   if f:
+#                       f.Text = item_value
+#                   else:
+                        
+        
+                                            
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
@@ -380,6 +404,59 @@ class FieldInspector(QTreeWidget):
 
             QStyledItemDelegate.setModelData(self, editor, model, idx)
                 
+            
+    class FieldInspectorItemsDelegate(QStyledItemDelegate):
+
+        TEXT_DELEGATE = 0
+        CBOX_DELEGATE = 1
+
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.editors = {}
+
+        def clear_editor_data(self):
+            self.editors = {}
+
+        def add_editor_data(self, name, editor_type, editor_data = []):
+            self.editors[name] = [editor_type, editor_data]
+
+        def createEditor(self, parent, option, idx):
+            if idx.column() == 1:
+                name = idx.sibling(idx.row(), 0).data()
+                etype = self.editors[name][0]
+                if etype == self.TEXT_DELEGATE:
+                    editor = QStyledItemDelegate.createEditor(self, parent, option, idx)
+                    return editor
+                else:
+                    editor = TComboBox(parent)
+                    editor.setEnabled(True)
+                    editor.setEditable(True)
+                    editor.addItems( self.editors[name][1] )
+                    return editor
+
+
+        def setEditorData(self, editor, idx):
+            #print(editor.metaObject().className() )
+            name = idx.sibling(idx.row(), 0).data()
+            if self.editors[name][0] == self.TEXT_DELEGATE:
+                QStyledItemDelegate.setEditorData(self, editor, idx)
+            else:
+                value = idx.model().data(idx, Qt.EditRole)
+                editor.set_index(value)
+
+        def setModelData(self, editor, model, idx):
+            name = idx.sibling(idx.row(), 0).data()
+            if self.editors[name][0] == self.TEXT_DELEGATE:
+                QStyledItemDelegate.setModelData(self, editor, model, idx)
+            else:
+                value = editor.currentText()
+                values = self.editors[name][1]
+                if value not in values:
+                    values.append(value)
+
+                QStyledItemDelegate.setModelData(self, editor, model, idx)
+            
+            
     #---------------------------------------------------------------------------    
     #
     #              Title              Field Name         Delegate         Delegate Data
@@ -387,12 +464,25 @@ class FieldInspector(QTreeWidget):
     ItemsTable = [ ['X',                'PosX',        'TextItemDelegate', None],
                    ['Y',                'PosY',        'TextItemDelegate', None],
                    ['Orientation',      'Orientation', 'CBoxItemDelegate', ['Horizontal', 'Vertical']],
-                   ['Visible',          'Visible',     'CBoxItemDelegate', ['Yes', 'No']],
+                   ['Visible',          'Visible',     'CBoxItemDelegate', ['Yes',  'No']],
                    ['Horizontal Align', 'HJustify',    'CBoxItemDelegate', ['Left', 'Center', 'Right']],
-                   ['Vertical Align',   'VJustify',    'CBoxItemDelegate', ['Top', 'Center', 'Bottom']],
+                   ['Vertical Align',   'VJustify',    'CBoxItemDelegate', ['Top',  'Center', 'Bottom']],
                    ['Font Size',        'FontSize',    'TextItemDelegate', None],
                    ['Font Bold',        'FontBold',    'CBoxItemDelegate', ['Yes', 'No']],
                    ['Font Italic',      'FontItalic',  'CBoxItemDelegate', ['Yes', 'No']] ]
+    
+    ItemsParamNameMap =\
+    {
+        'X'                : [ 'PosX'                                      ],
+        'Y'                : [ 'PosY'                                      ], 
+        'Orientation'      : [ 'Orientation', ['Horizontal', 'Vertical']   ],
+        'Visible'          : [ 'Visible',     ['Yes',  'No']               ],
+        'Horizontal Align' : [ 'HJustify',    ['Left', 'Center', 'Right']  ],
+        'Vertical Align'   : [ 'VJustify',    ['Top',  'Center', 'Bottom'] ],
+        'Font Size'        : [ 'FontSize'                                  ],
+        'Font Bold'        : [ 'FontBold',    ['Yes',  'No']               ],
+        'Font Italic'      : [ 'FontItalic',  ['Yes',  'No']               ]
+    }
     
     #---------------------------------------------------------------------------    
     class TreeWidgetItem(QTreeWidgetItem):
@@ -420,8 +510,8 @@ class FieldInspector(QTreeWidget):
 
                             
             if e.type() == QEvent.Leave:
-                #print('======== mouse leave')
-                self.parent().finish_edit()
+                print('======== mouse leave')
+               # self.parent().finish_edit()
                 return False
                 
             return False
@@ -451,8 +541,11 @@ class FieldInspector(QTreeWidget):
     
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.field_items, i[0], '')
-            self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
-    
+            #self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
+            
+        self.ItemsDelegate = self.FieldInspectorItemsDelegate(self)
+        self.setItemDelegate(self.ItemsDelegate)
+                
         self.itemClicked.connect(self.item_clicked)
         self.itemPressed.connect(self.item_pressed)
         self.currentItemChanged.connect(self.item_changed)
@@ -558,86 +651,101 @@ class FieldInspector(QTreeWidget):
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
-    #---------------------------------------------------------------------------    
-    def prepare_item(self, item, pindex):
-        l = []
-        for fg in self.fgroup:
-            if len(fg) == 2:
-                fstr = 'fg[0].Fields[fg[1]].'  
-            else:
-                fstr = 'fg[2].'
-                
-                
-            #print(fstr + ' ' + str(pindex))
-            p = eval( fstr + self.ItemsTable[pindex][1] ) # p means 'parameter'
-                
-            l.append( p )
-
-        vals = list(set(l))
-        vals.sort()
-        row  = self.indexFromItem(item, colDATA).row()
-        if len(vals) == 1:
-            s = 'self.' + self.ItemsTable[pindex][2]
-            self.setItemDelegateForRow( row, eval( s )(self, self.ItemsTable[pindex][3]) ) 
-        else:
-            vals.insert(0, '<...>')
+        self.save_fields()
             
-            if self.ItemsTable[pindex][2] == 'TextItemDelegate':
-                self.setItemDelegateForRow( row, self.CBoxItemDelegate(self, vals, True) )   # True - editable combobox
-            else:
-                self.setItemDelegateForRow( row, eval('self.' + self.ItemsTable[pindex][2])(self, ['<...>'] + self.ItemsTable[pindex][3]) )  
+    #---------------------------------------------------------------------------    
+    def reduce_list(self, l):
+        l = list(set(l))
+        l.sort()
+        return l
+    
+    #---------------------------------------------------------------------------    
+    def prepare_item(self, item, flist):
+        item_name   = item.data(colNAME, Qt.DisplayRole)
+        fparam_name = self.ItemsParamNameMap[item_name][0]
+        
+        vals = []
+        for f in flist:
+            vals.append( eval('f.' + fparam_name) )
                 
-        item.setData(colDATA, Qt.DisplayRole, vals[0])
+        vals = self.reduce_list(vals)
+        #print(vals)
+                     
+        if len( self.ItemsParamNameMap[item_name] ) == 1:
+            if len(vals) == 1:
+                self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.TEXT_DELEGATE)
+            else:
+                vals.insert(0, MULTIVALUE)
+                self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
+                
+            data_val = vals[0]
+        else:
+            print('*'*20)
+            print(item_name)
+            print(fparam_name)
+            data_val = vals[0]
+            if len(vals) > 1:
+                vals = [MULTIVALUE] + self.ItemsParamNameMap[item_name][1] 
+                data_val = vals[0]
+            else:
+                vals = self.ItemsParamNameMap[item_name][1] 
+
+            self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
+            
+            
+        print(item_name + ' : ' + data_val)
+        print(vals)
+        item.setData(colDATA, Qt.DisplayRole, data_val)
             
     #---------------------------------------------------------------------------    
     def load_field(self):
         
+        NO_FIELD_PARAMS = ['LibName', 'X', 'Y', 'Timestamp']
+
         comps = self.comps
         param = self.param
         
-        #comp = comps[0]
-        #print(comps)
+        if param in NO_FIELD_PARAMS:
+            for i in range( self.topLevelItem(0).childCount() ):
+                item = self.topLevelItem(0).child(i)
+                item.setData(colDATA, Qt.DisplayRole, '')
+                
+            return
+        
         #print(param)
         
-        self.fgroup = []       # list of items 'Component:Fn[:Field]', 
-                               # where Fn - field number of parameter, Field - optional part
-        
-        no_field_params = ['Lib Name', 'X', 'Y', 'Timestamp']
-        std_params      = ['Ref', 'Value', 'Footprint', 'Doc Sheet']
-        
-        if param not in no_field_params:
-            for c in comps:
-                Fn = None
-                if param in std_params:
-
-                    Fn = std_params.index(param)
-                    #print('Index Fn: ' + str(Fn))
-                else:
-                    for idx, field in enumerate(c.Fields[4:], start=4):
-                        if field.Name == param:
-                            Fn = idx
-                            break
-                if Fn != None:
-                    self.fgroup.append([c, Fn])
-                else:
-                    Fn = len(c.Fields)
-                    field = ComponentField.default(c, param, Fn)
-                    self.fgroup.append([c, Fn, field])
-             
-        #print(self.fgroup)
-                                       
+        flist = []
+        for c in comps:
+            flist.append( c.field(param) )
+            #print(c.field(param))
+                        
+                        
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
-            if len(self.fgroup) > 0:
-                self.prepare_item(item, i)
-            else:
-                item.setData( colDATA, Qt.DisplayRole, '' )
+            self.prepare_item(item, flist)
+        
+        self.field_list = flist
+                
+#           if len(self.fgroup) > 0:
+#           else:
+#               item.setData( colDATA, Qt.DisplayRole, '' )
                     
-#       if f:
-#           cur_item = self.topLevelItem(0).child(0)
-#           self.setCurrentItem(cur_item)
-        #self.clearSelection()
-    
+    #---------------------------------------------------------------------------    
+    def save_fields(self):
+        
+        if not hasattr(self, 'field_list'):
+            return
+        
+        for i in range( self.topLevelItem(0).childCount() ):
+            item        = self.topLevelItem(0).child(i)
+            item_name   = item.data(colNAME, Qt.DisplayRole)
+            fparam_name = self.ItemsParamNameMap[item_name][0]
+            val         = item.data(colDATA, Qt.DisplayRole)
+            if val != MULTIVALUE:
+                for f in self.field_list:
+                    exec('f.' + fparam_name + ' = val')
+            
+        
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
@@ -680,11 +788,13 @@ class ComponentsTable(QTableWidget):
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Name') )
 
-        b   = read_file('det-1/det-1.sch')
-        rcl = raw_cmp_list(b)
-        ipl = ['LBL'] 
-        self.CmpDict = cmp_dict(rcl, ipl)
-        self.update_cmp_list(self.CmpDict)
+        if len(sys.argv) > 1:
+            fname = sys.argv[1]
+            if os.path.exists(fname):
+                self.load_file(fname)
+            else:
+                print('E: input file "' + fname + '"does not exist')
+        
         
         self.setTabKeyNavigation(False)        
 #       for r in range(self.rowCount()):
@@ -707,6 +817,13 @@ class ComponentsTable(QTableWidget):
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
         self.cells_chosen.emit(refs)
+        
+    #---------------------------------------------------------------------------    
+    def load_file(self, fname):
+        #b   = read_file('det-1/det-1.sch')
+        #self.CmpDict = cmp_dict(rcl, ipl)
+        self.CmpDict = CmpMgr.load_file(fname)
+        self.update_cmp_list(self.CmpDict)
         
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
@@ -804,14 +921,14 @@ class MainWindow(QMainWindow):
             self.ToolIndex = 3
             
         if self.ToolIndex != 3:
-            self.ToolList[3].finish_edit()
+            self.ToolList[3].finish_edit()  # save field properties when leave field inspector
         
         
     def __init__(self):
         super().__init__()
         
         self.initUI()
-
+        
         self.installEventFilter(self.EventFilter(self))
         
         self.setFocusPolicy(Qt.WheelFocus)
@@ -842,18 +959,39 @@ class MainWindow(QMainWindow):
         Layout    = QHBoxLayout(work_zone)
         self.setCentralWidget(work_zone)
         
+        openAction = QAction(QIcon('open24.png'), 'Open', self)
+        openAction.setShortcut('Ctrl+O')
+        openAction.setStatusTip('Open Schematic File')
+        openAction.triggered.connect(self.open_file)
+        
+        saveAction = QAction(QIcon('save24.png'), 'Save', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.setStatusTip('Save Schematic File')
+        saveAction.triggered.connect(self.save_file)
+                
+        saveAsAction = QAction(QIcon('save-as24.png'), 'Save As...', self)
+        saveAsAction.setShortcut('Ctrl+Shift+S')
+        saveAsAction.setStatusTip('Save Schematic File As...')
+        saveAsAction.triggered.connect(self.save_file_as)
+        
+                        
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(self.close)        
+        exitAction.triggered.connect(self.close)
         
         self.statusBar().showMessage('Ready')
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(saveAction)
         fileMenu.addAction(exitAction)
 
         toolbar = self.addToolBar('Exit')
+        toolbar.addAction(openAction)        
+        toolbar.addAction(saveAction)        
+        toolbar.addAction(saveAsAction)        
         toolbar.addAction(exitAction)        
         
         self.CmpTabBox    = QGroupBox('Components', self)
@@ -915,6 +1053,9 @@ class MainWindow(QMainWindow):
         
         
         #----------------------------------------------------
+        #
+        #     Signals and Slots connections
+        #
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         
@@ -924,6 +1065,7 @@ class MainWindow(QMainWindow):
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
         
+        #----------------------------------------------------
         self.ToolList = []
         self.ToolList.append(self.CmpTable)
         self.ToolList.append(self.Selector)
@@ -966,7 +1108,7 @@ class MainWindow(QMainWindow):
         self.show()
         
                 
-    #---------------------------------------------------------------------------    
+    #---------------------------------------------------------------------------
     def closeEvent(self, event):
         #print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
@@ -982,6 +1124,47 @@ class MainWindow(QMainWindow):
 #           print( ref + ' ' + self.CmpTable.CmpDict[ref][0].Fields[2].Text)
         
 
+    #---------------------------------------------------------------------------
+    def open_file(self):
+        #filename = QFileDialog.getOpenFileName(self, 'Open schematic file', '/opt/cad/kicad', 'KiCad Schematic Files (*.sch)')
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setNameFilter('KiCad Schematic Files (*.sch)')
+        
+        filenames = []
+        if dialog.exec_():
+            filenames = dialog.selectedFiles()
+        
+        CmpMgr.set_curr_file_path( filenames[0] )
+        self.CmpTable.load_file( filenames[0] )
+            
+    #---------------------------------------------------------------------------
+    def save_file(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+        
+        curr_file = CmpMgr.curr_file_path()
+        print('Save File "' + curr_file + '"')
+        
+        CmpMgr.save_file(curr_file)
+
+    #---------------------------------------------------------------------------
+    def save_file_as(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+        
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setNameFilter('KiCad Schematic Files (*.sch)')
+
+        filenames = []
+        if dialog.exec_():
+            filenames = dialog.selectedFiles()
+
+        print('Save File As "' + filenames[0] + '"')
+        CmpMgr.save_file(filenames[0])
+        CmpMgr.set_curr_file_path( filenames[0] )
+                                     
 #-------------------------------------------------------------------------------
 class ComponentField:
     
@@ -1066,6 +1249,7 @@ class Component:
         self.LibName = '~'
         
     def parse_comp(self, rec):
+        self.rec = rec
         r = re.search('L ([\w-]+) ([\w#]+)', rec)
         if r:
             self.LibName, self.Ref = r.groups()
@@ -1102,16 +1286,16 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
-        r = re.search('(\s+\d\s+\d+\s+\d+\n\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s*)', rec)
+        r = re.search('([ \t]+\d\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)', rec)
         if r:
             self.Trailer = r.groups()[0]
-            print(self.Trailer)
         else:
             print('E: invalid component trailer record, rec: "' + rec + '"')
             sys.exit(1)
          
-            
-        #self.dump()
+        
+        if self.Ref == 'A1':
+            self.dump()
 
     #--------------------------------------------------------------
     def field(self, fname):
@@ -1134,7 +1318,7 @@ class Component:
             
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
-        print('Lib Name  : ' + self.LibName)
+        print('LibName   : ' + self.LibName)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)
@@ -1148,50 +1332,147 @@ class Component:
    
         print('===================================================================================================')
         
+    #--------------------------------------------------------------
+    def join_rec(self, l, s = ' ', no_last_sep = True):
+        res = ''
+        for idx, i in enumerate(l, start = 1):
+            sep = s
+            if no_last_sep and idx == len(l):
+                sep = ''
+            res += str(i) + sep
+
+        return res
+
+    #--------------------------------------------------------------
+    def create_cmp_rec(self):
+        #print(self.Ref)
+        rec_list = []
+        rec_list.append('L ' + self.LibName + ' ' + self.Ref)
+        rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
+        rec_list.append('P ' + self.PosX + ' ' + self.PosY)
+        
+        for f in self.Fields:
+            frec = ['F', 
+                    f.InnerCode,
+                    '"' + f.Text +'"',
+                    f.Orientation[0],
+                    int(self.PosX) + int(f.PosX),
+                    int(self.PosY) + int(f.PosY),
+                    '{:<3}'.format(f.FontSize),
+                    '0000' if f.Visible == 'Yes' else '0001',
+                    f.HJustify[0],
+                    f.VJustify[0] + ('I' if f.FontItalic == 'Yes' else 'N') + ('B' if f.FontBold == 'Yes' else 'N'),
+                    '"' + f.Name + '"' if f.Name not in ['Ref', 'Value', 'Footprint', 'DocSheet'] else '']
+            
+            rec_list.append( self.join_rec(frec).strip() )
+            
+            
+        pattern = '([ \t]+\d\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
+        r = re.match(pattern, self.Trailer).groups()
+        self.Trailer = r[0] + str(self.PosX) + r[1] + str(self.PosY) + r[2]
+        
+        rec_list.append(self.Trailer)
+        
+        rec = self.join_rec(rec_list, os.linesep)
+        
+        return rec
+                
 #-------------------------------------------------------------------------------
 def split_alphanumeric(x):
     r = re.split('(\d+)', x)
-    
+
     return ( r[0], int(r[1]) )
 #-------------------------------------------------------------------------------
-def read_file(fname):
-    with open(fname, 'rb') as f:
-        b = f.read()
+class ComponentManager:
+    
+    def __init__(self):
+        self.current_file_path = ''
         
-    return b.decode()
-#-------------------------------------------------------------------------------
-def raw_cmp_list(s):
-    pattern = '\$Comp\n((?:.*\n)+?)\$EndComp'
-    res = re.findall(pattern, s)
-    
-    return res
+    #---------------------------------------------------------------------------
+    def set_curr_file_path(self, fname):
+        self.current_file_path = fname
+        
+    #---------------------------------------------------------------------------
+    def curr_file_path(self):
+        return self.current_file_path
 
-#-------------------------------------------------------------------------------
-def cmp_dict(rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
+    #---------------------------------------------------------------------------
+    def read_file(self, fname):
+        with open(fname, 'rb') as f:
+            b = f.read()
+
+        self.infile = b.decode()
+        return self.infile
     
-    cdict = {}
-    
-    for i in rcl:
-        cmp = Component()
-        cmp.parse_comp(i)
-        ignore = False
-        for ip in ipl:
-            r = re.search(ip+'.*\d+', cmp.Ref)
-            if r:
-                ignore = True
+    #---------------------------------------------------------------------------
+    def raw_cmp_list(self, s):
+        pattern = '\$Comp\s((?:.*\s)+?)\$EndComp'
+        res = re.findall(pattern, s)
+
+        return res
+        
+    #---------------------------------------------------------------------------
+    def load_file(self, fname):
+        b   = self.read_file(fname)
+        rcl = self.raw_cmp_list(b)                     # rcl - raw component list
+        ipl = ['LBL']                                  # ipl - ignored pattern list
+        self.current_file_path = fname
+        return self.cmp_dict(rcl, ipl)
+        
+    #---------------------------------------------------------------------------
+    def cmp_dict(self, rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
+
+        cdict = {}
+
+        for i in rcl:
+            cmp = Component()
+            cmp.parse_comp(i)
+            ignore = False
+            for ip in ipl:
+                r = re.search(ip+'.*\d+', cmp.Ref)
+                if r:
+                    ignore = True
+                    continue
+
+            if ignore:
                 continue
-           
-        if ignore:
-            continue
-            
-        if not cmp.Ref in cdict:
-            cdict[cmp.Ref] = []
 
-        cdict[cmp.Ref].append(cmp)
-     
+            if not cmp.Ref in cdict:
+                cdict[cmp.Ref] = []
+
+            cdict[cmp.Ref].append(cmp)
+
+        self.cdict = cdict
+        return self.cdict
+
+    #---------------------------------------------------------------------------
+    def save_file(self, fname):
+
+        dirname  = os.path.dirname(fname)
+        basename = os.path.basename(fname)
+        name     = os.path.splitext(basename)[0]
+        newname  = name + os.path.extsep + '~'
+        newpath  = os.path.join(dirname, newname)
+        shutil.copy(self.current_file_path, newpath)
         
-           
-    return cdict
+        cl = list(self.cdict.keys())
+        cl.sort()
+        outfile = self.infile
+        for k in cl:
+            clist = self.cdict[k]
+            for c in clist:
+                crec = c.create_cmp_rec()
+                outfile = re.sub(c.rec, crec, outfile )
+                #if c.Ref == 'D71':
+                #    print(repr(c.rec))
+                #    print(repr(crec))
+                
+        with open(fname, 'wb') as f:
+            f.write(outfile.encode('utf-8'))
+        
+#-------------------------------------------------------------------------------
+CmpMgr = ComponentManager()     
+
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
