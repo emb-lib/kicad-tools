@@ -303,7 +303,7 @@ class Inspector(QTreeWidget):
         
         #-------------------------------------
         #
-        #    Create selected components list including parts
+        #    Create selected components list including component parts
         #
         comps = []
         for c in cmps:
@@ -343,11 +343,14 @@ class Inspector(QTreeWidget):
                 if item_value != MULTIVALUE:
                     exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
                 
-#           for i in range( self.topLevelItem(1).childCount() ):
-#               item = self.topLevelItem(1).child(i)
-#               item_name  = item.data(colNAME, Qt.DisplayRole)
-#               item_value = item.data(colDATA, Qt.DisplayRole)
-#               if item_value != MULTIVALUE:
+            for i in range( self.topLevelItem(1).childCount() ):
+                item = self.topLevelItem(1).child(i)
+                item_name  = item.data(colNAME, Qt.DisplayRole)
+                item_value = item.data(colDATA, Qt.DisplayRole)
+                if item_value != MULTIVALUE:
+                    f = c.field(item_name)
+                    f.Text = item_value
+                    
 #                   for i in FieldInspector.fgroup:
 #                   f = c.field(item_name)
 #                   if f:
@@ -966,7 +969,7 @@ class MainWindow(QMainWindow):
         saveAsAction = QAction(QIcon('save-as24.png'), 'Save As...', self)
         saveAsAction.setShortcut('Ctrl+Shift+S')
         saveAsAction.setStatusTip('Save Schematic File As...')
-        saveAsAction.triggered.connect(self.save_as_file)
+        saveAsAction.triggered.connect(self.save_file_as)
         
                         
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
@@ -1140,7 +1143,7 @@ class MainWindow(QMainWindow):
         CmpMgr.save_file(curr_file)
 
     #---------------------------------------------------------------------------
-    def save_as_file(self):
+    def save_file_as(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.AnyFile)
         dialog.setNameFilter('KiCad Schematic Files (*.sch)')
