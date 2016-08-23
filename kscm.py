@@ -733,6 +733,9 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def save_fields(self):
         
+        if not hasattr(self, 'field_list'):
+            return
+        
         for i in range( self.topLevelItem(0).childCount() ):
             item        = self.topLevelItem(0).child(i)
             item_name   = item.data(colNAME, Qt.DisplayRole)
