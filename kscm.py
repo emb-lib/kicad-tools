@@ -144,7 +144,12 @@ class Inspector(QTreeWidget):
         text, ok = QInputDialog.getText(self, 'Add Property', 'Enter New Proterty Name')
         print(text)
         
+        for c in self.comps:
+            f = ComponentField.default(c, text)
+            c.add_field(f)
         
+        self.load_user_defined_params()
+            
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -306,6 +311,20 @@ class Inspector(QTreeWidget):
         return fdict
         
     #---------------------------------------------------------------------------
+    def load_user_defined_params(self):
+        self.topLevelItem(1).takeChildren()
+        user_fields = self.user_defined_params()        
+
+        for name in user_fields.keys():
+            item = self.addChild(self.usr_items, name, user_fields[name][0])
+
+            if len(user_fields[name]) == 1:
+                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
+            else:
+                vals = user_fields[name]
+                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+        
+    #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
         
         #-------------------------------------
@@ -327,18 +346,7 @@ class Inspector(QTreeWidget):
             item = self.topLevelItem(0).child(i)
             self.prepare_std_params(item)
             
-        self.topLevelItem(1).takeChildren()
-        user_fields = self.user_defined_params()        
-        #row_offset  = self.topLevelItem(0).childCount()
-        
-        for name in user_fields.keys():
-            item = self.addChild(self.usr_items, name, user_fields[name][0])
-            
-            if len(user_fields[name]) == 1:
-                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
-            else:
-                vals = user_fields[name]
-                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+        self.load_user_defined_params()            
             
     #---------------------------------------------------------------------------                            
     def save_cmps(self):
@@ -1206,7 +1214,10 @@ class ComponentField:
     
     #--------------------------------------------------------------
     @classmethod
-    def default(cls, comp, name, Fn):
+    def default(cls, comp, name, Fn = None):
+        if not Fn:
+            Fn = len(comp.Fields)
+            
         rec = []
         rec.append( str(Fn) )
         rec.append( '~' )
@@ -1214,7 +1225,7 @@ class ComponentField:
         rec.append( comp.PosX )
         rec.append( comp.PosY )
         rec.append( comp.Fields[0].FontSize )
-        rec.append( '0000' )
+        rec.append( '0001' )
         rec.append( 'C' )
         rec.append( 'C' )
         rec.append( 'N' )
