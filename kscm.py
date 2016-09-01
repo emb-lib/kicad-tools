@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog)
+                             QFileDialog, QInputDialog)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
@@ -138,6 +138,13 @@ class Inspector(QTreeWidget):
 
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
 
+    #---------------------------------------------------------------------------    
+    def add_property(self):
+        print('add property')
+        text, ok = QInputDialog.getText(self, 'Add Property', 'Enter New Proterty Name')
+        print(text)
+        
+        
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -1024,9 +1031,9 @@ class MainWindow(QMainWindow):
         #
         self.Inspector       = Inspector(self)
         self.FieldInspector  = FieldInspector(self)
-        self.InspectorAdd    = QPushButton('Add Parameter', self)
-        self.InspectorDelete = QPushButton('Delete Parameter', self)
-        self.InspectorRename = QPushButton('Rename Parameter', self)
+        self.InspectorAdd    = QPushButton('Add Property', self)
+        self.InspectorDelete = QPushButton('Delete Property', self)
+        self.InspectorRename = QPushButton('Rename Property', self)
         
         self.InspectorBox    = QGroupBox('Inspector', self)
         self.InspectorSplit  = QSplitter(Qt.Vertical, self)
@@ -1064,6 +1071,8 @@ class MainWindow(QMainWindow):
         self.FieldInspector.mouse_click.connect(self.mouse_change_tool)
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
+        
+        self.InspectorAdd.clicked.connect(self.Inspector.add_property)
         
         #----------------------------------------------------
         self.ToolList = []
