@@ -142,7 +142,6 @@ class Inspector(QTreeWidget):
     def add_property(self):
         print('add property')
         text, ok = QInputDialog.getText(self, 'Add Property', 'Enter New Proterty Name')
-        print(text)
         
         for c in self.comps:
             if not c.field(text):
@@ -251,7 +250,7 @@ class Inspector(QTreeWidget):
 
         
         if editor:
-            print(editor)
+            #print(editor)
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
@@ -713,9 +712,9 @@ class FieldInspector(QTreeWidget):
                 
             data_val = vals[0]
         else:
-            print('*'*20)
-            print(item_name)
-            print(fparam_name)
+#           print('*'*20)
+#           print(item_name)
+#           print(fparam_name)
             data_val = vals[0]
             if len(vals) > 1:
                 vals = [MULTIVALUE] + self.ItemsParamNameMap[item_name][1] 
@@ -726,8 +725,8 @@ class FieldInspector(QTreeWidget):
             self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
             
             
-        print(item_name + ' : ' + data_val)
-        print(vals)
+        #print(item_name + ' : ' + data_val)
+        #print(vals)
         item.setData(colDATA, Qt.DisplayRole, data_val)
             
     #---------------------------------------------------------------------------    
@@ -1346,8 +1345,8 @@ class Component:
             sys.exit(1)
          
         
-        if self.Ref == 'A1':
-            self.dump()
+#       if self.Ref == 'A1':
+#           self.dump()
 
     #--------------------------------------------------------------
     def field(self, fname):
