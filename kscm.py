@@ -742,7 +742,8 @@ class FieldInspector(QTreeWidget):
             for i in range( self.topLevelItem(0).childCount() ):
                 item = self.topLevelItem(0).child(i)
                 item.setData(colDATA, Qt.DisplayRole, '')
-                
+                if hasattr(self, 'field_list'):
+                    delattr(self, 'field_list')
             return
         
         #print(param)
