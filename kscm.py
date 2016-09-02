@@ -152,7 +152,7 @@ class Inspector(QTreeWidget):
         self.load_user_defined_params()
             
     #---------------------------------------------------------------------------    
-    def delete_property(self):
+    def remove_property(self):
         print('delete property')
         
         item = self.currentItem()
@@ -956,6 +956,18 @@ class MainWindow(QMainWindow):
         if self.ToolIndex != 3:
             self.ToolList[3].finish_edit()  # save field properties when leave field inspector
         
+    def add_user_property(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+        
+        self.Inspector.add_property()
+
+    def remove_user_property(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+
+        self.Inspector.remove_property()
+            
         
     def __init__(self):
         super().__init__()
@@ -1098,8 +1110,8 @@ class MainWindow(QMainWindow):
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
         
-        self.InspectorAdd.clicked.connect(self.Inspector.add_property)
-        self.InspectorDelete.clicked.connect(self.Inspector.delete_property)
+        self.InspectorAdd.clicked.connect(self.add_user_property)
+        self.InspectorDelete.clicked.connect(self.remove_user_property)
         
         #----------------------------------------------------
         self.ToolList = []
