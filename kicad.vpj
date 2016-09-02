@@ -81,13 +81,14 @@
                 <F N="scmgr/cmpmgr.py"/>
                 <F N="scmgr/cmptable.py"/>
                 <F N="scmgr/inspector.py"/>
+                <F N="scmgr/scmgr.qss"/>
                 <F N="scmgr/selector.py"/>
                 <F N="scmgr/utils.py"/>
             </Folder>
-            <F N="kscm.py"/>
             <F N="conngen.py"/>
             <F N="icgen.py"/>
             <F N="merge-lib.sh"/>
+            <F N="scmgr.py"/>
         </Folder>
     </Files>
 </Project>

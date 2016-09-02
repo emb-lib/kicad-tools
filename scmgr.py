@@ -381,7 +381,7 @@ if __name__ == '__main__':
     
     app  = QApplication(sys.argv)
     
-    with open('kscm.qss', 'rb') as fqss:
+    with open( os.path.join('scmgr', 'scmgr.qss'), 'rb') as fqss:
         qss = fqss.read().decode()
         qss = re.sub(os.linesep, '', qss )
     app.setStyleSheet(qss)
