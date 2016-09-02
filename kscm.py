@@ -1516,11 +1516,13 @@ class ComponentManager:
         for k in cl:
             clist = self.cdict[k]
             for c in clist:
+                c.renumerate_fields()
                 crec = c.create_cmp_rec()
-                outfile = re.sub(c.rec, crec, outfile )
-                #if c.Ref == 'D71':
-                #    print(repr(c.rec))
-                #    print(repr(crec))
+                pattern = re.sub('\$', '\\\$', c.rec)
+                outfile = re.sub(pattern, crec, outfile )
+#               if c.Ref == 'A1':
+#                   print(repr(c.rec))
+#                   print(repr(crec))
                 
         with open(fname, 'wb') as f:
             f.write(outfile.encode('utf-8'))
