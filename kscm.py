@@ -145,8 +145,9 @@ class Inspector(QTreeWidget):
         print(text)
         
         for c in self.comps:
-            f = ComponentField.default(c, text)
-            c.add_field(f)
+            if not c.field(text):
+                f = ComponentField.default(c, text)
+                c.add_field(f)
         
         self.load_user_defined_params()
             
