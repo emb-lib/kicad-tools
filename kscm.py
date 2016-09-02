@@ -141,7 +141,7 @@ class Inspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def add_property(self):
         print('add property')
-        text, ok = QInputDialog.getText(self, 'Add Property', 'Enter New Proterty Name')
+        text, ok = QInputDialog.getText(self, 'Add Property', 'Enter Property Name')
         
         for c in self.comps:
             if not c.field(text):
@@ -164,6 +164,19 @@ class Inspector(QTreeWidget):
         for c in self.comps:
             f = c.field(name)
             c.remove_field(f)
+
+        self.load_user_defined_params()
+
+    #---------------------------------------------------------------------------    
+    def rename_property(self):
+        print('rename property')
+        item = self.currentItem()
+        name  = item.data(colNAME, Qt.DisplayRole)
+        text, ok = QInputDialog.getText(self, 'Rename Property', 'Enter New Proterty Name')
+
+        for c in self.comps:
+            f = c.field(name)
+            f.Name = text
 
         self.load_user_defined_params()
 
@@ -968,6 +981,11 @@ class MainWindow(QMainWindow):
 
         self.Inspector.remove_property()
             
+    def rename_user_property(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+                    
+        self.Inspector.rename_property()
         
     def __init__(self):
         super().__init__()
@@ -1069,9 +1087,9 @@ class MainWindow(QMainWindow):
         #
         self.Inspector       = Inspector(self)
         self.FieldInspector  = FieldInspector(self)
-        self.InspectorAdd    = QPushButton('Add Property', self)
-        self.InspectorDelete = QPushButton('Delete Property', self)
-        self.InspectorRename = QPushButton('Rename Property', self)
+        self.AddUserProperty    = QPushButton('Add Property', self)
+        self.DeleteUserProperty = QPushButton('Delete Property', self)
+        self.RenameUserProperty = QPushButton('Rename Property', self)
         
         self.InspectorBox    = QGroupBox('Inspector', self)
         self.InspectorSplit  = QSplitter(Qt.Vertical, self)
@@ -1083,9 +1101,9 @@ class MainWindow(QMainWindow):
         self.InspectorSplit.addWidget(self.Inspector)
         self.InspectorSplit.addWidget(self.FieldInspector)
         self.InspectorLayout.addWidget(self.InspectorSplit)
-        self.InspectorLayout.addWidget(self.InspectorAdd)
-        self.InspectorLayout.addWidget(self.InspectorDelete)
-        self.InspectorLayout.addWidget(self.InspectorRename)
+        self.InspectorLayout.addWidget(self.AddUserProperty)
+        self.InspectorLayout.addWidget(self.DeleteUserProperty)
+        self.InspectorLayout.addWidget(self.RenameUserProperty)
                 
         #----------------------------------------------------
 
@@ -1110,8 +1128,9 @@ class MainWindow(QMainWindow):
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
         
-        self.InspectorAdd.clicked.connect(self.add_user_property)
-        self.InspectorDelete.clicked.connect(self.remove_user_property)
+        self.AddUserProperty.clicked.connect(self.add_user_property)
+        self.DeleteUserProperty.clicked.connect(self.remove_user_property)
+        self.RenameUserProperty.clicked.connect(self.rename_user_property)
         
         #----------------------------------------------------
         self.ToolList = []
