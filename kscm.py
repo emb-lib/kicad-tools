@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog)
+                             QFileDialog, QInputDialog, QMessageBox)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
@@ -139,6 +139,48 @@ class Inspector(QTreeWidget):
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
 
     #---------------------------------------------------------------------------    
+    def add_property(self):
+        print('add property')
+        text, ok = QInputDialog.getText(self, 'Add Property', 'Enter Property Name')
+        
+        for c in self.comps:
+            if not c.field(text):
+                f = ComponentField.default(c, text)
+                c.add_field(f)
+        
+        self.load_user_defined_params()
+            
+    #---------------------------------------------------------------------------    
+    def remove_property(self):
+        print('delete property')
+        
+        item = self.currentItem()
+        name  = item.data(colNAME, Qt.DisplayRole)
+        reply = QMessageBox.question(self, 'Delete Property', 'Delete "' + name + '" property?' )
+        
+        if reply == QMessageBox.No:
+            return
+
+        for c in self.comps:
+            f = c.field(name)
+            c.remove_field(f)
+
+        self.load_user_defined_params()
+
+    #---------------------------------------------------------------------------    
+    def rename_property(self):
+        print('rename property')
+        item = self.currentItem()
+        name  = item.data(colNAME, Qt.DisplayRole)
+        text, ok = QInputDialog.getText(self, 'Rename Property', 'Enter New Proterty Name')
+
+        for c in self.comps:
+            f = c.field(name)
+            f.Name = text
+
+        self.load_user_defined_params()
+
+    #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
         QTreeWidget.mousePressEvent(self, e)
@@ -221,7 +263,7 @@ class Inspector(QTreeWidget):
 
         
         if editor:
-            print(editor)
+            #print(editor)
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
@@ -299,6 +341,20 @@ class Inspector(QTreeWidget):
         return fdict
         
     #---------------------------------------------------------------------------
+    def load_user_defined_params(self):
+        self.topLevelItem(1).takeChildren()
+        user_fields = self.user_defined_params()        
+
+        for name in user_fields.keys():
+            item = self.addChild(self.usr_items, name, user_fields[name][0])
+
+            if len(user_fields[name]) == 1:
+                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
+            else:
+                vals = user_fields[name]
+                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+        
+    #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
         
         #-------------------------------------
@@ -320,18 +376,7 @@ class Inspector(QTreeWidget):
             item = self.topLevelItem(0).child(i)
             self.prepare_std_params(item)
             
-        self.topLevelItem(1).takeChildren()
-        user_fields = self.user_defined_params()        
-        #row_offset  = self.topLevelItem(0).childCount()
-        
-        for name in user_fields.keys():
-            item = self.addChild(self.usr_items, name, user_fields[name][0])
-            
-            if len(user_fields[name]) == 1:
-                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
-            else:
-                vals = user_fields[name]
-                self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+        self.load_user_defined_params()            
             
     #---------------------------------------------------------------------------                            
     def save_cmps(self):
@@ -680,9 +725,9 @@ class FieldInspector(QTreeWidget):
                 
             data_val = vals[0]
         else:
-            print('*'*20)
-            print(item_name)
-            print(fparam_name)
+#           print('*'*20)
+#           print(item_name)
+#           print(fparam_name)
             data_val = vals[0]
             if len(vals) > 1:
                 vals = [MULTIVALUE] + self.ItemsParamNameMap[item_name][1] 
@@ -693,8 +738,8 @@ class FieldInspector(QTreeWidget):
             self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
             
             
-        print(item_name + ' : ' + data_val)
-        print(vals)
+        #print(item_name + ' : ' + data_val)
+        #print(vals)
         item.setData(colDATA, Qt.DisplayRole, data_val)
             
     #---------------------------------------------------------------------------    
@@ -709,7 +754,8 @@ class FieldInspector(QTreeWidget):
             for i in range( self.topLevelItem(0).childCount() ):
                 item = self.topLevelItem(0).child(i)
                 item.setData(colDATA, Qt.DisplayRole, '')
-                
+                if hasattr(self, 'field_list'):
+                    delattr(self, 'field_list')
             return
         
         #print(param)
@@ -923,6 +969,23 @@ class MainWindow(QMainWindow):
         if self.ToolIndex != 3:
             self.ToolList[3].finish_edit()  # save field properties when leave field inspector
         
+    def add_user_property(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+        
+        self.Inspector.add_property()
+
+    def remove_user_property(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+
+        self.Inspector.remove_property()
+            
+    def rename_user_property(self):
+        self.Inspector.save_cmps()
+        self.FieldInspector.save_fields()
+                    
+        self.Inspector.rename_property()
         
     def __init__(self):
         super().__init__()
@@ -1024,9 +1087,9 @@ class MainWindow(QMainWindow):
         #
         self.Inspector       = Inspector(self)
         self.FieldInspector  = FieldInspector(self)
-        self.InspectorAdd    = QPushButton('Add Parameter', self)
-        self.InspectorDelete = QPushButton('Delete Parameter', self)
-        self.InspectorRename = QPushButton('Rename Parameter', self)
+        self.AddUserProperty    = QPushButton('Add Property', self)
+        self.DeleteUserProperty = QPushButton('Delete Property', self)
+        self.RenameUserProperty = QPushButton('Rename Property', self)
         
         self.InspectorBox    = QGroupBox('Inspector', self)
         self.InspectorSplit  = QSplitter(Qt.Vertical, self)
@@ -1038,9 +1101,9 @@ class MainWindow(QMainWindow):
         self.InspectorSplit.addWidget(self.Inspector)
         self.InspectorSplit.addWidget(self.FieldInspector)
         self.InspectorLayout.addWidget(self.InspectorSplit)
-        self.InspectorLayout.addWidget(self.InspectorAdd)
-        self.InspectorLayout.addWidget(self.InspectorDelete)
-        self.InspectorLayout.addWidget(self.InspectorRename)
+        self.InspectorLayout.addWidget(self.AddUserProperty)
+        self.InspectorLayout.addWidget(self.DeleteUserProperty)
+        self.InspectorLayout.addWidget(self.RenameUserProperty)
                 
         #----------------------------------------------------
 
@@ -1064,6 +1127,10 @@ class MainWindow(QMainWindow):
         self.FieldInspector.mouse_click.connect(self.mouse_change_tool)
 
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
+        
+        self.AddUserProperty.clicked.connect(self.add_user_property)
+        self.DeleteUserProperty.clicked.connect(self.remove_user_property)
+        self.RenameUserProperty.clicked.connect(self.rename_user_property)
         
         #----------------------------------------------------
         self.ToolList = []
@@ -1197,7 +1264,10 @@ class ComponentField:
     
     #--------------------------------------------------------------
     @classmethod
-    def default(cls, comp, name, Fn):
+    def default(cls, comp, name, Fn = None):
+        if not Fn:
+            Fn = len(comp.Fields)
+            
         rec = []
         rec.append( str(Fn) )
         rec.append( '~' )
@@ -1205,7 +1275,7 @@ class ComponentField:
         rec.append( comp.PosX )
         rec.append( comp.PosY )
         rec.append( comp.Fields[0].FontSize )
-        rec.append( '0000' )
+        rec.append( '0001' )
         rec.append( 'C' )
         rec.append( 'C' )
         rec.append( 'N' )
@@ -1294,8 +1364,8 @@ class Component:
             sys.exit(1)
          
         
-        if self.Ref == 'A1':
-            self.dump()
+#       if self.Ref == 'A1':
+#           self.dump()
 
     #--------------------------------------------------------------
     def field(self, fname):
@@ -1308,6 +1378,16 @@ class Component:
     #--------------------------------------------------------------
     def add_field(self, f):
         self.Fields.append(f)
+        
+    #--------------------------------------------------------------
+    def remove_field(self, f):
+        self.Fields.remove(f)
+        
+    #--------------------------------------------------------------
+    def renumerate_fields(self):
+        FIELD_NUM = 4
+        for num, f in enumerate(self.Fields[FIELD_NUM:], start=FIELD_NUM):
+            f.InnerCode = str(num)
         
     #--------------------------------------------------------------
     def dump(self):
@@ -1461,11 +1541,13 @@ class ComponentManager:
         for k in cl:
             clist = self.cdict[k]
             for c in clist:
+                c.renumerate_fields()
                 crec = c.create_cmp_rec()
-                outfile = re.sub(c.rec, crec, outfile )
-                #if c.Ref == 'D71':
-                #    print(repr(c.rec))
-                #    print(repr(crec))
+                pattern = re.sub('\$', '\\\$', c.rec)
+                outfile = re.sub(pattern, crec, outfile )
+#               if c.Ref == 'A1':
+#                   print(repr(c.rec))
+#                   print(repr(crec))
                 
         with open(fname, 'wb') as f:
             f.write(outfile.encode('utf-8'))
