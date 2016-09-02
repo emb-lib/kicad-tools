@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog, QInputDialog)
+                             QFileDialog, QInputDialog, QMessageBox)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
@@ -150,6 +150,23 @@ class Inspector(QTreeWidget):
         
         self.load_user_defined_params()
             
+    #---------------------------------------------------------------------------    
+    def delete_property(self):
+        print('delete property')
+        
+        item = self.currentItem()
+        name  = item.data(colNAME, Qt.DisplayRole)
+        reply = QMessageBox.question(self, 'Delete Property', 'Delete "' + name + '" property?' )
+        
+        if reply == QMessageBox.No:
+            return
+
+        for c in self.comps:
+            f = c.field(name)
+            c.remove_field(f)
+
+        self.load_user_defined_params()
+
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -1081,6 +1098,7 @@ class MainWindow(QMainWindow):
         self.Inspector.header().sectionResized.connect(self.FieldInspector.column_resize)
         
         self.InspectorAdd.clicked.connect(self.Inspector.add_property)
+        self.InspectorDelete.clicked.connect(self.Inspector.delete_property)
         
         #----------------------------------------------------
         self.ToolList = []
@@ -1328,6 +1346,10 @@ class Component:
     #--------------------------------------------------------------
     def add_field(self, f):
         self.Fields.append(f)
+        
+    #--------------------------------------------------------------
+    def remove_field(self, f):
+        self.Fields.remove(f)
         
     #--------------------------------------------------------------
     def dump(self):
