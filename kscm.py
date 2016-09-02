@@ -1365,6 +1365,12 @@ class Component:
         self.Fields.remove(f)
         
     #--------------------------------------------------------------
+    def renumerate_fields(self):
+        FIELD_NUM = 4
+        for num, f in enumerate(self.Fields[FIELD_NUM:], start=FIELD_NUM):
+            f.InnerCode = str(num)
+        
+    #--------------------------------------------------------------
     def dump(self):
         if int(self.PartNo) > 1:
             part = '.' + self.PartNo
