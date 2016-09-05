@@ -372,9 +372,6 @@ class MainWindow(QMainWindow):
         CmpMgr.set_curr_file_path( filenames[0] )
                                      
 #-------------------------------------------------------------------------------
-CmpMgr = ComponentManager()     
-
-#-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
     print('Qt Version: ' + QT_VERSION_STR)

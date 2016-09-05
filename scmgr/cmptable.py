@@ -7,7 +7,6 @@ import re
 import shutil
 
 from utils import *
-from cmpmgr    import *
 
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
@@ -76,6 +75,8 @@ class ComponentsTable(QTableWidget):
     #---------------------------------------------------------------------------    
     def load_file(self, fname):
                 
+        from cmpmgr import CmpMgr
+        
         self.CmpDict = CmpMgr.load_file(fname)
         self.update_cmp_list(self.CmpDict)
         

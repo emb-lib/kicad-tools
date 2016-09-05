@@ -235,7 +235,7 @@ class Component:
 class ComponentManager:
     
     def __init__(self):
-        self.current_file_path = ''
+        pass
         
     #---------------------------------------------------------------------------
     def set_curr_file_path(self, fname):
@@ -302,7 +302,7 @@ class ComponentManager:
         name     = os.path.splitext(basename)[0]
         newname  = name + os.path.extsep + '~'
         newpath  = os.path.join(dirname, newname)
-        shutil.copy(self.current_file_path, newpath)
+        shutil.copy(fname, newpath)
         
         cl = list(self.cdict.keys())
         cl.sort()
@@ -322,8 +322,7 @@ class ComponentManager:
             f.write(outfile.encode('utf-8'))
         
 #-------------------------------------------------------------------------------
-CmpMgr = ComponentManager()     
-
+CmpMgr = ComponentManager()
 #-------------------------------------------------------------------------------
 
 
