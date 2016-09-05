@@ -57,8 +57,7 @@ class MainWindow(QMainWindow):
 #
 #            return False
 
-    #-------------------------------------------------------------------------------    
-
+    #--------------------------------------------------------------------------------
     class EventFilter(QObject):
         def __init__(self, parent):
             super().__init__(parent)
@@ -71,8 +70,7 @@ class MainWindow(QMainWindow):
                 #print(obj.focusWidget().metaObject().className())
 
             return False
-
-    
+    #--------------------------------------------------------------------------------
     def scroll_left(self):
         print('alt-left')
         if self.ToolIndex == 3 or self.ToolIndex == 2:
@@ -84,7 +82,7 @@ class MainWindow(QMainWindow):
             
         print('Tool Index: ' + str(self.ToolIndex))
         self.ToolList[self.ToolIndex].setFocus()
-        
+    #--------------------------------------------------------------------------------    
     def scroll_right(self):
         print('alt-right')
         if self.ToolIndex == 3 or self.ToolIndex == 2:
@@ -96,7 +94,7 @@ class MainWindow(QMainWindow):
 
         print('Tool Index: ' + str(self.ToolIndex))
         self.ToolList[self.ToolIndex].setFocus()
-        
+    #--------------------------------------------------------------------------------    
     def mouse_change_tool(self, s):
         print('Tool ' + s)
         if s == 'CmpTable':
@@ -110,25 +108,25 @@ class MainWindow(QMainWindow):
             
         if self.ToolIndex != 3:
             self.ToolList[3].finish_edit()  # save field properties when leave field inspector
-        
+    #--------------------------------------------------------------------------------    
     def add_user_property(self):
         self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
         
         self.Inspector.add_property()
-
+    #--------------------------------------------------------------------------------
     def remove_user_property(self):
         self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
 
         self.Inspector.remove_property()
-            
+    #--------------------------------------------------------------------------------        
     def rename_user_property(self):
         self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
                     
         self.Inspector.rename_property()
-        
+    #--------------------------------------------------------------------------------    
     def __init__(self):
         super().__init__()
         
@@ -152,8 +150,7 @@ class MainWindow(QMainWindow):
         self.shortcutRight.setContext(Qt.ApplicationShortcut)
         self.shortcutLeft.activated.connect(self.scroll_left)
         self.shortcutRight.activated.connect(self.scroll_right)
-        
-        
+    #--------------------------------------------------------------------------------    
     def initUI(self):
         
         #----------------------------------------------------
@@ -374,6 +371,9 @@ class MainWindow(QMainWindow):
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
                                      
+#-------------------------------------------------------------------------------
+CmpMgr = ComponentManager()     
+
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
