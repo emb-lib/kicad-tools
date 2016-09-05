@@ -65,6 +65,9 @@ class ComponentsTable(QTableWidget):
     #---------------------------------------------------------------------------    
     def cell_chosen(self, row, col):
         items = self.selectedItems()
+        if len(items) == 0:
+            return
+            
         refs = []
         for i in items:
             if i.column() == 0:
