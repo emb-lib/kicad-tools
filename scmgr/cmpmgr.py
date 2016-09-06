@@ -262,16 +262,15 @@ class ComponentManager:
         
     #---------------------------------------------------------------------------
     def load_file(self, fname):
-        self.sheets = [fname]
+        self.sheets = [ os.path.basename(fname) ]
         self.indata = [self.read_file(fname)]
         
         pattern = '\$Sheet\s.+\s.+\sF0.+\sF1\s\"(.+)\".+\s\$EndSheet'
-        dirname = os.path.dirname(fname)
-        self.sheets += [ os.path.join(dirname, filepath) for filepath in re.findall(pattern, self.indata[0]) ]
+        self.dirname  =   os.path.dirname(fname)
+        self.sheets  +=   re.findall(pattern, self.indata[0])
+        sheets_paths  = [ os.path.join(self.dirname, filepath) for filepath in self.sheets ]
         
-        print(self.sheets)
-        
-        for sheet in self.sheets:
+        for sheet in sheets_paths:
             self.indata.append(self.read_file(sheet))
         
         ipl = ['LBL', 'BUS_ENTRY']                                    # ipl - ignored pattern list
@@ -318,14 +317,29 @@ class ComponentManager:
         return self.cdict
 
     #---------------------------------------------------------------------------
-    def save_file(self, fname):
-
+    def backup_files(self, fname):
         dirname  = os.path.dirname(fname)
         basename = os.path.basename(fname)
-        name     = os.path.splitext(basename)[0]
-        newname  = name + os.path.extsep + '~'
-        newpath  = os.path.join(dirname, newname)
-        shutil.copy(fname, newpath)
+        
+        namelist = [basename] + self.sheets[1:]
+        
+        #pathlist = [os.path.join(dirname, path) for path in namelist]
+        
+        for name in namelist:
+            oldpath  = os.path.join(dirname, name)
+            if os.path.exists(oldpath):
+                n = os.path.splitext(name)[0]
+                newname  = n + os.path.extsep + '~'
+                newpath  = os.path.join(dirname, newname)
+                shutil.copy(oldpath, newpath)
+        
+    #---------------------------------------------------------------------------
+    def save_file(self, fname):
+        
+        self.backup_files(fname)
+        
+        return
+
         
         cl = list(self.cdict.keys())
         cl.sort()
