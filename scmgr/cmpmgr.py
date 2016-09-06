@@ -88,9 +88,10 @@ class ComponentField:
 #-------------------------------------------------------------------------------
 class Component:
     
-    def __init__(self):
-        self.Ref = '~'
+    def __init__(self, sheet = 0):
+        self.Ref     = '~'
         self.LibName = '~'
+        self.Sheet   = sheet
         
     def parse_comp(self, rec):
         self.rec = rec
@@ -250,8 +251,7 @@ class ComponentManager:
         with open(fname, 'rb') as f:
             b = f.read()
 
-        self.infile = b.decode()
-        return self.infile
+        return b.decode()
     
     #---------------------------------------------------------------------------
     def raw_cmp_list(self, s):
@@ -262,19 +262,42 @@ class ComponentManager:
         
     #---------------------------------------------------------------------------
     def load_file(self, fname):
-        b   = self.read_file(fname)
-        rcl = self.raw_cmp_list(b)                     # rcl - raw component list
-        ipl = ['LBL']                                  # ipl - ignored pattern list
+        self.sheets = [fname]
+        self.indata = [self.read_file(fname)]
+        
+        pattern = '\$Sheet\s.+\s.+\sF0.+\sF1\s\"(.+)\".+\s\$EndSheet'
+        dirname = os.path.dirname(fname)
+        self.sheets += [ os.path.join(dirname, filepath) for filepath in re.findall(pattern, self.indata[0]) ]
+        
+        print(self.sheets)
+        
+        for sheet in self.sheets:
+            self.indata.append(self.read_file(sheet))
+        
+        ipl = ['LBL', 'BUS_ENTRY']                                    # ipl - ignored pattern list
+        cmp_dict = { }
+        for sheet, indata in enumerate( self.indata ):
+            rcl = self.raw_cmp_list(indata)              # rcl - raw component list
+            cmp_dict.update( self.cmp_dict(rcl, ipl, sheet) )
+            
+        
         self.current_file_path = fname
-        return self.cmp_dict(rcl, ipl)
+        return cmp_dict
+            
+#       rcl = self.raw_cmp_list(self.indata[0])                     # rcl - raw component list
+#       ipl = ['LBL']                                  # ipl - ignored pattern list
+#       self.current_file_path = fname
+#       return self.cmp_dict(rcl, ipl)
         
     #---------------------------------------------------------------------------
-    def cmp_dict(self, rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
+    def cmp_dict(self, rcl, ipl, sheet):   # rcl: raw component list; 
+                                           # ipl: ignore pattern list
+                                           # sheet: index of sheet where componets from
 
         cdict = {}
 
         for i in rcl:
-            cmp = Component()
+            cmp = Component(sheet)
             cmp.parse_comp(i)
             ignore = False
             for ip in ipl:
