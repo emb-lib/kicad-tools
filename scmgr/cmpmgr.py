@@ -263,24 +263,25 @@ class ComponentManager:
     #---------------------------------------------------------------------------
     def load_file(self, fname):
         self.sheets = [ os.path.basename(fname) ]
-        self.indata = [self.read_file(fname)]
+        self.schdata = [self.read_file(fname)]
         
         pattern = '\$Sheet\s.+\s.+\sF0.+\sF1\s\"(.+)\".+\s\$EndSheet'
         self.dirname  =   os.path.dirname(fname)
-        self.sheets  +=   re.findall(pattern, self.indata[0])
+        self.sheets  +=   re.findall(pattern, self.schdata[0])
         sheets_paths  = [ os.path.join(self.dirname, filepath) for filepath in self.sheets ]
         
-        for sheet in sheets_paths:
-            self.indata.append(self.read_file(sheet))
+        for sheet in sheets_paths[1:]:
+            self.schdata.append(self.read_file(sheet))
         
-        ipl = ['LBL', 'BUS_ENTRY']                                    # ipl - ignored pattern list
+        ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
         cmp_dict = { }
-        for sheet, indata in enumerate( self.indata ):
-            rcl = self.raw_cmp_list(indata)              # rcl - raw component list
+        for sheet, schdata in enumerate( self.schdata ):
+            rcl = self.raw_cmp_list(schdata)                      # rcl - raw component list
             cmp_dict.update( self.cmp_dict(rcl, ipl, sheet) )
             
         
         self.current_file_path = fname
+        self.cmp_dict = cmp_dict
         return cmp_dict
             
 #       rcl = self.raw_cmp_list(self.indata[0])                     # rcl - raw component list
@@ -313,8 +314,8 @@ class ComponentManager:
 
             cdict[cmp.Ref].append(cmp)
 
-        self.cdict = cdict
-        return self.cdict
+        #self.cdict = cdict
+        return cdict
 
     #---------------------------------------------------------------------------
     def backup_files(self, fname):
@@ -323,40 +324,53 @@ class ComponentManager:
         
         namelist = [basename] + self.sheets[1:]
         
-        #pathlist = [os.path.join(dirname, path) for path in namelist]
-        
         for name in namelist:
-            oldpath  = os.path.join(dirname, name)
-            if os.path.exists(oldpath):
+            dst_path  = os.path.join(dirname, name)
+            if os.path.exists(dst_path):
                 n = os.path.splitext(name)[0]
-                newname  = n + os.path.extsep + '~'
-                newpath  = os.path.join(dirname, newname)
-                shutil.copy(oldpath, newpath)
+                backup_name  = n + os.path.extsep + '~'
+                backup_path  = os.path.join(dirname, backup_name)
+                shutil.copy(dst_path, backup_path)
         
     #---------------------------------------------------------------------------
     def save_file(self, fname):
         
-        self.backup_files(fname)
+        #self.backup_files(fname)
         
-        return
-
-        
-        cl = list(self.cdict.keys())
-        cl.sort()
-        outfile = self.infile
-        for k in cl:
-            clist = self.cdict[k]
+        refs = list(self.cmp_dict.keys())
+        refs.sort()
+        #outfile = self.infile
+        for ref in refs:
+            clist = self.cmp_dict[ref]
             for c in clist:
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
                 pattern = re.sub('\$', '\\\$', c.rec)
-                outfile = re.sub(pattern, crec, outfile )
+                self.schdata[c.Sheet] = re.sub(pattern, crec, self.schdata[c.Sheet] )
+                print(c.Ref, self.schdata[c.Sheet][311:320])
 #               if c.Ref == 'A1':
 #                   print(repr(c.rec))
 #                   print(repr(crec))
                 
-        with open(fname, 'wb') as f:
-            f.write(outfile.encode('utf-8'))
+        dirname  = os.path.dirname(fname)
+        basename = os.path.basename(fname)
+        
+        namelist = [basename] + self.sheets[1:]
+        
+        for sheet, name in enumerate(namelist):
+            print(sheet, name)
+            dst_path  = os.path.join(dirname, name)
+            if os.path.exists(dst_path):
+                n = os.path.splitext(name)[0]
+                backup_name  = n + os.path.extsep + '~'
+                backup_path  = os.path.join(dirname, backup_name)
+                shutil.copy(dst_path, backup_path)
+
+
+            print(self.schdata[sheet][311:320])
+            with open(dst_path, 'wb') as f:
+                f.write(self.schdata[sheet].encode('utf-8'))
+                print(dst_path, len(self.schdata[sheet].encode('utf-8')))
         
 #-------------------------------------------------------------------------------
 CmpMgr = ComponentManager()
