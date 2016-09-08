@@ -275,79 +275,60 @@ class ComponentManager:
         
         ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
         cmp_dict = { }
-        for sheet, schdata in enumerate( self.schdata ):
-            rcl = self.raw_cmp_list(schdata)                      # rcl - raw component list
-            cmp_dict.update( self.cmp_dict(rcl, ipl, sheet) )
+        rcls = []
+        for schdata in self.schdata:
+            rcls.append( self.raw_cmp_list(schdata) )             # rcl - raw component list
+
+        cmp_dict = self.create_cmp_dict( rcls, ipl )
             
-        
         self.current_file_path = fname
         self.cmp_dict = cmp_dict
         return cmp_dict
             
-#       rcl = self.raw_cmp_list(self.indata[0])                     # rcl - raw component list
-#       ipl = ['LBL']                                  # ipl - ignored pattern list
-#       self.current_file_path = fname
-#       return self.cmp_dict(rcl, ipl)
-        
     #---------------------------------------------------------------------------
-    def cmp_dict(self, rcl, ipl, sheet):   # rcl: raw component list; 
-                                           # ipl: ignore pattern list
-                                           # sheet: index of sheet where componets from
-
+    def create_cmp_dict(self, rcls, ipl):   # rcls: raw component lists; 
+                                            # ipl:  ignore patterns list
         cdict = {}
 
-        for i in rcl:
-            cmp = Component(sheet)
-            cmp.parse_comp(i)
-            ignore = False
-            for ip in ipl:
-                r = re.search(ip+'.*\d+', cmp.Ref)
-                if r:
-                    ignore = True
+        for sheet_num, rcl in enumerate(rcls):
+            for i in rcl:
+                cmp = Component(sheet_num)
+                cmp.parse_comp(i)
+                ignore = False
+                for ip in ipl:
+                    r = re.search(ip+'.*\d+', cmp.Ref)
+                    if r:
+                        ignore = True
+                        continue
+    
+                if ignore:
                     continue
+    
+                if not cmp.Ref in cdict:
+                    cdict[cmp.Ref] = []
+    
+                cdict[cmp.Ref].append(cmp)
 
-            if ignore:
-                continue
-
-            if not cmp.Ref in cdict:
-                cdict[cmp.Ref] = []
-
-            cdict[cmp.Ref].append(cmp)
-
-        #self.cdict = cdict
         return cdict
 
     #---------------------------------------------------------------------------
-    def backup_files(self, fname):
-        dirname  = os.path.dirname(fname)
-        basename = os.path.basename(fname)
-        
-        namelist = [basename] + self.sheets[1:]
-        
-        for name in namelist:
-            dst_path  = os.path.join(dirname, name)
-            if os.path.exists(dst_path):
-                n = os.path.splitext(name)[0]
-                backup_name  = n + os.path.extsep + '~'
-                backup_path  = os.path.join(dirname, backup_name)
-                shutil.copy(dst_path, backup_path)
-        
-    #---------------------------------------------------------------------------
     def save_file(self, fname):
-        
-        #self.backup_files(fname)
         
         refs = list(self.cmp_dict.keys())
         refs.sort()
-        #outfile = self.infile
         for ref in refs:
             clist = self.cmp_dict[ref]
+            if len(clist) > 1:
+                print(ref, len(clist))
+                for c in clist:
+                    print('Sheet:', c.Sheet, 'Part:', c.PartNo)
+                
             for c in clist:
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
                 pattern = re.sub('\$', '\\\$', c.rec)
                 self.schdata[c.Sheet] = re.sub(pattern, crec, self.schdata[c.Sheet] )
-                print(c.Ref, self.schdata[c.Sheet][311:320])
+                #print(c.Ref, self.schdata[c.Sheet][311:320])
 #               if c.Ref == 'A1':
 #                   print(repr(c.rec))
 #                   print(repr(crec))
