@@ -131,7 +131,7 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
-        r = re.search('([ \t]+\d\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)', rec)
+        r = re.search('([ \t]+\d+\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)', rec)
         if r:
             self.Trailer = r.groups()[0]
         else:
@@ -222,7 +222,7 @@ class Component:
             rec_list.append( self.join_rec(frec).strip() )
             
             
-        pattern = '([ \t]+\d\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
+        pattern = '([ \t]+\d+\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
         r = re.match(pattern, self.Trailer).groups()
         self.Trailer = r[0] + str(self.PosX) + r[1] + str(self.PosY) + r[2]
         
