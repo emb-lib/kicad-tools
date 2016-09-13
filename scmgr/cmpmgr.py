@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # coding: utf-8
 
 
@@ -89,9 +88,10 @@ class ComponentField:
 #-------------------------------------------------------------------------------
 class Component:
     
-    def __init__(self):
-        self.Ref = '~'
+    def __init__(self, sheet = 0):
+        self.Ref     = '~'
         self.LibName = '~'
+        self.Sheet   = sheet
         
     def parse_comp(self, rec):
         self.rec = rec
@@ -131,7 +131,7 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
-        r = re.search('([ \t]+\d\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)', rec)
+        r = re.search('([ \t]+\d+\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)', rec)
         if r:
             self.Trailer = r.groups()[0]
         else:
@@ -222,7 +222,7 @@ class Component:
             rec_list.append( self.join_rec(frec).strip() )
             
             
-        pattern = '([ \t]+\d\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
+        pattern = '([ \t]+\d+\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
         r = re.match(pattern, self.Trailer).groups()
         self.Trailer = r[0] + str(self.PosX) + r[1] + str(self.PosY) + r[2]
         
@@ -236,7 +236,7 @@ class Component:
 class ComponentManager:
     
     def __init__(self):
-        self.current_file_path = ''
+        pass
         
     #---------------------------------------------------------------------------
     def set_curr_file_path(self, fname):
@@ -251,8 +251,7 @@ class ComponentManager:
         with open(fname, 'rb') as f:
             b = f.read()
 
-        self.infile = b.decode()
-        return self.infile
+        return b.decode()
     
     #---------------------------------------------------------------------------
     def raw_cmp_list(self, s):
@@ -263,68 +262,99 @@ class ComponentManager:
         
     #---------------------------------------------------------------------------
     def load_file(self, fname):
-        b   = self.read_file(fname)
-        rcl = self.raw_cmp_list(b)                     # rcl - raw component list
-        ipl = ['LBL']                                  # ipl - ignored pattern list
-        self.current_file_path = fname
-        return self.cmp_dict(rcl, ipl)
+        self.sheets = [ os.path.basename(fname) ]
+        self.schdata = [self.read_file(fname)]
         
-    #---------------------------------------------------------------------------
-    def cmp_dict(self, rcl, ipl):   # rcl: raw component list; ipl: ignore pattern list
+        pattern = '\$Sheet\s.+\s.+\sF0.+\sF1\s\"(.+)\".+\s\$EndSheet'
+        self.dirname  =   os.path.dirname(fname)
+        self.sheets  +=   re.findall(pattern, self.schdata[0])
+        sheets_paths  = [ os.path.join(self.dirname, filepath) for filepath in self.sheets ]
+        
+        for sheet in sheets_paths[1:]:
+            self.schdata.append(self.read_file(sheet))
+        
+        ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
+        cmp_dict = { }
+        rcls = []
+        for schdata in self.schdata:
+            rcls.append( self.raw_cmp_list(schdata) )             # rcl - raw component list
 
+        cmp_dict = self.create_cmp_dict( rcls, ipl )
+            
+        self.current_file_path = fname
+        self.cmp_dict = cmp_dict
+        return cmp_dict
+            
+    #---------------------------------------------------------------------------
+    def create_cmp_dict(self, rcls, ipl):   # rcls: raw component lists; 
+                                            # ipl:  ignore patterns list
         cdict = {}
 
-        for i in rcl:
-            cmp = Component()
-            cmp.parse_comp(i)
-            ignore = False
-            for ip in ipl:
-                r = re.search(ip+'.*\d+', cmp.Ref)
-                if r:
-                    ignore = True
+        for sheet_num, rcl in enumerate(rcls):
+            for i in rcl:
+                cmp = Component(sheet_num)
+                cmp.parse_comp(i)
+                ignore = False
+                for ip in ipl:
+                    r = re.search(ip+'.*\d+', cmp.Ref)
+                    if r:
+                        ignore = True
+                        continue
+    
+                if ignore:
                     continue
+    
+                if not cmp.Ref in cdict:
+                    cdict[cmp.Ref] = []
+    
+                cdict[cmp.Ref].append(cmp)
 
-            if ignore:
-                continue
-
-            if not cmp.Ref in cdict:
-                cdict[cmp.Ref] = []
-
-            cdict[cmp.Ref].append(cmp)
-
-        self.cdict = cdict
-        return self.cdict
+        return cdict
 
     #---------------------------------------------------------------------------
     def save_file(self, fname):
-
-        dirname  = os.path.dirname(fname)
-        basename = os.path.basename(fname)
-        name     = os.path.splitext(basename)[0]
-        newname  = name + os.path.extsep + '~'
-        newpath  = os.path.join(dirname, newname)
-        shutil.copy(self.current_file_path, newpath)
         
-        cl = list(self.cdict.keys())
-        cl.sort()
-        outfile = self.infile
-        for k in cl:
-            clist = self.cdict[k]
+        refs = list(self.cmp_dict.keys())
+        refs.sort()
+        for ref in refs:
+            clist = self.cmp_dict[ref]
+            if len(clist) > 1:
+                print(ref, len(clist))
+                for c in clist:
+                    print('Sheet:', c.Sheet, 'Part:', c.PartNo)
+                
             for c in clist:
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
                 pattern = re.sub('\$', '\\\$', c.rec)
-                outfile = re.sub(pattern, crec, outfile )
+                self.schdata[c.Sheet] = re.sub(pattern, crec, self.schdata[c.Sheet] )
+                #print(c.Ref, self.schdata[c.Sheet][311:320])
 #               if c.Ref == 'A1':
 #                   print(repr(c.rec))
 #                   print(repr(crec))
                 
-        with open(fname, 'wb') as f:
-            f.write(outfile.encode('utf-8'))
+        dirname  = os.path.dirname(fname)
+        basename = os.path.basename(fname)
+        
+        namelist = [basename] + self.sheets[1:]
+        
+        for sheet, name in enumerate(namelist):
+            print(sheet, name)
+            dst_path  = os.path.join(dirname, name)
+            if os.path.exists(dst_path):
+                n = os.path.splitext(name)[0]
+                backup_name  = n + os.path.extsep + '~'
+                backup_path  = os.path.join(dirname, backup_name)
+                shutil.copy(dst_path, backup_path)
+
+
+            print(self.schdata[sheet][311:320])
+            with open(dst_path, 'wb') as f:
+                f.write(self.schdata[sheet].encode('utf-8'))
+                print(dst_path, len(self.schdata[sheet].encode('utf-8')))
         
 #-------------------------------------------------------------------------------
-CmpMgr = ComponentManager()     
-
+CmpMgr = ComponentManager()
 #-------------------------------------------------------------------------------
 
 

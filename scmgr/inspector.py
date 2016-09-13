@@ -378,6 +378,9 @@ class Inspector(QTreeWidget):
             
     #---------------------------------------------------------------------------                            
     def save_cmps(self):
+        if not hasattr(self, 'comps'):
+            return
+            
         for c in self.comps:
             for i in range( self.topLevelItem(0).childCount() ):
                 item = self.topLevelItem(0).child(i)
