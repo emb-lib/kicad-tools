@@ -21,13 +21,30 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox,
                              QAbstractItemDelegate, 
                              QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog, QInputDialog, QMessageBox)
+                             QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 from PyQt5.QtCore import QT_VERSION_STR
                                         
+#-------------------------------------------------------------------------------
+class TSettingsDialog(QDialog):
+    
+    def __init__(self, parent):
+        
+        super().__init__(parent)
+        
+        self.Tabs      = QTabWidget(self)
+        self.ButtonBox = QDialogButtonBox(self)
+        
+        self.CmpTableTab  = QWidget(self)
+        self.RefIgnoreTab = QWidget(self)
+        
+        self.Tabs.addTab(self.CmpTableTab, 'Components Table')
+        self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Refs List')
+        
+        
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
@@ -142,7 +159,7 @@ class MainWindow(QMainWindow):
 
         #----------------------------------------------------
         #
-        #   Application hotkeys
+        #   Application Hotkeys
         #
         self.shortcutLeft  = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Left), self)
         self.shortcutRight = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Right), self)
@@ -191,7 +208,7 @@ class MainWindow(QMainWindow):
 
         #--------------------------------------------
         #
-        #    Main menu
+        #    Main Menu
         #
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
@@ -202,7 +219,7 @@ class MainWindow(QMainWindow):
 
         #--------------------------------------------
         #
-        #    Options menu
+        #    Options Menu
         #
         optionsMenu = menubar.addMenu('&Options')
         optionsMenu.addAction(settingsAction)
@@ -228,7 +245,12 @@ class MainWindow(QMainWindow):
         
         #----------------------------------------------------
         #
-        #    Components table
+        #    Settings Dialog
+        #
+        
+        #----------------------------------------------------
+        #
+        #    Components Table
         #
         self.CmpTable       = ComponentsTable(self) 
         self.CmpChooseButton = QPushButton('Choose', self)
@@ -401,6 +423,8 @@ class MainWindow(QMainWindow):
     #---------------------------------------------------------------------------
     def edit_settings(self):
         print('edit settings')
+        SettingsDialog = TSettingsDialog(self)
+        SettingsDialog.show()
         
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
