@@ -188,6 +188,7 @@ class MainWindow(QMainWindow):
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(saveAsAction)
         fileMenu.addAction(exitAction)
 
         toolbar = self.addToolBar('Exit')
@@ -367,6 +368,10 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             filenames = dialog.selectedFiles()
 
+            
+        if len(filenames) == 0:
+            return
+            
         print('Save File As "' + filenames[0] + '"')
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
