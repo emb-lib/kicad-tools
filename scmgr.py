@@ -182,8 +182,17 @@ class MainWindow(QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
         
+        settingsAction = QAction(QIcon( os.path.join('scmgr', 'settings24.png') ), 'Settings', self)
+        settingsAction.setShortcut('Alt+S')
+        settingsAction.setStatusTip('Edit settings')
+        settingsAction.triggered.connect(self.edit_settings)
+        
         self.statusBar().showMessage('Ready')
 
+        #--------------------------------------------
+        #
+        #    Main menu
+        #
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(openAction)
@@ -191,12 +200,25 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(saveAsAction)
         fileMenu.addAction(exitAction)
 
+        #--------------------------------------------
+        #
+        #    Options menu
+        #
+        optionsMenu = menubar.addMenu('&Options')
+        optionsMenu.addAction(settingsAction)
+        
+        #--------------------------------------------
+        #
+        #    Toolbar
+        #
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(openAction)        
         toolbar.addAction(saveAction)        
         toolbar.addAction(saveAsAction)        
         toolbar.addAction(exitAction)        
+        toolbar.addAction(settingsAction)        
         
+                
         self.CmpTabBox    = QGroupBox('Components', self)
         self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
         self.CmpTabLayout.setContentsMargins(4,10,4,4)
@@ -376,6 +398,10 @@ class MainWindow(QMainWindow):
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
                                      
+    #---------------------------------------------------------------------------
+    def edit_settings(self):
+        print('edit settings')
+        
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
