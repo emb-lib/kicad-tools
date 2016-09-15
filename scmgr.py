@@ -19,8 +19,8 @@ from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QAbstractItemDelegate, 
-                             QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication,
+                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget,
+                             QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
                              QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
@@ -31,17 +31,64 @@ from PyQt5.QtCore import QT_VERSION_STR
 #-------------------------------------------------------------------------------
 class TSettingsDialog(QDialog):
     
+    class CmpViewTable(QTableWidget):
+
+        def __init__(self, parent):
+            super().__init__(0, 2, parent)
+        
+            self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
+            self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
+            self.horizontalHeader().setStretchLastSection(True)
+            self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+            self.verticalHeader().setDefaultSectionSize(20)
+            self.setHorizontalHeaderLabels( ('Ref Base', 'Property Pattern') )
+
+        def load(self, data_dict):
+
+            keys = list( data_dict.keys() )
+            keys.sort()    
+
+            self.setRowCount(64)
+
+            for idx, k in enumerate( keys ):
+                RefBase = QTableWidgetItem(k)
+                Pattern = QTableWidgetItem(data_dict[k])
+                self.setItem(idx, 0, RefBase)
+                self.setItem(idx, 1, Pattern)
+
+        def data_dict(self):
+            res = {}
+            for row in range(self.rowCount()):
+                if self.item(row, 0):
+                    res[self.item(row, 0).data(Qt.DisplayRole)] = self.item(row, 1).data(Qt.DisplayRole)
+                    
+            return res
+            
+    
     def __init__(self, parent):
+        
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        if Settings.contains('component-view'):
+            CmpViewDict = Settings.value('component-view')
+        else:
+            CmpViewDict = { 'C' : '$Value, $Footprint', 
+                            'D' : '$LibName', 
+                            'R' : '$Value, $Footprint' }
+            
+        
         
         super().__init__(parent)
         
         self.Tabs      = QTabWidget(self)
         self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         
-        self.CmpTableTab  = QWidget(self)
-        self.RefIgnoreTab = QWidget(self)
+        self.CmpViewTable  = self.CmpViewTable(self)
+        self.CmpViewTable.load(CmpViewDict)
         
-        self.Tabs.addTab(self.CmpTableTab, 'Component View')
+        
+        self.RefIgnoreTab = QListWidget(self)
+        
+        self.Tabs.addTab(self.CmpViewTable, 'Component View')
         self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Refs List')
         
         self.ButtonBox.accepted.connect(self.save_settings)
@@ -57,6 +104,9 @@ class TSettingsDialog(QDialog):
         
     def save_settings(self):
         print('save settings')
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        print( self.CmpViewTable.data_dict() )
+        Settings.setValue('component-view', self.CmpViewTable.data_dict())
         self.close()
         
     def cancel(self):
