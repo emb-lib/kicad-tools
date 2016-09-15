@@ -31,9 +31,10 @@ from PyQt5.QtCore import QT_VERSION_STR
 #-------------------------------------------------------------------------------
 class TSettingsDialog(QDialog):
     
+    #-----------------------------------------------------------------
     class CmpViewTable(QTableWidget):
-
-        def __init__(self, parent):
+        #-------------------------------------------------------------
+        def __init__(self, parent, data_dict):
             super().__init__(0, 2, parent)
         
             self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
@@ -42,9 +43,7 @@ class TSettingsDialog(QDialog):
             self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             self.verticalHeader().setDefaultSectionSize(20)
             self.setHorizontalHeaderLabels( ('Ref Base', 'Property Pattern') )
-
-        def load(self, data_dict):
-
+            
             keys = list( data_dict.keys() )
             keys.sort()    
 
@@ -56,6 +55,20 @@ class TSettingsDialog(QDialog):
                 self.setItem(idx, 0, RefBase)
                 self.setItem(idx, 1, Pattern)
 
+        #-------------------------------------------------------------
+#       def load(self, data_dict):
+#
+#           keys = list( data_dict.keys() )
+#           keys.sort()
+#
+#           self.setRowCount(64)
+#
+#           for idx, k in enumerate( keys ):
+#               RefBase = QTableWidgetItem(k)
+#               Pattern = QTableWidgetItem(data_dict[k])
+#               self.setItem(idx, 0, RefBase)
+#               self.setItem(idx, 1, Pattern)
+        #-------------------------------------------------------------
         def data_dict(self):
             res = {}
             for row in range(self.rowCount()):
@@ -64,9 +77,19 @@ class TSettingsDialog(QDialog):
                     
             return res
             
+    #-----------------------------------------------------------------        
+    class IgnoreCmpList(QListWidget):
+        
+        def __init__(self, parent):
+            super().__init__(parent)
     
+    
+    #-----------------------------------------------------------------
     def __init__(self, parent):
         
+        #---------------------------------------------------
+        super().__init__(parent)
+        #---------------------------------------------------
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         if Settings.contains('component-view'):
             CmpViewDict = Settings.value('component-view')
@@ -74,45 +97,37 @@ class TSettingsDialog(QDialog):
             CmpViewDict = { 'C' : '$Value, $Footprint', 
                             'D' : '$LibName', 
                             'R' : '$Value, $Footprint' }
-            
-        
-        
-        super().__init__(parent)
-        
-        self.Tabs      = QTabWidget(self)
-        self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        
-        self.CmpViewTable  = self.CmpViewTable(self)
-        self.CmpViewTable.load(CmpViewDict)
-        
+        #---------------------------------------------------
+        self.CmpViewTable  = self.CmpViewTable(self, CmpViewDict)
+        #self.CmpViewTable.load(CmpViewDict)
         
         self.RefIgnoreTab = QListWidget(self)
-        
+        #---------------------------------------------------
+        self.Tabs      = QTabWidget(self)
         self.Tabs.addTab(self.CmpViewTable, 'Component View')
-        self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Refs List')
-        
+        self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Component List')
+        #---------------------------------------------------
+        self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.ButtonBox.accepted.connect(self.save_settings)
         self.ButtonBox.rejected.connect(self.cancel)
-        
+        #---------------------------------------------------
         self.Layout = QVBoxLayout(self)
         self.Layout.addWidget(self.Tabs)
         self.Layout.addWidget(self.ButtonBox)
-        
+        #---------------------------------------------------
         self.setWindowTitle('Settings')
         self.setModal(True)
-        
-        
+    #-----------------------------------------------------------------    
     def save_settings(self):
         print('save settings')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         print( self.CmpViewTable.data_dict() )
         Settings.setValue('component-view', self.CmpViewTable.data_dict())
         self.close()
-        
+    #-----------------------------------------------------------------        
     def cancel(self):
         print('close settings dialog')
         self.close()
-        
         
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
