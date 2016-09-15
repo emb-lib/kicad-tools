@@ -33,9 +33,28 @@ class TSettingsDialog(QDialog):
     
     #-----------------------------------------------------------------
     class CmpViewTable(QTableWidget):
+        #---------------------------------------------------
+        class EventFilter(QObject):
+            def __init__(self, parent):
+                super().__init__(parent)
+                self.Parent = parent
+
+            def eventFilter(self, obj, e):
+                if e.type() == QEvent.KeyPress:
+                    if e.key() == Qt.Key_Delete:
+                        curr_row = self.Parent.currentRow()
+                        self.Parent.removeRow(curr_row)
+                        self.Parent.selectRow(curr_row)
+                        
+                        return True
+                
+                return False        
+                
         #-------------------------------------------------------------
         def __init__(self, parent, data_dict):
             super().__init__(0, 2, parent)
+            
+            self.installEventFilter(self.EventFilter(self))
         
             self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
             self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
@@ -55,6 +74,7 @@ class TSettingsDialog(QDialog):
                 self.setItem(idx, 0, RefBase)
                 self.setItem(idx, 1, Pattern)
 
+            self.selectRow(0)
         #-------------------------------------------------------------
         def data_dict(self):
             res = {}
@@ -66,11 +86,10 @@ class TSettingsDialog(QDialog):
             
     #-----------------------------------------------------------------        
     class IgnoreCmpList(QListWidget):
-        
+        #---------------------------------------------------
         def __init__(self, parent, data_list):
             super().__init__(parent)
             self.addItems( data_list )
-    
     
     #-----------------------------------------------------------------
     def __init__(self, parent):
@@ -499,7 +518,7 @@ class MainWindow(QMainWindow):
     def edit_settings(self):
         print('edit settings')
         SettingsDialog = TSettingsDialog(self)
-        SettingsDialog.resize(400, 300)
+        SettingsDialog.resize(400, 400)
         SettingsDialog.Tabs.setMinimumWidth(800)
         SettingsDialog.show()
         
