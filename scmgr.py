@@ -19,7 +19,7 @@ from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QAbstractItemDelegate, 
-                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget,
+                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
                              QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
 
@@ -56,19 +56,6 @@ class TSettingsDialog(QDialog):
                 self.setItem(idx, 1, Pattern)
 
         #-------------------------------------------------------------
-#       def load(self, data_dict):
-#
-#           keys = list( data_dict.keys() )
-#           keys.sort()
-#
-#           self.setRowCount(64)
-#
-#           for idx, k in enumerate( keys ):
-#               RefBase = QTableWidgetItem(k)
-#               Pattern = QTableWidgetItem(data_dict[k])
-#               self.setItem(idx, 0, RefBase)
-#               self.setItem(idx, 1, Pattern)
-        #-------------------------------------------------------------
         def data_dict(self):
             res = {}
             for row in range(self.rowCount()):
@@ -80,8 +67,9 @@ class TSettingsDialog(QDialog):
     #-----------------------------------------------------------------        
     class IgnoreCmpList(QListWidget):
         
-        def __init__(self, parent):
+        def __init__(self, parent, data_list):
             super().__init__(parent)
+            self.addItems( data_list )
     
     
     #-----------------------------------------------------------------
@@ -97,15 +85,19 @@ class TSettingsDialog(QDialog):
             CmpViewDict = { 'C' : '$Value, $Footprint', 
                             'D' : '$LibName', 
                             'R' : '$Value, $Footprint' }
+            
+        if Settings.contains('component-ignore'):
+            CmpIgnoreList = Settings.value('component-ignore')
+        else:
+            CmpIgnoreList = ['slon', 'mammont']
+
         #---------------------------------------------------
         self.CmpViewTable  = self.CmpViewTable(self, CmpViewDict)
-        #self.CmpViewTable.load(CmpViewDict)
-        
-        self.RefIgnoreTab = QListWidget(self)
+        self.CmpIgnoreList = self.IgnoreCmpList(self, CmpIgnoreList)
         #---------------------------------------------------
         self.Tabs      = QTabWidget(self)
         self.Tabs.addTab(self.CmpViewTable, 'Component View')
-        self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Component List')
+        self.Tabs.addTab(self.CmpIgnoreList, 'Ignore Component List')
         #---------------------------------------------------
         self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.ButtonBox.accepted.connect(self.save_settings)
@@ -121,7 +113,6 @@ class TSettingsDialog(QDialog):
     def save_settings(self):
         print('save settings')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
-        print( self.CmpViewTable.data_dict() )
         Settings.setValue('component-view', self.CmpViewTable.data_dict())
         self.close()
     #-----------------------------------------------------------------        
