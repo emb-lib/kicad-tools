@@ -114,3 +114,15 @@ QTabBar::tab::selected {
 QTabBar::tab {
     min-width: 200px
 }
+QListWidget::item:selected:active{
+    color: white;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);
+    background: navy;
+}
+QListWidget::item:selected:!active {
+    color: black;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);
+}
+QListView::item:alternate {
+    background: #EEEEEE;
+}

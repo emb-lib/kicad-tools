@@ -32,7 +32,7 @@ from PyQt5.QtCore import QT_VERSION_STR
 class TSettingsDialog(QDialog):
     
     #-----------------------------------------------------------------
-    class CmpViewTable(QTableWidget):
+    class TCmpViewTable(QTableWidget):
         #---------------------------------------------------
         class EventFilter(QObject):
             def __init__(self, parent):
@@ -45,11 +45,9 @@ class TSettingsDialog(QDialog):
                         curr_row = self.Parent.currentRow()
                         self.Parent.removeRow(curr_row)
                         self.Parent.selectRow(curr_row)
-                        
                         return True
                 
                 return False        
-                
         #-------------------------------------------------------------
         def __init__(self, parent, data_dict):
             super().__init__(0, 2, parent)
@@ -85,12 +83,61 @@ class TSettingsDialog(QDialog):
             return res
             
     #-----------------------------------------------------------------        
-    class IgnoreCmpList(QListWidget):
+    class TIgnoreCmpList(QListWidget):
+        #---------------------------------------------------
+        class EventFilter(QObject):
+            def __init__(self, parent):
+                super().__init__(parent)
+                self.Parent = parent
+
+            def eventFilter(self, obj, e):
+                if e.type() == QEvent.KeyPress:
+                    if e.key() == Qt.Key_Insert:
+                        print('insert item')
+                        self.Parent.add_item()
+                        
+                        return True
+
+                    if e.key() == Qt.Key_Delete:
+                        self.Parent.remove_item()
+                        return True
+
+                return False        
         #---------------------------------------------------
         def __init__(self, parent, data_list):
             super().__init__(parent)
+            self.installEventFilter(self.EventFilter(self))
+            
+            data_list.sort()
             self.addItems( data_list )
-    
+            self.setAlternatingRowColors(True)
+            for row in range(self.count()):
+                item = self.item(row)
+                item.setFlags(item.flags() | Qt.ItemIsEditable)
+            
+            #self.setEnabled(True)
+            #self.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
+        #---------------------------------------------------
+        def add_item(self):
+            text, ok = QInputDialog.getText(self, 'Add Component Reference', 'Enter Component Reference Pattern')
+            if ok:
+                self.addItem(text)
+                print(self.count())
+                
+            print(self.data_list())
+        #---------------------------------------------------
+        def remove_item(self):
+            curr_row = self.currentRow()
+            self.takeItem(curr_row)
+            
+        #---------------------------------------------------
+        def data_list(self):
+            res = []
+            for row in range(self.count()):
+                res.append(self.item(row).data(Qt.DisplayRole))
+                
+            res.sort()
+            return res
     #-----------------------------------------------------------------
     def __init__(self, parent):
         
@@ -106,17 +153,17 @@ class TSettingsDialog(QDialog):
                             'R' : '$Value, $Footprint' }
             
         if Settings.contains('component-ignore'):
-            CmpIgnoreList = Settings.value('component-ignore')
+            IgnoreCmpRefsList = Settings.value('component-ignore')
         else:
-            CmpIgnoreList = ['slon', 'mammont']
+            IgnoreCmpRefsList = []
 
         #---------------------------------------------------
-        self.CmpViewTable  = self.CmpViewTable(self, CmpViewDict)
-        self.CmpIgnoreList = self.IgnoreCmpList(self, CmpIgnoreList)
+        self.CmpViewTable  = self.TCmpViewTable(self, CmpViewDict)
+        self.IgnoreCmpList = self.TIgnoreCmpList(self, IgnoreCmpRefsList)
         #---------------------------------------------------
-        self.Tabs      = QTabWidget(self)
+        self.Tabs = QTabWidget(self)
         self.Tabs.addTab(self.CmpViewTable, 'Component View')
-        self.Tabs.addTab(self.CmpIgnoreList, 'Ignore Component List')
+        self.Tabs.addTab(self.IgnoreCmpList, 'Ignore Component List')
         #---------------------------------------------------
         self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.ButtonBox.accepted.connect(self.save_settings)
@@ -133,6 +180,7 @@ class TSettingsDialog(QDialog):
         print('save settings')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue('component-view', self.CmpViewTable.data_dict())
+        Settings.setValue('component-ignore', self.IgnoreCmpList.data_list())
         self.close()
     #-----------------------------------------------------------------        
     def cancel(self):
