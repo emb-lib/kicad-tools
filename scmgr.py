@@ -41,7 +41,7 @@ class TSettingsDialog(QDialog):
         self.CmpTableTab  = QWidget(self)
         self.RefIgnoreTab = QWidget(self)
         
-        self.Tabs.addTab(self.CmpTableTab, 'Components Table')
+        self.Tabs.addTab(self.CmpTableTab, 'Component View')
         self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Refs List')
         
         
@@ -424,6 +424,8 @@ class MainWindow(QMainWindow):
     def edit_settings(self):
         print('edit settings')
         SettingsDialog = TSettingsDialog(self)
+        SettingsDialog.resize(400, 300)
+        SettingsDialog.Tabs.setMinimumWidth(800)
         SettingsDialog.show()
         
 #-------------------------------------------------------------------------------

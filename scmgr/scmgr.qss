@@ -105,4 +105,11 @@ QComboBox {
     padding: 1px 18px 1px 3px;
     min-width: 6em;
 }
-
+QTabBar::tab::selected {
+    background: #BBBBBB;
+    color: navy;
+    min-width: 200px;
+}
+QTabBar::tab {
+    min-width: 200px
+}
