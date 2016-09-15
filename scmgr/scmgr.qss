@@ -107,7 +107,8 @@ QComboBox {
 }
 QTabBar::tab::selected {
     background: #BBBBBB;
-    color: navy;
+    color: black;
+    font-weight: bold;
     min-width: 200px;
 }
 QTabBar::tab {
