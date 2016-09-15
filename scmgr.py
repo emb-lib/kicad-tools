@@ -36,13 +36,32 @@ class TSettingsDialog(QDialog):
         super().__init__(parent)
         
         self.Tabs      = QTabWidget(self)
-        self.ButtonBox = QDialogButtonBox(self)
+        self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         
         self.CmpTableTab  = QWidget(self)
         self.RefIgnoreTab = QWidget(self)
         
         self.Tabs.addTab(self.CmpTableTab, 'Component View')
         self.Tabs.addTab(self.RefIgnoreTab, 'Ignore Refs List')
+        
+        self.ButtonBox.accepted.connect(self.save_settings)
+        self.ButtonBox.rejected.connect(self.cancel)
+        
+        self.Layout = QVBoxLayout(self)
+        self.Layout.addWidget(self.Tabs)
+        self.Layout.addWidget(self.ButtonBox)
+        
+        self.setWindowTitle('Settings')
+        self.setModal(True)
+        
+        
+    def save_settings(self):
+        print('save settings')
+        self.close()
+        
+    def cancel(self):
+        print('close settings dialog')
+        self.close()
         
         
 #-------------------------------------------------------------------------------
