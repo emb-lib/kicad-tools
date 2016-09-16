@@ -19,15 +19,179 @@ from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
                              QAbstractItemDelegate, 
-                             QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog, QInputDialog, QMessageBox)
+                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem,
+                             QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
+                             QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
 
 from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 from PyQt5.QtCore import QT_VERSION_STR
                                         
+#-------------------------------------------------------------------------------
+class TSettingsDialog(QDialog):
+    
+    #-----------------------------------------------------------------
+    class TCmpViewTable(QTableWidget):
+        #---------------------------------------------------
+        class EventFilter(QObject):
+            def __init__(self, parent):
+                super().__init__(parent)
+                self.Parent = parent
+
+            def eventFilter(self, obj, e):
+                if e.type() == QEvent.KeyPress:
+                    if e.key() == Qt.Key_Delete:
+                        curr_row = self.Parent.currentRow()
+                        self.Parent.removeRow(curr_row)
+                        self.Parent.selectRow(curr_row)
+                        return True
+                
+                return False        
+        #-------------------------------------------------------------
+        def __init__(self, parent, data_dict):
+            super().__init__(0, 2, parent)
+            
+            self.installEventFilter(self.EventFilter(self))
+        
+            self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
+            self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
+            self.horizontalHeader().setStretchLastSection(True)
+            self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+            self.verticalHeader().setDefaultSectionSize(20)
+            self.setHorizontalHeaderLabels( ('Ref Base', 'Property Pattern') )
+            
+            keys = list( data_dict.keys() )
+            keys.sort()    
+
+            self.setRowCount(64)
+
+            for idx, k in enumerate( keys ):
+                RefBase = QTableWidgetItem(k)
+                Pattern = QTableWidgetItem(data_dict[k])
+                self.setItem(idx, 0, RefBase)
+                self.setItem(idx, 1, Pattern)
+
+            self.selectRow(0)
+        #-------------------------------------------------------------
+        def data_dict(self):
+            res = {}
+            for row in range(self.rowCount()):
+                if self.item(row, 0):
+                    res[self.item(row, 0).data(Qt.DisplayRole)] = self.item(row, 1).data(Qt.DisplayRole)
+                    
+            return res
+            
+    #-----------------------------------------------------------------        
+    class TIgnoreCmpList(QListWidget):
+        #---------------------------------------------------
+        class EventFilter(QObject):
+            def __init__(self, parent):
+                super().__init__(parent)
+                self.Parent = parent
+
+            def eventFilter(self, obj, e):
+                if e.type() == QEvent.KeyPress:
+                    if e.key() == Qt.Key_Insert:
+                        print('insert item')
+                        self.Parent.add_item()
+                        
+                        return True
+
+                    if e.key() == Qt.Key_Delete:
+                        self.Parent.remove_item()
+                        return True
+
+                return False        
+        #---------------------------------------------------
+        def __init__(self, parent, data_list):
+            super().__init__(parent)
+            self.installEventFilter(self.EventFilter(self))
+            
+            data_list.sort()
+            self.addItems( data_list )
+            self.setAlternatingRowColors(True)
+            for row in range(self.count()):
+                item = self.item(row)
+                item.setFlags(item.flags() | Qt.ItemIsEditable)
+            
+            #self.setEnabled(True)
+            #self.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
+        #---------------------------------------------------
+        def add_item(self):
+            text, ok = QInputDialog.getText(self, 'Add Component Reference', 'Enter Component Reference Pattern')
+            if ok:
+                self.addItem(text)
+                print(self.count())
+                
+            print(self.data_list())
+        #---------------------------------------------------
+        def remove_item(self):
+            curr_row = self.currentRow()
+            self.takeItem(curr_row)
+            
+        #---------------------------------------------------
+        def data_list(self):
+            res = []
+            for row in range(self.count()):
+                res.append(self.item(row).data(Qt.DisplayRole))
+                
+            res.sort()
+            return res
+    #-----------------------------------------------------------------
+    def __init__(self, parent):
+        
+        #---------------------------------------------------
+        super().__init__(parent)
+        self.Parent = parent
+        #---------------------------------------------------
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        if Settings.contains('component-view'):
+            CmpViewDict = Settings.value('component-view')
+        else:
+            CmpViewDict = { 'C' : '$Value, $Footprint', 
+                            'D' : '$LibRef', 
+                            'R' : '$Value, $Footprint' }
+            
+        if Settings.contains('component-ignore'):
+            IgnoreCmpRefsList = Settings.value('component-ignore')
+        else:
+            IgnoreCmpRefsList = []
+
+        #---------------------------------------------------
+        self.CmpViewTable  = self.TCmpViewTable(self, CmpViewDict)
+        self.IgnoreCmpList = self.TIgnoreCmpList(self, IgnoreCmpRefsList)
+        #---------------------------------------------------
+        self.Tabs = QTabWidget(self)
+        self.Tabs.addTab(self.CmpViewTable, 'Component View')
+        self.Tabs.addTab(self.IgnoreCmpList, 'Ignore Component List')
+        #---------------------------------------------------
+        self.ButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.ButtonBox.accepted.connect(self.save_settings)
+        self.ButtonBox.rejected.connect(self.cancel)
+        #---------------------------------------------------
+        self.Layout = QVBoxLayout(self)
+        self.Layout.addWidget(self.Tabs)
+        self.Layout.addWidget(self.ButtonBox)
+        #---------------------------------------------------
+        self.setWindowTitle('Settings')
+        self.setModal(True)
+    #-----------------------------------------------------------------    
+    def save_settings(self):
+        print('save settings')
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        Settings.setValue('component-view', self.CmpViewTable.data_dict())
+        Settings.setValue('component-ignore', self.IgnoreCmpList.data_list())
+
+        curr_file = CmpMgr.curr_file_path()
+        self.Parent.CmpTable.reload_file(curr_file)
+        
+        self.close()
+    #-----------------------------------------------------------------        
+    def cancel(self):
+        print('close settings dialog')
+        self.close()
+        
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
@@ -142,7 +306,7 @@ class MainWindow(QMainWindow):
 
         #----------------------------------------------------
         #
-        #   Application hotkeys
+        #   Application Hotkeys
         #
         self.shortcutLeft  = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Left), self)
         self.shortcutRight = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Right), self)
@@ -182,20 +346,43 @@ class MainWindow(QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
         
+        settingsAction = QAction(QIcon( os.path.join('scmgr', 'settings24.png') ), 'Settings', self)
+        settingsAction.setShortcut('Alt+S')
+        settingsAction.setStatusTip('Edit settings')
+        settingsAction.triggered.connect(self.edit_settings)
+        
         self.statusBar().showMessage('Ready')
 
+        #--------------------------------------------
+        #
+        #    Main Menu
+        #
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(saveAsAction)
         fileMenu.addAction(exitAction)
 
+        #--------------------------------------------
+        #
+        #    Options Menu
+        #
+        optionsMenu = menubar.addMenu('&Options')
+        optionsMenu.addAction(settingsAction)
+        
+        #--------------------------------------------
+        #
+        #    Toolbar
+        #
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(openAction)        
         toolbar.addAction(saveAction)        
         toolbar.addAction(saveAsAction)        
         toolbar.addAction(exitAction)        
+        toolbar.addAction(settingsAction)        
         
+                
         self.CmpTabBox    = QGroupBox('Components', self)
         self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
         self.CmpTabLayout.setContentsMargins(4,10,4,4)
@@ -205,7 +392,12 @@ class MainWindow(QMainWindow):
         
         #----------------------------------------------------
         #
-        #    Components table
+        #    Settings Dialog
+        #
+        
+        #----------------------------------------------------
+        #
+        #    Components Table
         #
         self.CmpTable       = ComponentsTable(self) 
         self.CmpChooseButton = QPushButton('Choose', self)
@@ -367,10 +559,22 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             filenames = dialog.selectedFiles()
 
+            
+        if len(filenames) == 0:
+            return
+            
         print('Save File As "' + filenames[0] + '"')
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
                                      
+    #---------------------------------------------------------------------------
+    def edit_settings(self):
+        print('edit settings')
+        SettingsDialog = TSettingsDialog(self)
+        SettingsDialog.resize(400, 400)
+        SettingsDialog.Tabs.setMinimumWidth(800)
+        SettingsDialog.show()
+        
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 

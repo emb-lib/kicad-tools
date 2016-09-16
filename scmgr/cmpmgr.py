@@ -5,7 +5,9 @@ import sys
 import os
 import shutil
 import re
-                                     
+                   
+from PyQt5.QtCore import QSettings
+                  
 #-------------------------------------------------------------------------------
 class ComponentField:
     
@@ -90,14 +92,14 @@ class Component:
     
     def __init__(self, sheet = 0):
         self.Ref     = '~'
-        self.LibName = '~'
+        self.LibRef = '~'
         self.Sheet   = sheet
         
     def parse_comp(self, rec):
         self.rec = rec
         r = re.search('L ([\w-]+) ([\w#]+)', rec)
         if r:
-            self.LibName, self.Ref = r.groups()
+            self.LibRef, self.Ref = r.groups()
         else:
             print('E: invalid component L record, rec: "' + rec + '"')
             sys.exit(1)
@@ -165,6 +167,16 @@ class Component:
             f.InnerCode = str(num)
         
     #--------------------------------------------------------------
+    def property_value(self, pname):
+        if hasattr(self, pname):
+            return eval('self.' + pname)
+        else:
+            f = self.field(pname)
+            if f:
+                return f.Text
+            else:
+                return None
+    #--------------------------------------------------------------
     def dump(self):
         if int(self.PartNo) > 1:
             part = '.' + self.PartNo
@@ -173,7 +185,7 @@ class Component:
             
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
-        print('LibName   : ' + self.LibName)
+        print('LibRef   : ' + self.LibRef)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)
@@ -202,7 +214,7 @@ class Component:
     def create_cmp_rec(self):
         #print(self.Ref)
         rec_list = []
-        rec_list.append('L ' + self.LibName + ' ' + self.Ref)
+        rec_list.append('L ' + self.LibRef + ' ' + self.Ref)
         rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
         rec_list.append('P ' + self.PosX + ' ' + self.PosY)
         
@@ -273,7 +285,12 @@ class ComponentManager:
         for sheet in sheets_paths[1:]:
             self.schdata.append(self.read_file(sheet))
         
-        ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        if Settings.contains('component-ignore'):
+            ipl = Settings.value('component-ignore')
+        else:
+            ipl = []
+            
         cmp_dict = { }
         rcls = []
         for schdata in self.schdata:

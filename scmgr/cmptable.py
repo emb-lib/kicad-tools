@@ -61,7 +61,6 @@ class ComponentsTable(QTableWidget):
         print('--------------   mouse press event CmpTable -------------')
         self.mouse_click.emit('CmpTable')
         QTableWidget.mousePressEvent(self, e)
-
     #---------------------------------------------------------------------------    
     def cell_chosen(self, row, col):
         items = self.selectedItems()
@@ -74,7 +73,6 @@ class ComponentsTable(QTableWidget):
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
         self.cells_chosen.emit(refs)
-        
     #---------------------------------------------------------------------------    
     def load_file(self, fname):
                 
@@ -82,7 +80,10 @@ class ComponentsTable(QTableWidget):
         
         self.CmpDict = CmpMgr.load_file(fname)
         self.update_cmp_list(self.CmpDict)
-        
+    #---------------------------------------------------------------------------    
+    def reload_file(self, fname):
+        self.clear()
+        self.load_file(fname)
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 
@@ -91,12 +92,28 @@ class ComponentsTable(QTableWidget):
 
         self.setRowCount(len(cd))
 
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        if Settings.contains('component-view'):
+            CmpViewDict = Settings.value('component-view')
+        
         for idx, k in enumerate( keys ):
-            Name = QTableWidgetItem(cd[k][0].LibName)
             Ref  = QTableWidgetItem(k)
-          #  print(ref + ' ' + cd[ref].Name)
+            RefBase = re.match('([a-zA-Z]+)\d+', k).groups()[0]
+            if RefBase in CmpViewDict.keys():
+                Pattern = CmpViewDict[RefBase]
+            else:
+                Pattern = '$LibRef'
+                
+            Subs = re.findall('\$(\w+)', Pattern)
+            
+            cmp = cd[k][0]
+            for sub in Subs:
+                pval = cmp.property_value(sub)
+                if pval:
+                    Pattern = re.sub('\$' + sub, pval, Pattern)
+            
+            Name = QTableWidgetItem(Pattern)
             self.setItem(idx, 0, Ref)
             self.setItem(idx, 1, Name)
-                                        
 #-------------------------------------------------------------------------------
 
