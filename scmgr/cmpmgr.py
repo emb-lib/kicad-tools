@@ -92,14 +92,14 @@ class Component:
     
     def __init__(self, sheet = 0):
         self.Ref     = '~'
-        self.LibName = '~'
+        self.LibRef = '~'
         self.Sheet   = sheet
         
     def parse_comp(self, rec):
         self.rec = rec
         r = re.search('L ([\w-]+) ([\w#]+)', rec)
         if r:
-            self.LibName, self.Ref = r.groups()
+            self.LibRef, self.Ref = r.groups()
         else:
             print('E: invalid component L record, rec: "' + rec + '"')
             sys.exit(1)
@@ -185,7 +185,7 @@ class Component:
             
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
-        print('LibName   : ' + self.LibName)
+        print('LibRef   : ' + self.LibRef)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)
@@ -214,7 +214,7 @@ class Component:
     def create_cmp_rec(self):
         #print(self.Ref)
         rec_list = []
-        rec_list.append('L ' + self.LibName + ' ' + self.Ref)
+        rec_list.append('L ' + self.LibRef + ' ' + self.Ref)
         rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
         rec_list.append('P ' + self.PosX + ' ' + self.PosY)
         

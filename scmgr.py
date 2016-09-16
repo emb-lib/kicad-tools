@@ -150,7 +150,7 @@ class TSettingsDialog(QDialog):
             CmpViewDict = Settings.value('component-view')
         else:
             CmpViewDict = { 'C' : '$Value, $Footprint', 
-                            'D' : '$LibName', 
+                            'D' : '$LibRef', 
                             'R' : '$Value, $Footprint' }
             
         if Settings.contains('component-ignore'):

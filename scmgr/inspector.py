@@ -57,7 +57,7 @@ class Inspector(QTreeWidget):
     #              Title                  Delegate         Delegate Data
     #
     ItemsTable = [ ['Ref',              'TextItemDelegate', None],
-                   ['LibName',          'TextItemDelegate', None],
+                   ['LibRef',          'TextItemDelegate', None],
                    ['Value',            'TextItemDelegate', None],
                    ['Footprint',        'TextItemDelegate', None],
                    ['DocSheet',         'TextItemDelegate', None],
@@ -69,7 +69,7 @@ class Inspector(QTreeWidget):
     StdParamsNameMap =\
     {
         'Ref'       : 'Ref',
-        'LibName'   : 'LibName',
+        'LibRef'   : 'LibRef',
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
         'DocSheet'  : 'Fields[3].Text',
@@ -746,7 +746,7 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def load_field(self):
         
-        NO_FIELD_PARAMS = ['LibName', 'X', 'Y', 'Timestamp']
+        NO_FIELD_PARAMS = ['LibRef', 'X', 'Y', 'Timestamp']
 
         comps = self.comps
         param = self.param
