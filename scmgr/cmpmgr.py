@@ -275,7 +275,6 @@ class ComponentManager:
         for sheet in sheets_paths[1:]:
             self.schdata.append(self.read_file(sheet))
         
-        #ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         if Settings.contains('component-ignore'):
             ipl = Settings.value('component-ignore')

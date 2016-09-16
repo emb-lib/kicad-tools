@@ -143,6 +143,7 @@ class TSettingsDialog(QDialog):
         
         #---------------------------------------------------
         super().__init__(parent)
+        self.Parent = parent
         #---------------------------------------------------
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         if Settings.contains('component-view'):
@@ -181,6 +182,10 @@ class TSettingsDialog(QDialog):
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue('component-view', self.CmpViewTable.data_dict())
         Settings.setValue('component-ignore', self.IgnoreCmpList.data_list())
+
+        curr_file = CmpMgr.curr_file_path()
+        self.Parent.CmpTable.reload_file(curr_file)
+        
         self.close()
     #-----------------------------------------------------------------        
     def cancel(self):
