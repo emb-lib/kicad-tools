@@ -5,7 +5,9 @@ import sys
 import os
 import shutil
 import re
-                                     
+                   
+from PyQt5.QtCore import QSettings
+                  
 #-------------------------------------------------------------------------------
 class ComponentField:
     
@@ -273,7 +275,13 @@ class ComponentManager:
         for sheet in sheets_paths[1:]:
             self.schdata.append(self.read_file(sheet))
         
-        ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
+        #ipl = ['LBL', 'BUS_ENTRY']                               # ipl - ignored pattern list
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        if Settings.contains('component-ignore'):
+            ipl = Settings.value('component-ignore')
+        else:
+            ipl = []
+            
         cmp_dict = { }
         rcls = []
         for schdata in self.schdata:
