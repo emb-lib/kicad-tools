@@ -167,6 +167,16 @@ class Component:
             f.InnerCode = str(num)
         
     #--------------------------------------------------------------
+    def property_value(self, pname):
+        if hasattr(self, pname):
+            return eval('self.' + pname)
+        else:
+            f = self.field(pname)
+            if f:
+                return f.Text
+            else:
+                return None
+    #--------------------------------------------------------------
     def dump(self):
         if int(self.PartNo) > 1:
             part = '.' + self.PartNo
