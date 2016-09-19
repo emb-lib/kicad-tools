@@ -103,16 +103,10 @@ class ComponentsTable(QTableWidget):
                 Pattern = CmpViewDict[RefBase]
             else:
                 Pattern = '$LibRef'
-                
-            Subs = re.findall('\$(\w+)', Pattern)
             
             cmp = cd[k][0]
-            for sub in Subs:
-                pval = cmp.property_value(sub)
-                if pval:
-                    Pattern = re.sub('\$' + sub, pval, Pattern)
-            
-            Name = QTableWidgetItem(Pattern)
+            info_str = cmp.get_str_from_pattern(Pattern)
+            Name = QTableWidgetItem(info_str)
             self.setItem(idx, 0, Ref)
             self.setItem(idx, 1, Name)
 #-------------------------------------------------------------------------------

@@ -169,13 +169,23 @@ class Component:
     #--------------------------------------------------------------
     def property_value(self, pname):
         if hasattr(self, pname):
-            return eval('self.' + pname)
+            return getattr(self, pname)
         else:
             f = self.field(pname)
             if f:
                 return f.Text
             else:
                 return None
+    #--------------------------------------------------------------
+    def get_str_from_pattern(self, pattern):
+        Subs = re.findall('\$(\w+)', pattern)
+
+        for sub in Subs:
+            pval = self.property_value(sub)
+            if pval:
+                pattern = re.sub('\$' + sub, pval, pattern)
+
+        return pattern
     #--------------------------------------------------------------
     def dump(self):
         if int(self.PartNo) > 1:
