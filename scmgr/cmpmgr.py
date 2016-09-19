@@ -185,7 +185,7 @@ class Component:
             
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
-        print('LibRef   : ' + self.LibRef)
+        print('LibRef    : ' + self.LibRef)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)

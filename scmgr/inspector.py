@@ -57,7 +57,7 @@ class Inspector(QTreeWidget):
     #              Title                  Delegate         Delegate Data
     #
     ItemsTable = [ ['Ref',              'TextItemDelegate', None],
-                   ['LibRef',          'TextItemDelegate', None],
+                   ['LibRef',           'TextItemDelegate', None],
                    ['Value',            'TextItemDelegate', None],
                    ['Footprint',        'TextItemDelegate', None],
                    ['DocSheet',         'TextItemDelegate', None],
@@ -69,7 +69,7 @@ class Inspector(QTreeWidget):
     StdParamsNameMap =\
     {
         'Ref'       : 'Ref',
-        'LibRef'   : 'LibRef',
+        'LibRef'    : 'LibRef',
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
         'DocSheet'  : 'Fields[3].Text',
