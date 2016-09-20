@@ -381,28 +381,47 @@ class Inspector(QTreeWidget):
         if not hasattr(self, 'comps'):
             return
             
+        subst_list = []
+            
         for c in self.comps:
             for i in range( self.topLevelItem(0).childCount() ):
                 item = self.topLevelItem(0).child(i)
                 item_name  = item.data(colNAME, Qt.DisplayRole)
+               # item_value = item.data(colDATA, Qt.DisplayRole)
                 item_value = item.data(colDATA, Qt.DisplayRole)
+                if '$' in item_value:
+                    subst_list.append( [item_name, item_value] )
+                    continue
+                    
+                #item_value = c.get_str_from_pattern( item.data(colDATA, Qt.DisplayRole) )
+                #print('save_cmps', item_value)
                 if item_value != MULTIVALUE:
                     exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
-                
+                    #f = c.field(item_name)
+                    #f.Text = item_value
+
+                    
             for i in range( self.topLevelItem(1).childCount() ):
                 item = self.topLevelItem(1).child(i)
                 item_name  = item.data(colNAME, Qt.DisplayRole)
                 item_value = item.data(colDATA, Qt.DisplayRole)
+                if '$' in item_value:
+                    subst_list.append( [item_name, item_value] )
+                    continue
+
                 if item_value != MULTIVALUE:
                     f = c.field(item_name)
                     f.Text = item_value
                     
-#                   for i in FieldInspector.fgroup:
-#                   f = c.field(item_name)
-#                   if f:
-#                       f.Text = item_value
-#                   else:
-                        
+            for s in subst_list:
+                item_name  = s[0]
+                item_value = c.get_str_from_pattern( s[1] )
+                if item_name in self.StdParamsNameMap.keys():
+                    exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                else:
+                    f = c.field(item_name)
+                    f.Text = item_value
+                
         
                                             
 #-------------------------------------------------------------------------------    
