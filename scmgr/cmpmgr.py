@@ -178,9 +178,9 @@ class Component:
                 return None
     #--------------------------------------------------------------
     def get_str_from_pattern(self, pattern):
-        Subs = re.findall('\$(\w+)', pattern)
+        subs = re.findall('\$(\w+)', pattern)
 
-        for sub in Subs:
+        for sub in subs:
             pval = self.property_value(sub)
             if pval:
                 pattern = re.sub('\$' + sub, pval, pattern)
@@ -349,12 +349,12 @@ class ComponentManager:
                 print(ref, len(clist))
                 for c in clist:
                     print('Sheet:', c.Sheet, 'Part:', c.PartNo)
-                
-            for c in clist:
+
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
                 pattern = re.sub('\$', '\\\$', c.rec)
                 self.schdata[c.Sheet] = re.sub(pattern, crec, self.schdata[c.Sheet] )
+                c.rec = crec
                 #print(c.Ref, self.schdata[c.Sheet][311:320])
 #               if c.Ref == 'A1':
 #                   print(repr(c.rec))
