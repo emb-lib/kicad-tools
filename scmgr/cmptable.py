@@ -95,14 +95,17 @@ class ComponentsTable(QTableWidget):
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         if Settings.contains('component-view'):
             CmpViewDict = Settings.value('component-view')
+        else:
+            CmpViewDict = {}
         
         for idx, k in enumerate( keys ):
             Ref  = QTableWidgetItem(k)
-            RefBase = re.match('([a-zA-Z]+)\d+', k).groups()[0]
-            if RefBase in CmpViewDict.keys():
-                Pattern = CmpViewDict[RefBase]
-            else:
-                Pattern = '$LibRef'
+            res  = re.match('([a-zA-Z]+)\d+', k)
+            Pattern = '$LibRef'
+            if res:
+                RefBase = res.groups()[0]
+                if RefBase in CmpViewDict.keys():
+                    Pattern = CmpViewDict[RefBase]
             
             cmp = cd[k][0]
             info_str = cmp.get_str_from_pattern(Pattern)
