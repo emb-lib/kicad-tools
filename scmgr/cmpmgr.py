@@ -349,6 +349,10 @@ class ComponentManager:
                 print(ref, len(clist))
                 for c in clist:
                     print('Sheet:', c.Sheet, 'Part:', c.PartNo)
+                
+            for c in clist:
+#               if ref == 'A1' or ref == 'C3':
+#                   c.dump()
 
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
