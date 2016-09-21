@@ -545,6 +545,7 @@ class MainWindow(QMainWindow):
         print('Save File "' + curr_file + '"')
         
         CmpMgr.save_file(curr_file)
+        #self.CmpTable.reload_file(curr_file)
 
     #---------------------------------------------------------------------------
     def save_file_as(self):

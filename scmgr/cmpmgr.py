@@ -169,13 +169,23 @@ class Component:
     #--------------------------------------------------------------
     def property_value(self, pname):
         if hasattr(self, pname):
-            return eval('self.' + pname)
+            return getattr(self, pname)
         else:
             f = self.field(pname)
             if f:
                 return f.Text
             else:
                 return None
+    #--------------------------------------------------------------
+    def get_str_from_pattern(self, pattern):
+        subs = re.findall('\$(\w+)', pattern)
+
+        for sub in subs:
+            pval = self.property_value(sub)
+            if pval:
+                pattern = re.sub('\$' + sub, pval, pattern)
+
+        return pattern
     #--------------------------------------------------------------
     def dump(self):
         if int(self.PartNo) > 1:
@@ -185,7 +195,7 @@ class Component:
             
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
-        print('LibRef   : ' + self.LibRef)
+        print('LibRef    : ' + self.LibRef)
         print('X         : ' + self.PosX)
         print('Y         : ' + self.PosY)
         print('Timestump : ' + self.Timestamp)
@@ -341,10 +351,14 @@ class ComponentManager:
                     print('Sheet:', c.Sheet, 'Part:', c.PartNo)
                 
             for c in clist:
+#               if ref == 'A1' or ref == 'C3':
+#                   c.dump()
+
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
                 pattern = re.sub('\$', '\\\$', c.rec)
                 self.schdata[c.Sheet] = re.sub(pattern, crec, self.schdata[c.Sheet] )
+                c.rec = crec
                 #print(c.Ref, self.schdata[c.Sheet][311:320])
 #               if c.Ref == 'A1':
 #                   print(repr(c.rec))

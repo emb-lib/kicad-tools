@@ -57,7 +57,7 @@ class Inspector(QTreeWidget):
     #              Title                  Delegate         Delegate Data
     #
     ItemsTable = [ ['Ref',              'TextItemDelegate', None],
-                   ['LibRef',          'TextItemDelegate', None],
+                   ['LibRef',           'TextItemDelegate', None],
                    ['Value',            'TextItemDelegate', None],
                    ['Footprint',        'TextItemDelegate', None],
                    ['DocSheet',         'TextItemDelegate', None],
@@ -69,7 +69,7 @@ class Inspector(QTreeWidget):
     StdParamsNameMap =\
     {
         'Ref'       : 'Ref',
-        'LibRef'   : 'LibRef',
+        'LibRef'    : 'LibRef',
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
         'DocSheet'  : 'Fields[3].Text',
@@ -380,31 +380,89 @@ class Inspector(QTreeWidget):
     def save_cmps(self):
         if not hasattr(self, 'comps'):
             return
-            
+
         for c in self.comps:
+            subst_list = []
+            item_list =  []
+            #---------------------------------------------
+            #
+            #   Collect items
+            #        
             for i in range( self.topLevelItem(0).childCount() ):
-                item = self.topLevelItem(0).child(i)
-                item_name  = item.data(colNAME, Qt.DisplayRole)
-                item_value = item.data(colDATA, Qt.DisplayRole)
-                if item_value != MULTIVALUE:
-                    exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                item_list.append( self.topLevelItem(0).child(i) )
                 
             for i in range( self.topLevelItem(1).childCount() ):
-                item = self.topLevelItem(1).child(i)
+                item_list.append( self.topLevelItem(1).child(i) )
+                
+                
+            #---------------------------------------------
+            #
+            #   Process items
+            #        
+            for item in item_list:
+                
                 item_name  = item.data(colNAME, Qt.DisplayRole)
                 item_value = item.data(colDATA, Qt.DisplayRole)
+                
+                print(item_name, item_value)
+                if item_name[0] == '@':
+                    if item_value != MULTIVALUE:
+                        subst_list.append( [item_name[1:], item_value] )
+                        c.field(item_name).Text = item_value
+                    else:
+                        subst_list.append( [item_name[1:], c.field(item_name).Text] )
+                    
+                    #print(c.Ref, item_name, item_value)
+                    continue
+                    
+                if '$' in item_value:
+                    subst_list.append( [item_name, item_value] )
+                    continue
+                    
                 if item_value != MULTIVALUE:
+                    if item_name in self.StdParamsNameMap.keys():
+                        exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                    else:
+                        f = c.field(item_name)
+                        f.Text = item_value
+
+#
+#           for i in range( self.topLevelItem(1).childCount() ):
+#               item = self.topLevelItem(1).child(i)
+#               item_name  = item.data(colNAME, Qt.DisplayRole)
+#               item_value = item.data(colDATA, Qt.DisplayRole)
+#
+#               if item_name[0] == '@':
+#                   subst_list.append( [item_name[1:], item_value] )
+#                   print(c.Ref, item_name, item_value)
+#                   continue
+#
+#               if '$' in item_value:
+#                   subst_list.append( [item_name, item_value] )
+#                   continue
+#
+#               if item_value != MULTIVALUE:
+#                   f = c.field(item_name)
+#                   f.Text = item_value
+            
+                    
+            #---------------------------------------------
+            #
+            #   Pattern substitution
+            #        
+            for s in subst_list:
+                item_name  = s[0]
+                item_value = c.get_str_from_pattern( s[1] )
+                print(item_name, item_value)
+                if item_name in self.StdParamsNameMap.keys():
+                    print('std')
+                    exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                else:
+                    print('user')
                     f = c.field(item_name)
                     f.Text = item_value
                     
-#                   for i in FieldInspector.fgroup:
-#                   f = c.field(item_name)
-#                   if f:
-#                       f.Text = item_value
-#                   else:
-                        
-        
-                                            
+                #c.dump()
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
