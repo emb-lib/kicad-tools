@@ -350,13 +350,9 @@ class ComponentManager:
                     print('Sheet:', c.Sheet, 'Part:', c.PartNo)
                 
             for c in clist:
-#               if ref == 'A1' or ref == 'C3':
-#                   c.dump()
-
                 c.renumerate_fields()
                 crec = c.create_cmp_rec()
-                pattern = re.sub('\$', '\\\$', c.rec)
-                self.schdata[c.Sheet] = re.sub(pattern, crec, self.schdata[c.Sheet] )
+                self.schdata[c.Sheet] = re.sub(re.escape(c.rec), crec, self.schdata[c.Sheet] )
                 c.rec = crec
                 #print(c.Ref, self.schdata[c.Sheet][311:320])
 #               if c.Ref == 'A1':
