@@ -346,7 +346,6 @@ class ComponentManager:
         for ref in refs:
             clist = self.cmp_dict[ref]
             if len(clist) > 1:
-                print(ref, len(clist))
                 for c in clist:
                     print('Sheet:', c.Sheet, 'Part:', c.PartNo)
                 

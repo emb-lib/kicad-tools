@@ -141,12 +141,13 @@ class Inspector(QTreeWidget):
         print('add property')
         text, ok = QInputDialog.getText(self, 'Add Property', 'Enter Property Name')
         
-        for c in self.comps:
-            if not c.field(text):
-                f = ComponentField.default(c, text)
-                c.add_field(f)
+        if len(text) > 0:
+            for c in self.comps:
+                if not c.field(text):
+                    f = ComponentField.default(c, text)
+                    c.add_field(f)
         
-        self.load_user_defined_params()
+            self.load_user_defined_params()
             
     #---------------------------------------------------------------------------    
     def remove_property(self):
@@ -172,11 +173,12 @@ class Inspector(QTreeWidget):
         name  = item.data(colNAME, Qt.DisplayRole)
         text, ok = QInputDialog.getText(self, 'Rename Property', 'Enter New Proterty Name')
 
-        for c in self.comps:
-            f = c.field(name)
-            f.Name = text
-
-        self.load_user_defined_params()
+        if len(text) > 0:
+            for c in self.comps:
+                f = c.field(name)
+                f.Name = text
+    
+            self.load_user_defined_params()
 
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
@@ -404,7 +406,6 @@ class Inspector(QTreeWidget):
                 item_name  = item.data(colNAME, Qt.DisplayRole)
                 item_value = item.data(colDATA, Qt.DisplayRole)
                 
-                print(item_name, item_value)
                 if item_name[0] == '@':
                     if item_value != MULTIVALUE:
                         subst_list.append( [item_name[1:], item_value] )
@@ -425,26 +426,6 @@ class Inspector(QTreeWidget):
                     else:
                         f = c.field(item_name)
                         f.Text = item_value
-
-#
-#           for i in range( self.topLevelItem(1).childCount() ):
-#               item = self.topLevelItem(1).child(i)
-#               item_name  = item.data(colNAME, Qt.DisplayRole)
-#               item_value = item.data(colDATA, Qt.DisplayRole)
-#
-#               if item_name[0] == '@':
-#                   subst_list.append( [item_name[1:], item_value] )
-#                   print(c.Ref, item_name, item_value)
-#                   continue
-#
-#               if '$' in item_value:
-#                   subst_list.append( [item_name, item_value] )
-#                   continue
-#
-#               if item_value != MULTIVALUE:
-#                   f = c.field(item_name)
-#                   f.Text = item_value
-            
                     
             #---------------------------------------------
             #
@@ -453,12 +434,9 @@ class Inspector(QTreeWidget):
             for s in subst_list:
                 item_name  = s[0]
                 item_value = c.get_str_from_pattern( s[1] )
-                print(item_name, item_value)
                 if item_name in self.StdParamsNameMap.keys():
-                    print('std')
                     exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
                 else:
-                    print('user')
                     f = c.field(item_name)
                     f.Text = item_value
                     
