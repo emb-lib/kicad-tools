@@ -442,11 +442,12 @@ class Inspector(QTreeWidget):
                     f.Text = item_value
                     
                 #c.dump()
-        
+        self.file_changed.emit()
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
-    mouse_click = pyqtSignal([str])
+    mouse_click  = pyqtSignal([str])
+    file_changed = pyqtSignal()
     
     #---------------------------------------------------------------------------    
     class TextItemDelegate(QStyledItemDelegate):
@@ -830,7 +831,7 @@ class FieldInspector(QTreeWidget):
                 for f in self.field_list:
                     exec('f.' + fparam_name + ' = val')
             
-        
+        self.file_changed.emit()
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)

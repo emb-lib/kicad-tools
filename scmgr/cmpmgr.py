@@ -6,7 +6,7 @@ import os
 import shutil
 import re
                    
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject
                   
 #-------------------------------------------------------------------------------
 class ComponentField:
@@ -255,10 +255,12 @@ class Component:
         return rec
                 
 #-------------------------------------------------------------------------------
-class ComponentManager:
+class ComponentManager(QObject):
+    
+    file_saved = pyqtSignal()
     
     def __init__(self):
-        pass
+        super().__init__()
     #---------------------------------------------------------------------------
     def set_curr_file_path(self, fname):
         self.current_file_path = fname
@@ -371,6 +373,8 @@ class ComponentManager:
             with open(dst_path, 'wb') as f:
                 f.write(self.schdata[sheet].encode('utf-8'))
                 print(dst_path, len(self.schdata[sheet].encode('utf-8')))
+                
+        self.file_saved.emit()
 #-------------------------------------------------------------------------------
 CmpMgr = ComponentManager()
 #-------------------------------------------------------------------------------

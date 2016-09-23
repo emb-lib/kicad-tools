@@ -454,8 +454,11 @@ class MainWindow(QMainWindow):
         #     Signals and Slots connections
         #
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
-        self.CmpTable.file_load.connect(self.set_title)
+        self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
+        self.Inspector.file_changed.connect(self.file_changed_slot)
+        self.FieldInspector.file_changed.connect(self.file_changed_slot)
+        CmpMgr.file_saved.connect(self.file_saved_slot)
         
         self.CmpTable.mouse_click.connect(self.mouse_change_tool)
         self.Inspector.mouse_click.connect(self.mouse_change_tool)
@@ -570,9 +573,21 @@ class MainWindow(QMainWindow):
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
     #---------------------------------------------------------------------------
-    def set_title(self):
+    def file_loaded_slot(self):
         text = CmpMgr.curr_file_path()
-        self.setWindowTitle(self.PROGRAM_NAME + ' - ' + text)
+        self.set_title(text)
+    #---------------------------------------------------------------------------
+    def file_changed_slot(self):
+        text = CmpMgr.curr_file_path() + ' *'
+        self.set_title(text)
+    #---------------------------------------------------------------------------
+    def file_saved_slot(self):
+        text = CmpMgr.curr_file_path()
+        self.set_title(text)
+    #---------------------------------------------------------------------------
+    def set_title(self, text = ''):
+        text = ' - ' + text if len(text) > 0 else ''
+        self.setWindowTitle(self.PROGRAM_NAME + text)
         
     #---------------------------------------------------------------------------
     def edit_settings(self):
