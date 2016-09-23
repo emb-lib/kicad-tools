@@ -43,6 +43,7 @@ class ComponentsTable(QTableWidget):
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Name') )
         self.setTabKeyNavigation(False)        
+        
 #       for r in range(self.rowCount()):
 #           for c in range(self.columnCount()):
 #               self.item(r, c).setFocusPolicy(Qt.NoFocus)
@@ -73,6 +74,8 @@ class ComponentsTable(QTableWidget):
         fname = os.path.abspath(fname)
         self.CmpDict = CmpMgr.load_file(fname)
         self.update_cmp_list(self.CmpDict)
+        self.selectRow(0)
+        self.cell_chosen(0, 0)
         CmpMgr.set_curr_file_path(fname)
         self.file_load.emit()
     #---------------------------------------------------------------------------    
