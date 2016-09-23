@@ -457,6 +457,7 @@ class MainWindow(QMainWindow):
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         self.Inspector.file_changed.connect(self.file_changed_slot)
+        self.Inspector.file_changed.connect(self.CmpTable.update_cmp_list_slot)
         self.FieldInspector.file_changed.connect(self.file_changed_slot)
         CmpMgr.file_saved.connect(self.file_saved_slot)
         

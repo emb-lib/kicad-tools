@@ -83,6 +83,9 @@ class ComponentsTable(QTableWidget):
         self.clear()
         self.load_file(fname)
     #---------------------------------------------------------------------------    
+    def update_cmp_list_slot(self):
+        self.update_cmp_list(self.CmpDict)
+    #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 
         keys = list( cd.keys() )
