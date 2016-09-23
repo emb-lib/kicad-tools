@@ -80,8 +80,9 @@ class Inspector(QTreeWidget):
     
     
     #---------------------------------------------------------------------------    
-    load_field  = pyqtSignal( [list], [str] )
-    mouse_click = pyqtSignal([str])
+    load_field   = pyqtSignal( [list], [str] )
+    mouse_click  = pyqtSignal([str])
+    file_changed = pyqtSignal()
     #---------------------------------------------------------------------------    
             
 #-------------------------------------------------------------------------------    
@@ -345,7 +346,9 @@ class Inspector(QTreeWidget):
         self.topLevelItem(1).takeChildren()
         user_fields = self.user_defined_params()        
 
-        for name in user_fields.keys():
+        user_fields_names = list(user_fields.keys())
+        user_fields_names.sort()
+        for name in user_fields_names:
             item = self.addChild(self.usr_items, name, user_fields[name][0])
 
             if len(user_fields[name]) == 1:
@@ -441,10 +444,12 @@ class Inspector(QTreeWidget):
                     f.Text = item_value
                     
                 #c.dump()
+        self.file_changed.emit()
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
-    mouse_click = pyqtSignal([str])
+    mouse_click  = pyqtSignal([str])
+    file_changed = pyqtSignal()
     
     #---------------------------------------------------------------------------    
     class TextItemDelegate(QStyledItemDelegate):
@@ -828,7 +833,7 @@ class FieldInspector(QTreeWidget):
                 for f in self.field_list:
                     exec('f.' + fparam_name + ' = val')
             
-        
+        self.file_changed.emit()
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)

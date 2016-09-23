@@ -221,6 +221,9 @@ class MainWindow(QMainWindow):
 #
 #            return False
 
+
+    PROGRAM_NAME = 'KiCad Schematic Component Manager'
+
     #--------------------------------------------------------------------------------
     class EventFilter(QObject):
         def __init__(self, parent):
@@ -451,7 +454,12 @@ class MainWindow(QMainWindow):
         #     Signals and Slots connections
         #
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
+        self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
+        self.Inspector.file_changed.connect(self.file_changed_slot)
+        self.Inspector.file_changed.connect(self.CmpTable.update_cmp_list_slot)
+        self.FieldInspector.file_changed.connect(self.file_changed_slot)
+        CmpMgr.file_saved.connect(self.file_saved_slot)
         
         self.CmpTable.mouse_click.connect(self.mouse_change_tool)
         self.Inspector.mouse_click.connect(self.mouse_change_tool)
@@ -476,7 +484,7 @@ class MainWindow(QMainWindow):
         #
         #    Window
         #
-        self.setWindowTitle('KiCad Schematic Component Manager')
+        self.setWindowTitle(self.PROGRAM_NAME)
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         #print(Settings.allKeys())
         if Settings.contains('geometry'):
@@ -503,12 +511,20 @@ class MainWindow(QMainWindow):
         if Settings.contains('inssplitter'):
             self.InspectorSplit.restoreState( Settings.value('inssplitter') )
             
+        #----------------------------------------------------
+        #
+        #    Process command line arguments
+        #
+        if len(sys.argv) > 1:
+            fname = sys.argv[1]
+            if os.path.exists(fname):
+                self.CmpTable.load_file(fname)
+            else:
+                print('E: input file "' + fname + '"does not exist')
+            
         self.show()
-        
-                
     #---------------------------------------------------------------------------
     def closeEvent(self, event):
-        #print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
@@ -516,12 +532,6 @@ class MainWindow(QMainWindow):
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         Settings.setValue( 'inssplitter', self.InspectorSplit.saveState() )
         QWidget.closeEvent(self, event)
-        
-        
-#       for ref in self.CmpTable.CmpDict.keys():
-#           print( ref + ' ' + self.CmpTable.CmpDict[ref][0].Fields[2].Text)
-        
-
     #---------------------------------------------------------------------------
     def open_file(self):
         #filename = QFileDialog.getOpenFileName(self, 'Open schematic file', '/opt/cad/kicad', 'KiCad Schematic Files (*.sch)')
@@ -535,7 +545,6 @@ class MainWindow(QMainWindow):
         
         CmpMgr.set_curr_file_path( filenames[0] )
         self.CmpTable.load_file( filenames[0] )
-            
     #---------------------------------------------------------------------------
     def save_file(self):
         self.Inspector.save_cmps()
@@ -545,8 +554,6 @@ class MainWindow(QMainWindow):
         print('Save File "' + curr_file + '"')
         
         CmpMgr.save_file(curr_file)
-        #self.CmpTable.reload_file(curr_file)
-
     #---------------------------------------------------------------------------
     def save_file_as(self):
         self.Inspector.save_cmps()
@@ -559,7 +566,6 @@ class MainWindow(QMainWindow):
         filenames = []
         if dialog.exec_():
             filenames = dialog.selectedFiles()
-
             
         if len(filenames) == 0:
             return
@@ -567,7 +573,23 @@ class MainWindow(QMainWindow):
         print('Save File As "' + filenames[0] + '"')
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
-                                     
+    #---------------------------------------------------------------------------
+    def file_loaded_slot(self):
+        text = CmpMgr.curr_file_path()
+        self.set_title(text)
+    #---------------------------------------------------------------------------
+    def file_changed_slot(self):
+        text = CmpMgr.curr_file_path() + ' *'
+        self.set_title(text)
+    #---------------------------------------------------------------------------
+    def file_saved_slot(self):
+        text = CmpMgr.curr_file_path()
+        self.set_title(text)
+    #---------------------------------------------------------------------------
+    def set_title(self, text = ''):
+        text = ' - ' + text if len(text) > 0 else ''
+        self.setWindowTitle(self.PROGRAM_NAME + text)
+        
     #---------------------------------------------------------------------------
     def edit_settings(self):
         print('edit settings')

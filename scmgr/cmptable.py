@@ -25,6 +25,7 @@ class ComponentsTable(QTableWidget):
     
     cells_chosen = pyqtSignal([list])
     mouse_click  = pyqtSignal([str])
+    file_load    = pyqtSignal()
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -41,16 +42,8 @@ class ComponentsTable(QTableWidget):
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Name') )
-
-        if len(sys.argv) > 1:
-            fname = sys.argv[1]
-            if os.path.exists(fname):
-                self.load_file(fname)
-            else:
-                print('E: input file "' + fname + '"does not exist')
-        
-        
         self.setTabKeyNavigation(False)        
+        
 #       for r in range(self.rowCount()):
 #           for c in range(self.columnCount()):
 #               self.item(r, c).setFocusPolicy(Qt.NoFocus)
@@ -78,12 +71,20 @@ class ComponentsTable(QTableWidget):
                 
         from cmpmgr import CmpMgr
         
+        fname = os.path.abspath(fname)
         self.CmpDict = CmpMgr.load_file(fname)
         self.update_cmp_list(self.CmpDict)
+        self.selectRow(0)
+        self.cell_chosen(0, 0)
+        CmpMgr.set_curr_file_path(fname)
+        self.file_load.emit()
     #---------------------------------------------------------------------------    
     def reload_file(self, fname):
         self.clear()
         self.load_file(fname)
+    #---------------------------------------------------------------------------    
+    def update_cmp_list_slot(self):
+        self.update_cmp_list(self.CmpDict)
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 

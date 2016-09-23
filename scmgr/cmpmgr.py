@@ -6,7 +6,7 @@ import os
 import shutil
 import re
                    
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject
                   
 #-------------------------------------------------------------------------------
 class ComponentField:
@@ -255,33 +255,30 @@ class Component:
         return rec
                 
 #-------------------------------------------------------------------------------
-class ComponentManager:
+class ComponentManager(QObject):
+    
+    file_saved = pyqtSignal()
     
     def __init__(self):
-        pass
-        
+        super().__init__()
     #---------------------------------------------------------------------------
     def set_curr_file_path(self, fname):
         self.current_file_path = fname
-        
     #---------------------------------------------------------------------------
     def curr_file_path(self):
         return self.current_file_path
-
     #---------------------------------------------------------------------------
     def read_file(self, fname):
         with open(fname, 'rb') as f:
             b = f.read()
 
         return b.decode()
-    
     #---------------------------------------------------------------------------
     def raw_cmp_list(self, s):
         pattern = '\$Comp\s((?:.*\s)+?)\$EndComp'
         res = re.findall(pattern, s)
 
         return res
-        
     #---------------------------------------------------------------------------
     def load_file(self, fname):
         self.sheets = [ os.path.basename(fname) ]
@@ -311,7 +308,6 @@ class ComponentManager:
         self.current_file_path = fname
         self.cmp_dict = cmp_dict
         return cmp_dict
-            
     #---------------------------------------------------------------------------
     def create_cmp_dict(self, rcls, ipl):   # rcls: raw component lists; 
                                             # ipl:  ignore patterns list
@@ -337,7 +333,6 @@ class ComponentManager:
                 cdict[cmp.Ref].append(cmp)
 
         return cdict
-
     #---------------------------------------------------------------------------
     def save_file(self, fname):
         
@@ -378,7 +373,8 @@ class ComponentManager:
             with open(dst_path, 'wb') as f:
                 f.write(self.schdata[sheet].encode('utf-8'))
                 print(dst_path, len(self.schdata[sheet].encode('utf-8')))
-        
+                
+        self.file_saved.emit()
 #-------------------------------------------------------------------------------
 CmpMgr = ComponentManager()
 #-------------------------------------------------------------------------------
