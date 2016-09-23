@@ -80,8 +80,9 @@ class Inspector(QTreeWidget):
     
     
     #---------------------------------------------------------------------------    
-    load_field  = pyqtSignal( [list], [str] )
-    mouse_click = pyqtSignal([str])
+    load_field   = pyqtSignal( [list], [str] )
+    mouse_click  = pyqtSignal([str])
+    file_changed = pyqtSignal()
     #---------------------------------------------------------------------------    
             
 #-------------------------------------------------------------------------------    
@@ -441,6 +442,7 @@ class Inspector(QTreeWidget):
                     f.Text = item_value
                     
                 #c.dump()
+        
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     

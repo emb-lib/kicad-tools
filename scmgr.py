@@ -521,7 +521,6 @@ class MainWindow(QMainWindow):
         self.show()
     #---------------------------------------------------------------------------
     def closeEvent(self, event):
-        #print('close app')
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
@@ -529,12 +528,6 @@ class MainWindow(QMainWindow):
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         Settings.setValue( 'inssplitter', self.InspectorSplit.saveState() )
         QWidget.closeEvent(self, event)
-        
-        
-#       for ref in self.CmpTable.CmpDict.keys():
-#           print( ref + ' ' + self.CmpTable.CmpDict[ref][0].Fields[2].Text)
-        
-
     #---------------------------------------------------------------------------
     def open_file(self):
         #filename = QFileDialog.getOpenFileName(self, 'Open schematic file', '/opt/cad/kicad', 'KiCad Schematic Files (*.sch)')
@@ -569,7 +562,6 @@ class MainWindow(QMainWindow):
         filenames = []
         if dialog.exec_():
             filenames = dialog.selectedFiles()
-
             
         if len(filenames) == 0:
             return
@@ -577,9 +569,9 @@ class MainWindow(QMainWindow):
         print('Save File As "' + filenames[0] + '"')
         CmpMgr.save_file(filenames[0])
         CmpMgr.set_curr_file_path( filenames[0] )
-                                     
     #---------------------------------------------------------------------------
-    def set_title(self, text):
+    def set_title(self):
+        text = CmpMgr.curr_file_path()
         self.setWindowTitle(self.PROGRAM_NAME + ' - ' + text)
         
     #---------------------------------------------------------------------------
