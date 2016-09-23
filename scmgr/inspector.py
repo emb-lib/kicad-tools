@@ -346,7 +346,9 @@ class Inspector(QTreeWidget):
         self.topLevelItem(1).takeChildren()
         user_fields = self.user_defined_params()        
 
-        for name in user_fields.keys():
+        user_fields_names = list(user_fields.keys())
+        user_fields_names.sort()
+        for name in user_fields_names:
             item = self.addChild(self.usr_items, name, user_fields[name][0])
 
             if len(user_fields[name]) == 1:
