@@ -502,6 +502,11 @@ class MainWindow(QMainWindow):
             self.CmpTable.setColumnWidth( 0, int(w0) )
             self.CmpTable.setColumnWidth( 1, int(w1) )
             
+        if Settings.contains('selector'):
+            w0, w1 = Settings.value('selector')
+            self.Selector.setColumnWidth( 0, int(w0) )
+            self.Selector.setColumnWidth( 1, int(w1) )
+                        
         if Settings.contains('inspector'):
             w0, w1 = Settings.value('inspector')
             self.Inspector.setColumnWidth( 0, int(w0) )
@@ -533,6 +538,7 @@ class MainWindow(QMainWindow):
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
+        Settings.setValue( 'selector',  [self.Selector.columnWidth(0), self.Selector.columnWidth(1)] )
         Settings.setValue( 'inspector', [self.Inspector.columnWidth(0), self.Inspector.columnWidth(1)] )
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         Settings.setValue( 'inssplitter', self.InspectorSplit.saveState() )
