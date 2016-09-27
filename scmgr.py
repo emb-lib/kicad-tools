@@ -385,13 +385,6 @@ class MainWindow(QMainWindow):
         toolbar.addAction(exitAction)        
         toolbar.addAction(settingsAction)        
         
-                
-        self.CmpTabBox    = QGroupBox('Components', self)
-        self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
-        self.CmpTabLayout.setContentsMargins(4,10,4,4)
-        self.CmpTabLayout.setSpacing(10)
-        
-        self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
         
         #----------------------------------------------------
         #
@@ -402,6 +395,13 @@ class MainWindow(QMainWindow):
         #
         #    Components Table
         #
+        self.CmpTabBox    = QGroupBox('Components', self)
+        self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
+        self.CmpTabLayout.setContentsMargins(4,10,4,4)
+        self.CmpTabLayout.setSpacing(10)
+
+        self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
+
         self.CmpTable       = ComponentsTable(self) 
         self.CmpChooseButton = QPushButton('Choose', self)
         
@@ -413,7 +413,12 @@ class MainWindow(QMainWindow):
         #
         #    Selector
         #
+        self.SelectorBox    = QGroupBox('Selector', self)
+        self.SelectorLayout = QVBoxLayout(self.SelectorBox)
+        self.SelectorLayout.setContentsMargins(4,10,4,4)
+        self.SelectorLayout.setSpacing(10)
         self.Selector = Selector(self)
+        self.SelectorLayout.addWidget(self.Selector)
         
         #----------------------------------------------------
         #
@@ -443,7 +448,7 @@ class MainWindow(QMainWindow):
 
         self.Splitter = QSplitter(self)
         self.Splitter.addWidget(self.CmpTabBox)
-        self.Splitter.addWidget(self.Selector)   
+        self.Splitter.addWidget(self.SelectorBox)   
         self.Splitter.addWidget(self.InspectorBox) 
                  
         self.centralWidget().layout().addWidget(self.Splitter)
