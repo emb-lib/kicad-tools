@@ -7,6 +7,7 @@ import re
 import shutil
 
 from utils import *
+from inspector import TComboBox
 
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
@@ -50,6 +51,7 @@ class Selector(QTreeWidget):
     
         def __init__(self, parent):
             super().__init__(parent)
+            self.Parent = parent
 
         def add_editor_data(self, props_dict):
             self.PropsDict = props_dict
@@ -61,23 +63,27 @@ class Selector(QTreeWidget):
                 editor.setEditable(True)
                 editor.addItems( self.PropsDict.keys() )
                 return editor
-            elif idx.column == 1:
+            elif idx.column() == 1:
+                print('col: ', idx.column())
                 editor = TComboBox(parent)
                 name = idx.sibling(idx.row(), 0).data()
+                print('name: ', name)
                 if not name:
                     editor.setEnabled(False)
                     editor.setEditable(False)
                 else:
                     editor.setEnabled(True)
                     editor.setEditable(True)
+                    print(name, self.PropsDict[name])
                     editor.addItems( self.PropsDict[name] )
                     
                 return editor
             else:
+                print('col: ', idx.column())
                 editor = TComboBox(parent)
                 editor.setEnabled(True)
                 editor.setEditable(False)
-                editor.addItems( parent.sel_options )
+                editor.addItems( self.Parent.sel_options )
                 return editor
     
     
@@ -145,12 +151,32 @@ class Selector(QTreeWidget):
 
         self.setIndentation(16)
         self.setColumnCount(3)
+        self.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.header().resizeSection(1, 200)
         self.header().setSectionResizeMode(self.colNAME, QHeaderView.Interactive)
         self.setHeaderLabels( ('Property', 'Value', 'Sel') );
         self.ItemsDelegate = self.SelectorItemsDelegate(self)
         self.setItemDelegate(self.ItemsDelegate)
     
+        #self.currentItemChanged.connect(self.item_changed)
+        self.itemChanged.connect(self.item_changed)
+        
+    #---------------------------------------------------------------------------    
+    def addParent(self, parent, column, title, data):
+        item = QTreeWidgetItem(parent, [title])
+        item.setData(column, Qt.UserRole, data)
+        item.setExpanded(False)
+#        item.setFlags(Qt.ItemIsEnabled)
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable)
+        return item
+
+    #---------------------------------------------------------------------------    
+    def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
+        item = QTreeWidgetItem(parent, [title])
+        item.setData(colDATA, Qt.DisplayRole, data)
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
+
+        return item
     #---------------------------------------------------------------------------    
     def process_comps_slot(self, comps):
         props = {}
@@ -167,10 +193,36 @@ class Selector(QTreeWidget):
                    
         self.props = props 
         self.ItemsDelegate.add_editor_data(self.props)
+        
+        self.addParent(self, 0, 'slon', 'aaa')
+        self.addParent(self, 0, 'mamont', 'bbb')
     #---------------------------------------------------------------------------    
     def reset_props(self):
         pass
+    #---------------------------------------------------------------------------    
+    def item_changed(self, item, col):
+        print('Selector::item_changed')
+
+        print('col: ', col)
         
+        if col == self.colNAME:
+            item.setData(self.colVALUE, Qt.EditRole, '')
+            item.setData(self.colSELOPT, Qt.EditRole, '*')
+        
+#       idx    = self.indexFromItem(prev, self.colNAME)
+#       editor = self.indexWidget(idx)
+#
+#
+#       if editor:
+#           #print(editor)
+#           self.commitData(editor)
+#           self.closeEditor(editor, QAbstractItemDelegate.NoHint)
+#
+
+        #self.editItem(item, self.colNAME)
+        #self.item_clicked(item, colNAME)
+
+    #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
     
