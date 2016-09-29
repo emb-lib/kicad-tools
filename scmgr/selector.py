@@ -144,7 +144,6 @@ class Selector(QTreeWidget):
                         ['Font Bold',        'FontBold'    ],
                         ['Font Italic',      'FontItalic'  ] ]
     
-    
     #---------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -158,8 +157,17 @@ class Selector(QTreeWidget):
         self.ItemsDelegate = self.SelectorItemsDelegate(self)
         self.setItemDelegate(self.ItemsDelegate)
     
-        #self.currentItemChanged.connect(self.item_changed)
         self.itemChanged.connect(self.item_changed)
+    #---------------------------------------------------------------------------    
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key_Enter or e.key() == Qt.Key_Return:
+            print('enter')
+            item = self.currentItem()
+            col  = self.currentColumn()
+            print(item, col)
+            self.editItem(item, col)
+        else:
+            QTreeWidget.keyPressEvent(self, e)
         
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
