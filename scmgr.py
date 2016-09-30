@@ -18,7 +18,7 @@ from cmpmgr    import *
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate, 
+                             QAbstractItemDelegate, QCheckBox, 
                              QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
                              QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
@@ -417,8 +417,10 @@ class MainWindow(QMainWindow):
         self.SelectorLayout = QVBoxLayout(self.SelectorBox)
         self.SelectorLayout.setContentsMargins(4,10,4,4)
         self.SelectorLayout.setSpacing(10)
-        self.Selector = Selector(self)
+        self.Selector    = Selector(self)
+        self.SelCheckBox = QCheckBox('Use Component As Template', self)
         self.SelectorLayout.addWidget(self.Selector)
+        self.SelectorLayout.addWidget(self.SelCheckBox)
         
         #----------------------------------------------------
         #
