@@ -29,7 +29,7 @@ class Selector(QTreeWidget):
     colVALUE  = 1
     colSELOPT = 2
     
-    sel_options = ['*', '+', '-', 're']
+    sel_options = ['', '+', '-', 're']
     
     #---------------------------------------------------------------------------
     def __init__(self, parent):
@@ -215,7 +215,7 @@ class Selector(QTreeWidget):
         
         if col == self.colNAME:
             item.setData(self.colVALUE, Qt.EditRole, '')
-            item.setData(self.colSELOPT, Qt.EditRole, '*')
+            item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
         
 #       idx    = self.indexFromItem(prev, self.colNAME)
 #       editor = self.indexWidget(idx)
