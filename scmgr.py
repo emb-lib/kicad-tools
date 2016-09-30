@@ -463,6 +463,7 @@ class MainWindow(QMainWindow):
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
+        self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         self.Inspector.file_changed.connect(self.file_changed_slot)
         self.Inspector.file_changed.connect(self.CmpTable.update_cmp_list_slot)

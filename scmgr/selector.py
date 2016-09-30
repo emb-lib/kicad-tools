@@ -205,8 +205,10 @@ class Selector(QTreeWidget):
         self.addParent(self, 0, 'slon', 'aaa')
         self.addParent(self, 0, 'mamont', 'bbb')
     #---------------------------------------------------------------------------    
-    def reset_props(self):
-        pass
+    def change_mode_slot(self, state):
+        print('state: ', state)
+        
+        
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
         print('Selector::item_changed')
