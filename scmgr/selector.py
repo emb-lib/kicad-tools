@@ -50,6 +50,8 @@ class Selector(QTreeWidget):
     
         TEXT_DELEGATE = 0
         CBOX_DELEGATE = 1
+        
+        edit_finished = pyqtSignal([list])
     
         def __init__(self, parent):
             super().__init__(parent)
@@ -91,6 +93,9 @@ class Selector(QTreeWidget):
     
     
 #       def setEditorData(self, editor, idx):
+#           print('setEditorData: ', editor.currentText())
+#           QStyledItemDelegate.setEditorData(self, editor, idx)
+            
 #           #print(editor.metaObject().className() )
 #           name = idx.sibling(idx.row(), 0).data()
 #           if self.editors[name][0] == self.TEXT_DELEGATE:
@@ -99,7 +104,13 @@ class Selector(QTreeWidget):
 #               value = idx.model().data(idx, Qt.EditRole)
 #               editor.set_index(value)
 #
-#       def setModelData(self, editor, model, idx):
+        def setModelData(self, editor, model, idx):
+            
+            self.edit_finished.emit( [idx.sibling(idx.row(), 0).data(),  editor.currentText() ] )
+            print('setModelData: ', editor.currentText())
+            QStyledItemDelegate.setModelData(self, editor, model, idx)
+
+            
 #           name = idx.sibling(idx.row(), 0).data()
 #           if self.editors[name][0] == self.TEXT_DELEGATE:
 #               QStyledItemDelegate.setModelData(self, editor, model, idx)
@@ -124,6 +135,10 @@ class Selector(QTreeWidget):
                       'Y',
                       'Timestamp' ]
 
+    NonFieldProps = [ 'LibRef',
+                      'X',
+                      'Y',
+                      'Timestamp' ]
 
     StdParamsNameMap =\
     {
@@ -161,13 +176,15 @@ class Selector(QTreeWidget):
         self.setItemDelegate(self.ItemsDelegate)
     
         self.itemChanged.connect(self.item_changed)
+        self.ItemsDelegate.edit_finished.connect(self.edit_finished_slot)
+        
+        self.state = Qt.Unchecked
     #---------------------------------------------------------------------------    
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Enter or e.key() == Qt.Key_Return:
-            print('enter')
             item = self.currentItem()
             col  = self.currentColumn()
-            print(item, col)
+            #print(item, col)
             self.editItem(item, col)
         else:
             QTreeWidget.keyPressEvent(self, e)
@@ -189,9 +206,31 @@ class Selector(QTreeWidget):
 
         return item
     #---------------------------------------------------------------------------    
+    def add_item(self, name):
+        if name in self.NonFieldProps:
+            value = getattr(self.comp, name)
+        else:
+            f     = self.comp.field(name)
+            value = f.Text
+        
+        item = self.addParent(self, self.colNAME, name, '')
+        item.setData(self.colVALUE, Qt.DisplayRole, value)
+        
+        
+    #---------------------------------------------------------------------------    
+    def add_default_item(self):
+        self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
+    #---------------------------------------------------------------------------    
     def process_comps_slot(self, comps):
         props = {}
         for c in comps:
+            for name in self.NonFieldProps:
+                value = getattr(c[0], name)
+                if name in props.keys():
+                    props[name].append(value)
+                else:
+                    props[name] = [value]
+
             for f in c[0].Fields:
                 if f.Name in props.keys():
                     props[f.Name].append(f.Text)
@@ -205,17 +244,26 @@ class Selector(QTreeWidget):
         self.props = props 
         self.ItemsDelegate.add_editor_data(self.props)
         
-        self.addParent(self, 0, '<enter name>', '')
+        #self.add_default_item()
+    #---------------------------------------------------------------------------    
+    def update_items(self):
+        self.clear()
+        if self.state == Qt.Checked:
+            for prop in self.StdItemsTable:
+                self.add_item(prop)
+
+        self.add_default_item()
     #---------------------------------------------------------------------------    
     def change_mode_slot(self, state):
         print('state: ', state)
-        
+        self.state = state
+        self.update_items()
+            
     #---------------------------------------------------------------------------    
     def comp_template_slot(self, comps):
         self.comp = comps[0][0]
         print('component template: ', self.comp.Ref)
-
-        
+        self.update_items()
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
         print('Selector::item_changed', col)
@@ -224,12 +272,17 @@ class Selector(QTreeWidget):
             item.setData(self.colVALUE, Qt.EditRole, '')
             item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
         
-        for i in range( self.topLevelItemCount() ):
-            item = self.topLevelItem(i)
-            if item.data(self.colNAME, Qt.DisplayRole) == self.NAME_PLACE_HOLDER:
-                return
+    #---------------------------------------------------------------------------    
+    def edit_finished_slot(self, values):
+        print('edit_finished_slot')
         
-        self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
+#       for i in range( self.topLevelItemCount() ):
+#           item = self.topLevelItem(i)
+#           if item.data(self.colNAME, Qt.DisplayRole) == self.NAME_PLACE_HOLDER:
+#               return
+
+        if values[0] == self.NAME_PLACE_HOLDER and values[1] != self.NAME_PLACE_HOLDER:
+            self.add_default_item()
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
