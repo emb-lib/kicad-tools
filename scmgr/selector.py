@@ -29,6 +29,8 @@ class Selector(QTreeWidget):
     colVALUE  = 1
     colSELOPT = 2
     
+    NAME_PLACE_HOLDER = '<enter name>'
+    
     sel_options = ['', '+', '-', 're']
     
     #---------------------------------------------------------------------------
@@ -217,27 +219,18 @@ class Selector(QTreeWidget):
         
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
-        print('Selector::item_changed')
+        print('Selector::item_changed', col)
 
-        print('col: ', col)
-        
         if col == self.colNAME:
             item.setData(self.colVALUE, Qt.EditRole, '')
             item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
         
-#       idx    = self.indexFromItem(prev, self.colNAME)
-#       editor = self.indexWidget(idx)
-#
-#
-#       if editor:
-#           #print(editor)
-#           self.commitData(editor)
-#           self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-#
-
-        #self.editItem(item, self.colNAME)
-        #self.item_clicked(item, colNAME)
-
+        for i in range( self.topLevelItemCount() ):
+            item = self.topLevelItem(i)
+            if item.data(self.colNAME, Qt.DisplayRole) == self.NAME_PLACE_HOLDER:
+                return
+        
+        self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
