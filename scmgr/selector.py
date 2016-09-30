@@ -68,7 +68,7 @@ class Selector(QTreeWidget):
                 editor = TComboBox(parent)
                 name = idx.sibling(idx.row(), 0).data()
                 print('name: ', name)
-                if not name:
+                if not name or not name in self.PropsDict.keys():
                     editor.setEnabled(False)
                     editor.setEditable(False)
                 else:
@@ -202,7 +202,7 @@ class Selector(QTreeWidget):
         self.props = props 
         self.ItemsDelegate.add_editor_data(self.props)
         
-        self.addParent(self, 0, '', '')
+        self.addParent(self, 0, '<enter name>', '')
     #---------------------------------------------------------------------------    
     def change_mode_slot(self, state):
         print('state: ', state)
