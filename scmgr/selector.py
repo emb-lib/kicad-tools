@@ -61,7 +61,9 @@ class Selector(QTreeWidget):
                 editor = TComboBox(parent)
                 editor.setEnabled(True)
                 editor.setEditable(True)
-                editor.addItems( self.PropsDict.keys() )
+                names = list(self.PropsDict.keys())
+                names.sort()
+                editor.addItems(names)
                 return editor
             elif idx.column() == 1:
                 print('col: ', idx.column())
