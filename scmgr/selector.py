@@ -71,7 +71,6 @@ class Selector(QTreeWidget):
                 print('col: ', idx.column())
                 editor = TComboBox(parent)
                 name = idx.sibling(idx.row(), 0).data()
-                print('name: ', name)
                 if not name or not name in self.PropsDict.keys():
                     editor.setEnabled(False)
                     editor.setEditable(False)
@@ -133,13 +132,13 @@ class Selector(QTreeWidget):
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
         'DocSheet'  : 'Fields[3].Text',
-        'X'         : 'PosX',
-        'Y'         : 'PosY',
+        'X'         : 'X',
+        'Y'         : 'Y',
         'Timestamp' : 'Timestamp'
     }
 
-    FieldItemsTable = [ ['X',                'PosX'        ],
-                        ['Y',                'PosY'        ],
+    FieldItemsTable = [ ['X',                'X'           ],
+                        ['Y',                'Y'           ],
                         ['Orientation',      'Orientation' ],
                         ['Visible',          'Visible'     ],
                         ['Horizontal Align', 'HJustify'    ],

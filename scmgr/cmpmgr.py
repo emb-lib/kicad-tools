@@ -29,8 +29,8 @@ class ComponentField:
             
         self.Text        = rec[1]
         self.Orientation = 'Horizontal' if rec[2] == 'H' else 'Vertical'
-        self.PosX        = str( int(rec[3]) - int(comp.PosX) )
-        self.PosY        = str( int(rec[4]) - int(comp.PosY) )
+        self.X           = str( int(rec[3]) - int(comp.X) )
+        self.Y           = str( int(rec[4]) - int(comp.Y) )
         self.FontSize    = rec[5]
         self.Visible     = 'Yes'  if int(rec[6]) == 0 else 'No'
         self.HJustify    = 'Left' if rec[7]  == 'L' else 'Center' if rec[7] == 'C' else 'Right'
@@ -48,8 +48,8 @@ class ComponentField:
         rec.append( str(Fn) )
         rec.append( '~' )
         rec.append( 'H' )
-        rec.append( comp.PosX )
-        rec.append( comp.PosY )
+        rec.append( comp.X )
+        rec.append( comp.Y )
         rec.append( comp.Fields[0].FontSize )
         rec.append( '0001' )
         rec.append( 'C' )
@@ -63,8 +63,8 @@ class ComponentField:
     def dump(self):
         print('Text        : ' + self.Text)
         print('Orientation : ' + self.Orientation)
-        print('X           : ' + self.PosX)
-        print('Y           : ' + self.PosY)
+        print('X           : ' + self.X)
+        print('Y           : ' + self.Y)
         print('Visible     : ' + self.Visible)
         print('H Justify   : ' + self.HJustify)
         print('V Justify   : ' + self.VJustify)
@@ -77,8 +77,8 @@ class ComponentField:
         print(self.Name        + ' '*(12 - len(self.Name)) +
               self.Text[0:11]  + ' '*(12 - len(self.Text[0:11])) +
               self.Orientation + ' '*(14 - len(self.Orientation)) + 
-              self.PosX        + ' '*(6  - len(self.PosX)) + 
-              self.PosY        + ' '*(6  - len(self.PosY)) + 
+              self.X           + ' '*(6  - len(self.X)) + 
+              self.Y           + ' '*(6  - len(self.Y)) + 
               self.Visible     + ' '*(8  - len(self.Visible)) + 
               self.HJustify    + ' '*(9  - len(self.HJustify)) + 
               self.VJustify    + ' '*(9  - len(self.VJustify)) + 
@@ -118,7 +118,7 @@ class Component:
 
         r = re.search('P (\d+) (\d+)', rec)
         if r:
-            self.PosX, self.PosY = r.groups()
+            self.X, self.Y = r.groups()
         else:
             print('E: invalid component P record, rec: "' + rec + '"')
             sys.exit(1)
@@ -196,8 +196,8 @@ class Component:
         print('===================================================================================================')
         print('Ref       : ' + self.Ref + part)
         print('LibRef    : ' + self.LibRef)
-        print('X         : ' + self.PosX)
-        print('Y         : ' + self.PosY)
+        print('X         : ' + self.X)
+        print('Y         : ' + self.Y)
         print('Timestump : ' + self.Timestamp)
         
         print('--------------------------------------------------------------------------------------------------')
@@ -226,15 +226,15 @@ class Component:
         rec_list = []
         rec_list.append('L ' + self.LibRef + ' ' + self.Ref)
         rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
-        rec_list.append('P ' + self.PosX + ' ' + self.PosY)
+        rec_list.append('P ' + self.X + ' ' + self.Y)
         
         for f in self.Fields:
             frec = ['F', 
                     f.InnerCode,
                     '"' + f.Text +'"',
                     f.Orientation[0],
-                    int(self.PosX) + int(f.PosX),
-                    int(self.PosY) + int(f.PosY),
+                    int(self.X) + int(f.X),
+                    int(self.Y) + int(f.Y),
                     '{:<3}'.format(f.FontSize),
                     '0000' if f.Visible == 'Yes' else '0001',
                     f.HJustify[0],
@@ -246,7 +246,7 @@ class Component:
             
         pattern = '([ \t]+\d+\s+)\d+(\s+)\d+(\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)'
         r = re.match(pattern, self.Trailer).groups()
-        self.Trailer = r[0] + str(self.PosX) + r[1] + str(self.PosY) + r[2]
+        self.Trailer = r[0] + str(self.X) + r[1] + str(self.Y) + r[2]
         
         rec_list.append(self.Trailer)
         
