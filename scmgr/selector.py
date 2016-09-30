@@ -206,21 +206,6 @@ class Selector(QTreeWidget):
 
         return item
     #---------------------------------------------------------------------------    
-    def add_item(self, name):
-        if name in self.NonFieldProps:
-            value = getattr(self.comp, name)
-        else:
-            f     = self.comp.field(name)
-            value = f.Text
-        
-        item = self.addParent(self, self.colNAME, name, '')
-        item.setData(self.colVALUE, Qt.DisplayRole, value)
-        
-        
-    #---------------------------------------------------------------------------    
-    def add_default_item(self):
-        self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
-    #---------------------------------------------------------------------------    
     def process_comps_slot(self, comps):
         props = {}
         for c in comps:
@@ -246,11 +231,29 @@ class Selector(QTreeWidget):
         
         #self.add_default_item()
     #---------------------------------------------------------------------------    
+    def add_item(self, name):
+        if name in self.NonFieldProps:
+            value = getattr(self.comp, name)
+        else:
+            f     = self.comp.field(name)
+            value = f.Text
+
+        item = self.addParent(self, self.colNAME, name, '')
+        item.setData(self.colVALUE, Qt.DisplayRole, value)
+
+
+    #---------------------------------------------------------------------------    
+    def add_default_item(self):
+        self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
+    #---------------------------------------------------------------------------    
     def update_items(self):
         self.clear()
         if self.state == Qt.Checked:
             for prop in self.StdItemsTable:
                 self.add_item(prop)
+                
+            for f in self.comp.Fields[4:]:
+                self.add_item(f.Name)
 
         self.add_default_item()
     #---------------------------------------------------------------------------    
@@ -275,11 +278,6 @@ class Selector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def edit_finished_slot(self, values):
         print('edit_finished_slot')
-        
-#       for i in range( self.topLevelItemCount() ):
-#           item = self.topLevelItem(i)
-#           if item.data(self.colNAME, Qt.DisplayRole) == self.NAME_PLACE_HOLDER:
-#               return
 
         if values[0] == self.NAME_PLACE_HOLDER and values[1] != self.NAME_PLACE_HOLDER:
             self.add_default_item()
