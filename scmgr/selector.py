@@ -202,12 +202,16 @@ class Selector(QTreeWidget):
         self.props = props 
         self.ItemsDelegate.add_editor_data(self.props)
         
-        self.addParent(self, 0, 'slon', 'aaa')
-        self.addParent(self, 0, 'mamont', 'bbb')
+        self.addParent(self, 0, '', '')
     #---------------------------------------------------------------------------    
     def change_mode_slot(self, state):
         print('state: ', state)
         
+    #---------------------------------------------------------------------------    
+    def comp_template_slot(self, comps):
+        self.comp = comps[0][0]
+        print('component template: ', self.comp.Ref)
+
         
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):

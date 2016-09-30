@@ -461,6 +461,7 @@ class MainWindow(QMainWindow):
         #     Signals and Slots connections
         #
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
+        self.CmpTable.cells_chosen.connect(self.Selector.comp_template_slot)
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
         self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
