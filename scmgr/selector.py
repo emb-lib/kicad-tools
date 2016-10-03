@@ -61,6 +61,35 @@ class Selector(QTreeWidget):
             self.PropsDict = props_dict
             
         def createEditor(self, parent, option, idx):
+            #---------------------------------------------------------
+            #
+            #    Child item
+            #
+            if idx.parent().isValid():    
+                if idx.column() == self.Parent.colVALUE:
+                    name = idx.sibling(idx.row(), 0).data()
+                    for i in self.Parent.FieldItemsTable:
+                        if i[0] == name:
+                            if i[2]:
+                                editor = TComboBox(parent)
+                                editor.setEnabled(True)
+                                editor.addItems( i[2] )
+                            else:
+                                editor = QStyledItemDelegate.createEditor(self, parent, option, idx)
+                    
+                            return editor
+                elif idx.column() == self.Parent.colSELOPT:
+                    editor = TComboBox(parent)
+                    editor.setEnabled(True)
+                    editor.setEditable(False)
+                    editor.addItems( self.Parent.sel_options )
+                    return editor
+                    
+                return             
+            #---------------------------------------------------------
+            #
+            #    Top-level item
+            #
             if idx.column() == 0:
                 editor = TComboBox(parent)
                 editor.setEnabled(True)
@@ -70,7 +99,6 @@ class Selector(QTreeWidget):
                 editor.addItems(names)
                 return editor
             elif idx.column() == 1:
-                print('col: ', idx.column())
                 editor = TComboBox(parent)
                 name = idx.sibling(idx.row(), 0).data()
                 if not name or not name in self.PropsDict.keys():
@@ -79,12 +107,10 @@ class Selector(QTreeWidget):
                 else:
                     editor.setEnabled(True)
                     editor.setEditable(True)
-                    print(name, self.PropsDict[name])
                     editor.addItems( self.PropsDict[name] )
                     
                 return editor
             else:
-                print('col: ', idx.column())
                 editor = TComboBox(parent)
                 editor.setEnabled(True)
                 editor.setEditable(False)
@@ -106,8 +132,8 @@ class Selector(QTreeWidget):
 #
         def setModelData(self, editor, model, idx):
             
-            self.edit_finished.emit( [idx.sibling(idx.row(), 0).data(),  editor.currentText() ] )
-            print('setModelData: ', editor.currentText())
+            value = editor.currentText() if editor.metaObject().className() == 'TComboBox' else editor.text()
+            self.edit_finished.emit( [idx.sibling(idx.row(), 0).data(), value ] )
             QStyledItemDelegate.setModelData(self, editor, model, idx)
 
             
@@ -152,15 +178,15 @@ class Selector(QTreeWidget):
         'Timestamp' : 'Timestamp'
     }
 
-    FieldItemsTable = [ ['X',                'X'           ],
-                        ['Y',                'Y'           ],
-                        ['Orientation',      'Orientation' ],
-                        ['Visible',          'Visible'     ],
-                        ['Horizontal Align', 'HJustify'    ],
-                        ['Vertical Align',   'VJustify'    ],
-                        ['Font Size',        'FontSize'    ],
-                        ['Font Bold',        'FontBold'    ],
-                        ['Font Italic',      'FontItalic'  ] ]
+    FieldItemsTable = [ ['X',                'X',           None                         ],
+                        ['Y',                'Y',           None                         ],
+                        ['Orientation',      'Orientation', ['Horizontal', 'Vertical']   ],
+                        ['Visible',          'Visible',     ['Yes',  'No']               ],
+                        ['Horizontal Align', 'HJustify',    ['Left', 'Center', 'Right']  ],
+                        ['Vertical Align',   'VJustify',    ['Top',  'Center', 'Bottom'] ],
+                        ['Font Size',        'FontSize',    None                         ],
+                        ['Font Bold',        'FontBold',    ['Yes', 'No']                ],
+                        ['Font Italic',      'FontItalic',  ['Yes', 'No']                ] ]
     
     #---------------------------------------------------------------------------    
     def __init__(self, parent):
@@ -184,7 +210,6 @@ class Selector(QTreeWidget):
         if e.key() == Qt.Key_Enter or e.key() == Qt.Key_Return:
             item = self.currentItem()
             col  = self.currentColumn()
-            #print(item, col)
             self.editItem(item, col)
         else:
             QTreeWidget.keyPressEvent(self, e)
@@ -197,12 +222,11 @@ class Selector(QTreeWidget):
 #        item.setFlags(Qt.ItemIsEnabled)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable)
         return item
-
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
         item = QTreeWidgetItem(parent, [title])
-        item.setData(colDATA, Qt.DisplayRole, data)
-        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
+        item.setFlags(item.flags() | Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
+        item.setData(self.colVALUE, Qt.DisplayRole, data)
 
         return item
     #---------------------------------------------------------------------------    
@@ -241,6 +265,14 @@ class Selector(QTreeWidget):
         item = self.addParent(self, self.colNAME, name, '')
         item.setData(self.colVALUE, Qt.DisplayRole, value)
 
+        if name  in self.NonFieldProps:
+            return 
+            
+        for fprop in self.FieldItemsTable:
+            name  = fprop[0]
+            value = getattr( f, fprop[1])
+            self.addChild(item, name, value)
+
 
     #---------------------------------------------------------------------------    
     def add_default_item(self):
@@ -258,18 +290,16 @@ class Selector(QTreeWidget):
         self.add_default_item()
     #---------------------------------------------------------------------------    
     def change_mode_slot(self, state):
-        print('state: ', state)
         self.state = state
         self.update_items()
             
     #---------------------------------------------------------------------------    
     def comp_template_slot(self, comps):
         self.comp = comps[0][0]
-        print('component template: ', self.comp.Ref)
         self.update_items()
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
-        print('Selector::item_changed', col)
+        #print('Selector::item_changed', col)
 
         if col == self.colNAME:
             item.setData(self.colVALUE, Qt.EditRole, '')
