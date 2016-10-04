@@ -219,8 +219,8 @@ class Selector(QTreeWidget):
         item = QTreeWidgetItem(parent, [title])
         item.setData(column, Qt.UserRole, data)
         item.setExpanded(False)
-#        item.setFlags(Qt.ItemIsEnabled)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable)
+        #item.setChildIndicatorPolicy(QTreeWidgetItem.DontShowIndicatorWhenChildless)
         return item
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
