@@ -317,6 +317,7 @@ class MainWindow(QMainWindow):
         self.shortcutRight.setContext(Qt.ApplicationShortcut)
         self.shortcutLeft.activated.connect(self.scroll_left)
         self.shortcutRight.activated.connect(self.scroll_right)
+        
     #--------------------------------------------------------------------------------    
     def initUI(self):
         
@@ -350,7 +351,7 @@ class MainWindow(QMainWindow):
         exitAction.triggered.connect(self.close)
         
         settingsAction = QAction(QIcon( os.path.join('scmgr', 'settings24.png') ), 'Settings', self)
-        settingsAction.setShortcut('Alt+S')
+        settingsAction.setShortcut('Ctrl+Alt+S')
         settingsAction.setStatusTip('Edit settings')
         settingsAction.triggered.connect(self.edit_settings)
         
@@ -417,11 +418,18 @@ class MainWindow(QMainWindow):
         self.SelectorLayout = QVBoxLayout(self.SelectorBox)
         self.SelectorLayout.setContentsMargins(4,10,4,4)
         self.SelectorLayout.setSpacing(10)
-        self.Selector    = Selector(self)
-        self.SelCheckBox = QCheckBox('Use Component As Template', self)
+        self.Selector       = Selector(self)
+        self.SelCheckBox    = QCheckBox('Use Component As Template', self)
+        self.SelApplyButton = QPushButton('Apply', self)
+        self.SelApplyButton.setToolTip('Alt+s: Apply selection patterns to components')
         self.SelectorLayout.addWidget(self.Selector)
+        self.SelectorLayout.addWidget(self.SelApplyButton)
         self.SelectorLayout.addWidget(self.SelCheckBox)
         
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_S), self)
+        self.shortcutSelApply.activated.connect(self.Selector.apply_slot)
+        
+                
         #----------------------------------------------------
         #
         #    Inspector
@@ -464,7 +472,10 @@ class MainWindow(QMainWindow):
         self.CmpTable.cells_chosen.connect(self.Selector.comp_template_slot)
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
+
         self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
+        self.SelApplyButton.clicked.connect(self.Selector.apply_slot)
+
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         self.Inspector.file_changed.connect(self.file_changed_slot)
         self.Inspector.file_changed.connect(self.CmpTable.update_cmp_list_slot)

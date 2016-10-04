@@ -203,6 +203,7 @@ class Selector(QTreeWidget):
         self.setItemDelegate(self.ItemsDelegate)
     
         self.itemChanged.connect(self.item_changed)
+        self.currentItemChanged.connect(self.current_item_changed)
         self.ItemsDelegate.edit_finished.connect(self.edit_finished_slot)
         
         self.state = Qt.Unchecked
@@ -232,6 +233,7 @@ class Selector(QTreeWidget):
         return item
     #---------------------------------------------------------------------------    
     def process_comps_slot(self, comps):
+        self.comps = comps
         props = {}
         for c in comps:
             for name in self.NonFieldProps:
@@ -305,6 +307,10 @@ class Selector(QTreeWidget):
             item.setData(self.colVALUE, Qt.EditRole, '')
             item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
     #---------------------------------------------------------------------------    
+    def current_item_changed(self, curr, prev):
+        print('selector::current_item_changed')
+
+    #---------------------------------------------------------------------------    
     def edit_finished_slot(self, data):
         print('edit_finished_slot')
 
@@ -315,14 +321,41 @@ class Selector(QTreeWidget):
         if prev_val == self.NAME_PLACE_HOLDER and value != self.NAME_PLACE_HOLDER:
             self.add_default_item()
             
-            if value in self.NonFieldProps:
-                return
-
-            item = self.currentItem()
-            for fprop in self.FieldItemsTable:
-                name  = fprop[0]
-                value = fprop[3]
-                self.addChild(item, name, value)
+            if value not in self.NonFieldProps:
+                item = self.currentItem()
+                for fprop in self.FieldItemsTable:
+                    name  = fprop[0]
+                    value = fprop[3]
+                    self.addChild(item, name, value)
+                 
+#       if prev_val != value:
+#           print('>>>>>',prev_val, value)
+#           self.select_comps()
+                       
+    #---------------------------------------------------------------------------    
+    def apply_slot(self):
+        self.select_comps()
+    #---------------------------------------------------------------------------    
+    def select_comps(self):
+        
+        print('select_comps')
+        
+        sel_refs = []
+        
+        for c in self.comps:
+            for i in range( self.topLevelItemCount() ):
+                item = self.topLevelItem(i)
+                name  = item.data(self.colNAME, Qt.DisplayRole)
+                if name == self.NAME_PLACE_HOLDER:
+                    continue
+                    
+                sel_opt = item.data(self.colSELOPT, Qt.DisplayRole)
+                print('sel_opt: ', sel_opt)
+                if sel_opt:
+                    
+                    value = item.data(self.colVALUE, Qt.DisplayRole)
+                    print(c[0].Ref, name, value, sel_opt)
+                    
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
