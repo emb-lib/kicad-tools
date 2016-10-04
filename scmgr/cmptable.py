@@ -42,7 +42,7 @@ class ComponentsTable(QTableWidget):
         
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(20)
-        self.setHorizontalHeaderLabels( ('Ref', 'Name') )
+        self.setHorizontalHeaderLabels( ('Ref', 'Description') )
         self.setTabKeyNavigation(False)        
         
 #       for r in range(self.rowCount()):
