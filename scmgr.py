@@ -421,7 +421,7 @@ class MainWindow(QMainWindow):
         self.Selector       = Selector(self)
         self.SelCheckBox    = QCheckBox('Use Component As Template', self)
         self.SelApplyButton = QPushButton('Apply', self)
-        self.SelApplyButton.setToolTip('Alt+s: Apply selection patterns to components')
+        self.SelApplyButton.setToolTip('Alt+S: Apply selection patterns to components')
         self.SelectorLayout.addWidget(self.Selector)
         self.SelectorLayout.addWidget(self.SelApplyButton)
         self.SelectorLayout.addWidget(self.SelCheckBox)

@@ -337,7 +337,6 @@ class Selector(QTreeWidget):
         self.select_comps()
     #---------------------------------------------------------------------------    
     def select_comps(self):
-        
         print('select_comps')
         
         sel_refs = []
@@ -350,9 +349,7 @@ class Selector(QTreeWidget):
                     continue
                     
                 sel_opt = item.data(self.colSELOPT, Qt.DisplayRole)
-                print('sel_opt: ', sel_opt)
                 if sel_opt:
-                    
                     value = item.data(self.colVALUE, Qt.DisplayRole)
                     print(c[0].Ref, name, value, sel_opt)
                     
