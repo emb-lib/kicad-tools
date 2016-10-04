@@ -132,8 +132,9 @@ class Selector(QTreeWidget):
 #
         def setModelData(self, editor, model, idx):
             
-            value = editor.currentText() if editor.metaObject().className() == 'TComboBox' else editor.text()
-            self.edit_finished.emit( [idx.sibling(idx.row(), 0).data(), value ] )
+            value    = editor.currentText() if editor.metaObject().className() == 'TComboBox' else editor.text()
+            prev_val = idx.sibling(idx.row(), 0).data()
+            self.edit_finished.emit( [idx, prev_val, value ] )
             QStyledItemDelegate.setModelData(self, editor, model, idx)
 
             
@@ -178,15 +179,15 @@ class Selector(QTreeWidget):
         'Timestamp' : 'Timestamp'
     }
 
-    FieldItemsTable = [ ['X',                'X',           None                         ],
-                        ['Y',                'Y',           None                         ],
-                        ['Orientation',      'Orientation', ['Horizontal', 'Vertical']   ],
-                        ['Visible',          'Visible',     ['Yes',  'No']               ],
-                        ['Horizontal Align', 'HJustify',    ['Left', 'Center', 'Right']  ],
-                        ['Vertical Align',   'VJustify',    ['Top',  'Center', 'Bottom'] ],
-                        ['Font Size',        'FontSize',    None                         ],
-                        ['Font Bold',        'FontBold',    ['Yes', 'No']                ],
-                        ['Font Italic',      'FontItalic',  ['Yes', 'No']                ] ]
+    FieldItemsTable = [ ['X',                'X',           None,                         '0'          ],
+                        ['Y',                'Y',           None,                         '0'          ],
+                        ['Orientation',      'Orientation', ['Horizontal', 'Vertical'],   'Horizontal' ],
+                        ['Visible',          'Visible',     ['Yes',  'No'],               'No'         ],
+                        ['Horizontal Align', 'HJustify',    ['Left', 'Center', 'Right'],  'Left'       ],
+                        ['Vertical Align',   'VJustify',    ['Top',  'Center', 'Bottom'], 'Center'     ],
+                        ['Font Size',        'FontSize',    None,                         '100'        ],
+                        ['Font Bold',        'FontBold',    ['Yes', 'No'],                'No'         ],
+                        ['Font Italic',      'FontItalic',  ['Yes', 'No'],                'No'         ] ]
     
     #---------------------------------------------------------------------------    
     def __init__(self, parent):
@@ -265,14 +266,13 @@ class Selector(QTreeWidget):
         item = self.addParent(self, self.colNAME, name, '')
         item.setData(self.colVALUE, Qt.DisplayRole, value)
 
-        if name  in self.NonFieldProps:
+        if name in self.NonFieldProps:
             return 
             
         for fprop in self.FieldItemsTable:
             name  = fprop[0]
             value = getattr( f, fprop[1])
             self.addChild(item, name, value)
-
 
     #---------------------------------------------------------------------------    
     def add_default_item(self):
@@ -304,13 +304,25 @@ class Selector(QTreeWidget):
         if col == self.colNAME:
             item.setData(self.colVALUE, Qt.EditRole, '')
             item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
-        
     #---------------------------------------------------------------------------    
-    def edit_finished_slot(self, values):
+    def edit_finished_slot(self, data):
         print('edit_finished_slot')
 
-        if values[0] == self.NAME_PLACE_HOLDER and values[1] != self.NAME_PLACE_HOLDER:
+        idx      = data[0]
+        prev_val = data[1]
+        value    = data[2]
+        
+        if prev_val == self.NAME_PLACE_HOLDER and value != self.NAME_PLACE_HOLDER:
             self.add_default_item()
+            
+            if value in self.NonFieldProps:
+                return
+
+            item = self.currentItem()
+            for fprop in self.FieldItemsTable:
+                name  = fprop[0]
+                value = fprop[3]
+                self.addChild(item, name, value)
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
