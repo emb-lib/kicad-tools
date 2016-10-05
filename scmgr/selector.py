@@ -344,6 +344,7 @@ class Selector(QTreeWidget):
         sel_refs = []
         
         for c in self.comps:
+            comp = c[0]
             for i in range( self.topLevelItemCount() ):
                 item = self.topLevelItem(i)
                 name  = item.data(self.colNAME, Qt.DisplayRole)
@@ -355,7 +356,11 @@ class Selector(QTreeWidget):
                     value = item.data(self.colVALUE, Qt.DisplayRole)
                     #print(c[0].Ref, name, value, sel_opt)
                     if name in self.NonFieldProps:
-                        prop_val = getattr(c[0], name)
+                        prop_val = getattr(comp, name)
+                    else:
+                        prop_val = comp.field(name).Text
+                        
+                        
                         print('prop_val: ', prop_val)
                         if (sel_opt == '+' and value == prop_val) or\
                            (sel_opt == '-' and value != prop_val) or\
