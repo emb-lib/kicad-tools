@@ -417,19 +417,42 @@ class MainWindow(QMainWindow):
         self.SelectorBox    = QGroupBox('Selector', self)
         self.SelectorLayout = QVBoxLayout(self.SelectorBox)
         self.SelectorLayout.setContentsMargins(4,10,4,4)
-        self.SelectorLayout.setSpacing(10)
+        self.SelectorLayout.setSpacing(2)
+        
+        self.SelectorBtnWidget = QWidget(self)
+        self.SelectorBtnLayout = QHBoxLayout(self.SelectorBtnWidget)
+        self.SelectorBtnLayout.setContentsMargins(4,10,4,4)
+        self.SelectorBtnLayout.setSpacing(10)
+
         self.Selector       = Selector(self)
-        self.SelCheckBox    = QCheckBox('Use Component As Template', self)
+        #self.SelCheckBox    = QCheckBox('Use Component As Template', self)
+
         self.SelApplyButton = QPushButton('Apply', self)
         self.SelApplyButton.setToolTip('Alt+S: Apply selection patterns to components')
+
+        self.SelClearButton = QPushButton('Clear', self)
+        self.SelClearButton.setToolTip('Alt+C: Clear selection patterns')
+
+        self.SelTemplateButton = QPushButton('Use Component', self)
+        self.SelTemplateButton.setToolTip('Alt+T: Use Selected Component As Template')
+
+
         self.SelectorLayout.addWidget(self.Selector)
-        self.SelectorLayout.addWidget(self.SelApplyButton)
-        self.SelectorLayout.addWidget(self.SelCheckBox)
+        self.SelectorBtnLayout.addWidget(self.SelApplyButton)
+        self.SelectorBtnLayout.addWidget(self.SelClearButton)
+        self.SelectorBtnLayout.addWidget(self.SelTemplateButton)
+        self.SelectorLayout.addWidget(self.SelectorBtnWidget)
+        #self.SelectorLayout.addWidget(self.SelCheckBox)
         
         self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_S), self)
         self.shortcutSelApply.activated.connect(self.Selector.apply_slot)
         
+        self.shortcutSelClear = QShortcut(QKeySequence(Qt.ALT + Qt.Key_C), self)
+        self.shortcutSelClear.activated.connect(self.Selector.clear_slot)
                 
+        self.shortcutSelTemplate = QShortcut(QKeySequence(Qt.ALT + Qt.Key_T), self)
+        self.shortcutSelTemplate.activated.connect(self.Selector.use_comp_as_template_slot)
+        
         #----------------------------------------------------
         #
         #    Inspector
@@ -473,8 +496,10 @@ class MainWindow(QMainWindow):
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
 
-        self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
+        #self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
         self.SelApplyButton.clicked.connect(self.Selector.apply_slot)
+        self.SelClearButton.clicked.connect(self.Selector.clear_slot)
+        self.SelTemplateButton.clicked.connect(self.Selector.use_comp_as_template_slot)
 
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         self.Inspector.file_changed.connect(self.file_changed_slot)

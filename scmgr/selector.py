@@ -207,7 +207,7 @@ class Selector(QTreeWidget):
         self.ItemsDelegate.edit_finished.connect(self.edit_finished_slot)
         
         self.state = Qt.Unchecked
-        self.update_items(True)
+        self.add_default_item()
     #---------------------------------------------------------------------------    
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Enter or e.key() == Qt.Key_Return:
@@ -281,28 +281,26 @@ class Selector(QTreeWidget):
     def add_default_item(self):
         self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
     #---------------------------------------------------------------------------    
-    def update_items(self, clear=False):
-        if clear:
-            self.clear()
+    def update_items(self):
+        for prop in self.StdItemsTable:
+            self.add_item(prop)
             
-        if self.state == Qt.Checked:
-            for prop in self.StdItemsTable:
-                self.add_item(prop)
-                
-            for f in self.comp.Fields[4:]:
-                self.add_item(f.Name)
+        for f in self.comp.Fields[4:]:
+            self.add_item(f.Name)
 
-        if clear:
-            self.add_default_item()
+        self.add_default_item()
     #---------------------------------------------------------------------------    
-    def change_mode_slot(self, state):
-        self.state = state
-        self.update_items(state)       # clear items when template mode turned on
-            
+    def clear_slot(self):
+        self.clear()
+        self.add_default_item()
+    #---------------------------------------------------------------------------    
+    def use_comp_as_template_slot(self):
+        self.clear()
+        self.update_items()
     #---------------------------------------------------------------------------    
     def comp_template_slot(self, comps):
         self.comp = comps[0][0]
-        self.update_items(self.state)  # clear items when template mode turned on
+      #  self.update_items(self.state)  # clear items when template mode turned on
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
         #print('Selector::item_changed', col)
