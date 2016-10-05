@@ -207,6 +207,7 @@ class Selector(QTreeWidget):
         self.ItemsDelegate.edit_finished.connect(self.edit_finished_slot)
         
         self.state = Qt.Unchecked
+        self.update_items(True)
     #---------------------------------------------------------------------------    
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Enter or e.key() == Qt.Key_Return:
@@ -280,8 +281,10 @@ class Selector(QTreeWidget):
     def add_default_item(self):
         self.addParent(self, self.colNAME, self.NAME_PLACE_HOLDER, '')
     #---------------------------------------------------------------------------    
-    def update_items(self):
-        self.clear()
+    def update_items(self, clear=False):
+        if clear:
+            self.clear()
+            
         if self.state == Qt.Checked:
             for prop in self.StdItemsTable:
                 self.add_item(prop)
@@ -289,16 +292,17 @@ class Selector(QTreeWidget):
             for f in self.comp.Fields[4:]:
                 self.add_item(f.Name)
 
-        self.add_default_item()
+        if clear:
+            self.add_default_item()
     #---------------------------------------------------------------------------    
     def change_mode_slot(self, state):
         self.state = state
-        self.update_items()
+        self.update_items(state)       # clear items when template mode turned on
             
     #---------------------------------------------------------------------------    
     def comp_template_slot(self, comps):
         self.comp = comps[0][0]
-        self.update_items()
+        self.update_items(self.state)  # clear items when template mode turned on
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
         #print('Selector::item_changed', col)
