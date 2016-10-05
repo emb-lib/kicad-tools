@@ -351,8 +351,17 @@ class Selector(QTreeWidget):
                 sel_opt = item.data(self.colSELOPT, Qt.DisplayRole)
                 if sel_opt:
                     value = item.data(self.colVALUE, Qt.DisplayRole)
-                    print(c[0].Ref, name, value, sel_opt)
-                    
+                    #print(c[0].Ref, name, value, sel_opt)
+                    if name in self.NonFieldProps:
+                        prop_val = getattr(c[0], name)
+                        print('prop_val: ', prop_val)
+                        if (sel_opt == '+' and value == prop_val) or\
+                           (sel_opt == '-' and value != prop_val) or\
+                           (sel_opt == 're' and re.match(value, prop_val)):
+                                sel_refs.append(c[0].Ref)
+                            
+                        
+        print(sorted(sel_refs))            
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
