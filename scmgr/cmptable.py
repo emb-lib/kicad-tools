@@ -90,6 +90,8 @@ class ComponentsTable(QTableWidget):
     #---------------------------------------------------------------------------    
     def update_cmp_list_slot(self):
         self.update_cmp_list(self.CmpDict)
+        self.cmps_updated.emit( self.CmpDict )
+        self.cell_chosen(0,0)
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 

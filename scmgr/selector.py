@@ -395,7 +395,7 @@ class Selector(QTreeWidget):
                         else:
                             continue
 
-                        print(c[0].Ref, value, prop_val)
+                        #print(c[0].Ref, value, prop_val)
                         if (sel_opt == '+' and value == prop_val) or\
                            (sel_opt == '-' and value != prop_val) or\
                            (sel_opt == 're' and re.match(value, prop_val)):
