@@ -167,17 +167,17 @@ class Selector(QTreeWidget):
                       'Y',
                       'Timestamp' ]
 
-    StdParamsNameMap =\
-    {
-        'Ref'       : 'Ref',
-        'LibRef'    : 'LibRef',
-        'Value'     : 'Fields[1].Text',
-        'Footprint' : 'Fields[2].Text',
-        'DocSheet'  : 'Fields[3].Text',
-        'X'         : 'X',
-        'Y'         : 'Y',
-        'Timestamp' : 'Timestamp'
-    }
+#   StdParamsNameMap =\
+#   {
+#       'Ref'       : 'Ref',
+#       'LibRef'    : 'LibRef',
+#       'Value'     : 'Fields[1].Text',
+#       'Footprint' : 'Fields[2].Text',
+#       'DocSheet'  : 'Fields[3].Text',
+#       'X'         : 'X',
+#       'Y'         : 'Y',
+#       'Timestamp' : 'Timestamp'
+#   }
 
     FieldItemsTable = [ ['X',                'X',           None,                         '0'          ],
                         ['Y',                'Y',           None,                         '0'          ],
@@ -233,7 +233,9 @@ class Selector(QTreeWidget):
 
         return item
     #---------------------------------------------------------------------------    
-    def process_comps_slot(self, comps):
+    def process_comps_slot(self, comps_dict):
+        self.comps_dict = comps_dict
+        comps = list(comps_dict.values())
         self.comps = comps
         props = {}
         for c in comps:
@@ -341,33 +343,66 @@ class Selector(QTreeWidget):
     def select_comps(self):
         print('select_comps')
         
-        sel_refs = []
+        sel_refs = list( self.comps_dict.keys() )
+        print(sel_refs)
         
-        for c in self.comps:
-            comp = c[0]
-            for i in range( self.topLevelItemCount() ):
-                item = self.topLevelItem(i)
-                name  = item.data(self.colNAME, Qt.DisplayRole)
-                if name == self.NAME_PLACE_HOLDER:
-                    continue
+        for i in range( self.topLevelItemCount() ):
+            item = self.topLevelItem(i)
+            name  = item.data(self.colNAME, Qt.DisplayRole)
+            if name == self.NAME_PLACE_HOLDER:
+                continue
+
+            refs = []
+            sel_opt = item.data(self.colSELOPT, Qt.DisplayRole)
+            if sel_opt:
+                value = item.data(self.colVALUE, Qt.DisplayRole)
+                for c in self.comps:
+                    comp = c[0]
                     
-                sel_opt = item.data(self.colSELOPT, Qt.DisplayRole)
-                if sel_opt:
-                    value = item.data(self.colVALUE, Qt.DisplayRole)
                     #print(c[0].Ref, name, value, sel_opt)
                     if name in self.NonFieldProps:
                         prop_val = getattr(comp, name)
                     else:
-                        prop_val = comp.field(name).Text
+                        f = comp.field(name)
+                        if f:
+                            prop_val = f.Text
+                        else:
+                            continue
                         
-                        
-                        print('prop_val: ', prop_val)
+                    #print('prop_val: ', prop_val)
+                    if (sel_opt == '+' and value == prop_val) or\
+                       (sel_opt == '-' and value != prop_val) or\
+                       (sel_opt == 're' and re.match(value, prop_val)):
+                        refs.append(c[0].Ref)
+                
+                print('refs: ', refs)
+                sel_refs = list(set(sel_refs) & set(refs))
+                
+            for j in range( item.childCount() ):
+                field_item = item.child(j)
+                sel_opt = field_item.data(self.colSELOPT, Qt.DisplayRole)
+                refs = []
+                if sel_opt:
+                    #fi_name  = field_item.data(self.colNAME, Qt.DisplayRole)
+                    finame = self.FieldItemsTable[j][1]
+                    value  = field_item.data(self.colVALUE, Qt.DisplayRole)
+                
+                    for c in self.comps:
+                        comp = c[0]
+                        f = comp.field(name)
+                        if f:
+                            prop_val = getattr(f, finame)
+                        else:
+                            continue
+
+                        print(c[0].Ref, value, prop_val)
                         if (sel_opt == '+' and value == prop_val) or\
                            (sel_opt == '-' and value != prop_val) or\
                            (sel_opt == 're' and re.match(value, prop_val)):
-                                sel_refs.append(c[0].Ref)
+                            refs.append(c[0].Ref)
                             
-                        
+                    sel_refs = list(set(sel_refs) & set(refs))
+                                    
         print(sorted(sel_refs))            
     #---------------------------------------------------------------------------    
     

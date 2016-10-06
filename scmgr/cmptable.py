@@ -26,7 +26,7 @@ class ComponentsTable(QTableWidget):
     cells_chosen = pyqtSignal([list])
     mouse_click  = pyqtSignal([str])
     file_load    = pyqtSignal()
-    cmps_updated = pyqtSignal([list])
+    cmps_updated = pyqtSignal([dict])
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -79,7 +79,7 @@ class ComponentsTable(QTableWidget):
         self.cell_chosen(0, 0)
         CmpMgr.set_curr_file_path(fname)
         self.file_load.emit()
-        self.cmps_updated.emit( list(self.CmpDict.values()) )
+        self.cmps_updated.emit( self.CmpDict )
     #---------------------------------------------------------------------------    
     def reload_file(self, fname):
         self.clear()
