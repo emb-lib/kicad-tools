@@ -26,6 +26,7 @@ class ComponentsTable(QTableWidget):
     cells_chosen = pyqtSignal([list])
     mouse_click  = pyqtSignal([str])
     file_load    = pyqtSignal()
+    cmps_updated = pyqtSignal([dict])
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -41,7 +42,7 @@ class ComponentsTable(QTableWidget):
         
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(20)
-        self.setHorizontalHeaderLabels( ('Ref', 'Name') )
+        self.setHorizontalHeaderLabels( ('Ref', 'Description') )
         self.setTabKeyNavigation(False)        
         
 #       for r in range(self.rowCount()):
@@ -67,6 +68,24 @@ class ComponentsTable(QTableWidget):
         
         self.cells_chosen.emit(refs)
     #---------------------------------------------------------------------------    
+    def select_comps_slot(self, refs):
+        self.clearSelection()
+        
+        print('select_comps_slot', refs)
+        
+        sel_mode = self.selectionMode()
+        self.setSelectionMode(QAbstractItemView.MultiSelection)
+        for ref in refs:
+            for row in range( self.rowCount() ):
+                reftext = self.item(row, 0).text()
+                if ref == reftext:
+                    print(ref, reftext)
+                    self.selectRow(row)
+                    #self.item(row, 0).setSelected(True)
+                   
+        self.setSelectionMode(sel_mode)
+        self.cell_chosen(0, 0)
+    #---------------------------------------------------------------------------    
     def load_file(self, fname):
                 
         from cmpmgr import CmpMgr
@@ -78,13 +97,19 @@ class ComponentsTable(QTableWidget):
         self.cell_chosen(0, 0)
         CmpMgr.set_curr_file_path(fname)
         self.file_load.emit()
+        self.cmps_updated.emit( self.CmpDict )
     #---------------------------------------------------------------------------    
     def reload_file(self, fname):
         self.clear()
         self.load_file(fname)
     #---------------------------------------------------------------------------    
+    def cmp_dict(self):
+        return self.CmpDict
+    #---------------------------------------------------------------------------    
     def update_cmp_list_slot(self):
         self.update_cmp_list(self.CmpDict)
+        self.cmps_updated.emit( self.CmpDict )
+        self.cell_chosen(0,0)
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 

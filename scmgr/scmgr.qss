@@ -52,6 +52,10 @@ Inspector::item:has-children {
    border-right-color: transparent;
    border-bottom-color: transparent;
 }
+Inspector::branch {
+    color: black;
+    background: white;
+}
 FieldInspector {
 alternate-background-color: #ffffd0;
 }
@@ -73,6 +77,36 @@ FieldInspector::item:has-children {
    border-right-color: transparent;
    border-bottom-color: transparent;
 }
+FieldInspector::branch {
+    color: black;
+    background: white;
+}
+Selector::item {
+   border: 1px solid #d9d9d9;
+   border-top-color: #d9d9d9;
+   border-left-color: #a9a9a9;
+   border-right-color: transparent;
+   border-bottom-color: transparent;
+}
+Selector::item:has-children {
+   left: 18px;
+   background-color: #F8F8F8;
+   border: 1px solid #d9d9d9;
+   /*border-top-color: #d9d9d9;*/
+   border-top-color: #a9a9a9;
+   border-left-color: #a9a9a9;
+   border-right-color: transparent;
+   border-bottom-color: transparent;
+}
+/*Selector::item:!has-children {
+   background-color: #00f0f0;
+}*/
+
+/*Selector::branch:open:has-children:has-siblings {*/
+Selector::branch {
+   color: black;
+   background: white;
+}
 QTreeWidget::item:selected {
     border: 1px solid #567dbc;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);
@@ -85,10 +119,6 @@ QTreeWidget::item:selected:!active {
     color: black;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #BECFD5, stop: 1 #D8ECF3);
 } 
-QTreeWidget::branch {
-    color: black;
-    background: white;
-}
 /*
 QTreeWidget QHeaderView::section:on {
     color: red;
@@ -103,7 +133,7 @@ QComboBox {
     border: 1px solid gray;
     border-radius: 1px;
     padding: 1px 18px 1px 3px;
-    min-width: 6em;
+    /*min-width: 2em;*/
 }
 QTabBar::tab::selected {
     background: #BBBBBB;

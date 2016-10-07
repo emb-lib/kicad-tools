@@ -18,7 +18,7 @@ from cmpmgr    import *
 from PyQt5.Qt        import Qt
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
                              QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate, 
+                             QAbstractItemDelegate, QCheckBox, 
                              QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem,
                              QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
                              QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
@@ -317,6 +317,7 @@ class MainWindow(QMainWindow):
         self.shortcutRight.setContext(Qt.ApplicationShortcut)
         self.shortcutLeft.activated.connect(self.scroll_left)
         self.shortcutRight.activated.connect(self.scroll_right)
+        
     #--------------------------------------------------------------------------------    
     def initUI(self):
         
@@ -350,7 +351,7 @@ class MainWindow(QMainWindow):
         exitAction.triggered.connect(self.close)
         
         settingsAction = QAction(QIcon( os.path.join('scmgr', 'settings24.png') ), 'Settings', self)
-        settingsAction.setShortcut('Alt+S')
+        settingsAction.setShortcut('Ctrl+Alt+S')
         settingsAction.setStatusTip('Edit settings')
         settingsAction.triggered.connect(self.edit_settings)
         
@@ -385,13 +386,6 @@ class MainWindow(QMainWindow):
         toolbar.addAction(exitAction)        
         toolbar.addAction(settingsAction)        
         
-                
-        self.CmpTabBox    = QGroupBox('Components', self)
-        self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
-        self.CmpTabLayout.setContentsMargins(4,10,4,4)
-        self.CmpTabLayout.setSpacing(10)
-        
-        self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
         
         #----------------------------------------------------
         #
@@ -402,6 +396,13 @@ class MainWindow(QMainWindow):
         #
         #    Components Table
         #
+        self.CmpTabBox    = QGroupBox('Components', self)
+        self.CmpTabLayout = QVBoxLayout(self.CmpTabBox)
+        self.CmpTabLayout.setContentsMargins(4,10,4,4)
+        self.CmpTabLayout.setSpacing(10)
+
+        self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
+
         self.CmpTable       = ComponentsTable(self) 
         self.CmpChooseButton = QPushButton('Choose', self)
         
@@ -413,7 +414,44 @@ class MainWindow(QMainWindow):
         #
         #    Selector
         #
-        self.Selector = Selector(self)
+        self.SelectorBox    = QGroupBox('Selector', self)
+        self.SelectorLayout = QVBoxLayout(self.SelectorBox)
+        self.SelectorLayout.setContentsMargins(4,10,4,4)
+        self.SelectorLayout.setSpacing(2)
+        
+        self.SelectorBtnWidget = QWidget(self)
+        self.SelectorBtnLayout = QHBoxLayout(self.SelectorBtnWidget)
+        self.SelectorBtnLayout.setContentsMargins(4,10,4,4)
+        self.SelectorBtnLayout.setSpacing(10)
+
+        self.Selector       = Selector(self)
+        #self.SelCheckBox    = QCheckBox('Use Component As Template', self)
+
+        self.SelApplyButton = QPushButton('Apply', self)
+        self.SelApplyButton.setToolTip('Alt+S: Apply selection patterns to components')
+
+        self.SelClearButton = QPushButton('Clear', self)
+        self.SelClearButton.setToolTip('Alt+C: Clear selection patterns')
+
+        self.SelTemplateButton = QPushButton('Use Component', self)
+        self.SelTemplateButton.setToolTip('Alt+T: Use Selected Component As Template')
+
+
+        self.SelectorLayout.addWidget(self.Selector)
+        self.SelectorBtnLayout.addWidget(self.SelTemplateButton)
+        self.SelectorBtnLayout.addWidget(self.SelApplyButton)
+        self.SelectorBtnLayout.addWidget(self.SelClearButton)
+        self.SelectorLayout.addWidget(self.SelectorBtnWidget)
+        #self.SelectorLayout.addWidget(self.SelCheckBox)
+        
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_S), self)
+        self.shortcutSelApply.activated.connect(self.Selector.apply_slot)
+        
+        self.shortcutSelClear = QShortcut(QKeySequence(Qt.ALT + Qt.Key_C), self)
+        self.shortcutSelClear.activated.connect(self.Selector.clear_slot)
+                
+        self.shortcutSelTemplate = QShortcut(QKeySequence(Qt.ALT + Qt.Key_T), self)
+        self.shortcutSelTemplate.activated.connect(self.Selector.use_comp_as_template_slot)
         
         #----------------------------------------------------
         #
@@ -443,7 +481,7 @@ class MainWindow(QMainWindow):
 
         self.Splitter = QSplitter(self)
         self.Splitter.addWidget(self.CmpTabBox)
-        self.Splitter.addWidget(self.Selector)   
+        self.Splitter.addWidget(self.SelectorBox)   
         self.Splitter.addWidget(self.InspectorBox) 
                  
         self.centralWidget().layout().addWidget(self.Splitter)
@@ -454,7 +492,17 @@ class MainWindow(QMainWindow):
         #     Signals and Slots connections
         #
         self.CmpTable.cells_chosen.connect(self.Inspector.load_cmp)
+        self.CmpTable.cells_chosen.connect(self.Selector.comp_template_slot)
         self.CmpTable.file_load.connect(self.file_loaded_slot)
+        self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
+
+        #self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
+        self.SelApplyButton.clicked.connect(self.Selector.apply_slot)
+        self.SelClearButton.clicked.connect(self.Selector.clear_slot)
+        self.SelTemplateButton.clicked.connect(self.Selector.use_comp_as_template_slot)
+        
+        self.Selector.select_comps_signal.connect(self.CmpTable.select_comps_slot)
+
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         self.Inspector.file_changed.connect(self.file_changed_slot)
         self.Inspector.file_changed.connect(self.CmpTable.update_cmp_list_slot)
@@ -497,8 +545,13 @@ class MainWindow(QMainWindow):
             self.CmpTable.setColumnWidth( 0, int(w0) )
             self.CmpTable.setColumnWidth( 1, int(w1) )
             
+        if Settings.contains('selector'):
+            w0, w1 = Settings.value('selector')
+            self.Selector.setColumnWidth( 0, int(w0) )
+            self.Selector.setColumnWidth( 1, int(w1) )
+                        
         if Settings.contains('inspector'):
-            w0, w1, w2 = Settings.value('inspector')
+            w0, w1 = Settings.value('inspector')
             self.Inspector.setColumnWidth( 0, int(w0) )
             self.Inspector.setColumnWidth( 1, int(w1) )
             self.FieldInspector.setColumnWidth( 0, int(w0) )
@@ -528,7 +581,8 @@ class MainWindow(QMainWindow):
         Settings = QSettings('kicad-tools', 'Schematic Component Manager')
         Settings.setValue( 'geometry', self.saveGeometry() )
         Settings.setValue( 'cmptable',  [self.CmpTable.columnWidth(0), self.CmpTable.columnWidth(1)] )
-        Settings.setValue( 'inspector', [self.Inspector.columnWidth(0), self.Inspector.columnWidth(1), self.Inspector.columnWidth(2)] )
+        Settings.setValue( 'selector',  [self.Selector.columnWidth(0), self.Selector.columnWidth(1)] )
+        Settings.setValue( 'inspector', [self.Inspector.columnWidth(0), self.Inspector.columnWidth(1)] )
         Settings.setValue( 'splitter', self.Splitter.saveState() )
         Settings.setValue( 'inssplitter', self.InspectorSplit.saveState() )
         QWidget.closeEvent(self, event)

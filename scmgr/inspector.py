@@ -73,8 +73,8 @@ class Inspector(QTreeWidget):
         'Value'     : 'Fields[1].Text',
         'Footprint' : 'Fields[2].Text',
         'DocSheet'  : 'Fields[3].Text',
-        'X'         : 'PosX',
-        'Y'         : 'PosY',
+        'X'         : 'X',
+        'Y'         : 'Y',
         'Timestamp' : 'Timestamp'
     }
     
@@ -548,8 +548,8 @@ class FieldInspector(QTreeWidget):
     #
     #              Title              Field Name         Delegate         Delegate Data
     #
-    ItemsTable = [ ['X',                'PosX',        'TextItemDelegate', None],
-                   ['Y',                'PosY',        'TextItemDelegate', None],
+    ItemsTable = [ ['X',                'X',           'TextItemDelegate', None],
+                   ['Y',                'Y',           'TextItemDelegate', None],
                    ['Orientation',      'Orientation', 'CBoxItemDelegate', ['Horizontal', 'Vertical']],
                    ['Visible',          'Visible',     'CBoxItemDelegate', ['Yes',  'No']],
                    ['Horizontal Align', 'HJustify',    'CBoxItemDelegate', ['Left', 'Center', 'Right']],
@@ -560,8 +560,8 @@ class FieldInspector(QTreeWidget):
     
     ItemsParamNameMap =\
     {
-        'X'                : [ 'PosX'                                      ],
-        'Y'                : [ 'PosY'                                      ], 
+        'X'                : [ 'X'                                         ],
+        'Y'                : [ 'Y'                                         ], 
         'Orientation'      : [ 'Orientation', ['Horizontal', 'Vertical']   ],
         'Visible'          : [ 'Visible',     ['Yes',  'No']               ],
         'Horizontal Align' : [ 'HJustify',    ['Left', 'Center', 'Right']  ],
@@ -720,10 +720,10 @@ class FieldInspector(QTreeWidget):
             return 
             
         if item.data(colNAME, Qt.DisplayRole) == 'X':
-            self.field.PosX = item.data(colDATA, Qt.DisplayRole)
+            self.field.X = item.data(colDATA, Qt.DisplayRole)
 
         if item.data(colNAME, Qt.DisplayRole) == 'Y':
-            self.field.PosY = item.data(colDATA, Qt.DisplayRole)
+            self.field.Y = item.data(colDATA, Qt.DisplayRole)
 
     #---------------------------------------------------------------------------    
     def finish_edit(self):
