@@ -123,7 +123,7 @@ class Component:
             print('E: invalid component P record, rec: "' + rec + '"')
             sys.exit(1)
             
-        cfre = re.compile('F\s+(\d+)\s+\"(.*?)\"\s+(H|V)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+([LRCBT])\s+([LRCBT])([NI])([NB])\s+(?:\"(.*)\")*')
+        cfre = re.compile('F\s+(\d+)\s+\"(.*?)\"\s+(H|V)\s+([\d-]+)\s+([\d-]+)\s+(\d+)\s+(\d+)\s+([LRCBT])\s+([LRCBT])([NI])([NB])\s+(?:\"(.*)\")*')
         r = re.findall(cfre, rec)
         
         r.sort(key=lambda x: int(x[0]))
