@@ -500,6 +500,8 @@ class MainWindow(QMainWindow):
         self.SelApplyButton.clicked.connect(self.Selector.apply_slot)
         self.SelClearButton.clicked.connect(self.Selector.clear_slot)
         self.SelTemplateButton.clicked.connect(self.Selector.use_comp_as_template_slot)
+        
+        self.Selector.select_comps_signal.connect(self.CmpTable.select_comps_slot)
 
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
         self.Inspector.file_changed.connect(self.file_changed_slot)

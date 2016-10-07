@@ -33,6 +33,8 @@ class Selector(QTreeWidget):
     
     sel_options = ['', '+', '-', 're']
     
+    select_comps_signal = pyqtSignal([list])
+    
     #---------------------------------------------------------------------------
     def __init__(self, parent):
         super().__init__(parent)
@@ -403,7 +405,8 @@ class Selector(QTreeWidget):
                             
                     sel_refs = list(set(sel_refs) & set(refs))
                                     
-        print(sorted(sel_refs))            
+        print(sorted(sel_refs))     
+        self.select_comps_signal.emit(sel_refs)       
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    

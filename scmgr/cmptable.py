@@ -68,6 +68,24 @@ class ComponentsTable(QTableWidget):
         
         self.cells_chosen.emit(refs)
     #---------------------------------------------------------------------------    
+    def select_comps_slot(self, refs):
+        self.clearSelection()
+        
+        print('select_comps_slot', refs)
+        
+        sel_mode = self.selectionMode()
+        self.setSelectionMode(QAbstractItemView.MultiSelection)
+        for ref in refs:
+            for row in range( self.rowCount() ):
+                reftext = self.item(row, 0).text()
+                if ref == reftext:
+                    print(ref, reftext)
+                    self.selectRow(row)
+                    #self.item(row, 0).setSelected(True)
+                   
+        self.setSelectionMode(sel_mode)
+        self.cell_chosen(0, 0)
+    #---------------------------------------------------------------------------    
     def load_file(self, fname):
                 
         from cmpmgr import CmpMgr
