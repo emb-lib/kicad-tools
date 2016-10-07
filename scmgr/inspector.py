@@ -78,6 +78,10 @@ class Inspector(QTreeWidget):
         'Timestamp' : 'Timestamp'
     }
     
+    NonFieldProps = [ 'LibRef',
+                      'X',
+                      'Y',
+                      'Timestamp' ]
     
     #---------------------------------------------------------------------------    
     load_field   = pyqtSignal( [list], [str] )
@@ -294,7 +298,14 @@ class Inspector(QTreeWidget):
         
         l = []
         for c in self.comps:
-            l.append( eval('c.' + param) )
+            if name in self.NonFieldProps:
+                l.append( getattr(c, name) )
+            else:
+                print(c.Ref, name)
+                f = c.field(name)
+                l.append( getattr(f, 'Text') )
+                
+            #l.append( eval('c.' + param) )
 
         vals = list(set(l))
         vals.sort()
@@ -753,7 +764,8 @@ class FieldInspector(QTreeWidget):
         
         vals = []
         for f in flist:
-            vals.append( eval('f.' + fparam_name) )
+            #vals.append( eval('f.' + fparam_name) )
+            vals.append( getattr(f, fparam_name) )
                 
         vals = self.reduce_list(vals)
         #print(vals)

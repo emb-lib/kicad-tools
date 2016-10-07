@@ -346,7 +346,7 @@ class Selector(QTreeWidget):
         print('select_comps')
         
         sel_refs = list( self.comps_dict.keys() )
-        print(sel_refs)
+        #print(sel_refs)
         
         for i in range( self.topLevelItemCount() ):
             item = self.topLevelItem(i)
@@ -377,7 +377,7 @@ class Selector(QTreeWidget):
                        (sel_opt == 're' and re.match(value, prop_val)):
                         refs.append(c[0].Ref)
                 
-                print('refs: ', refs)
+               # print('refs: ', refs)
                 sel_refs = list(set(sel_refs) & set(refs))
                 
             for j in range( item.childCount() ):
@@ -405,7 +405,7 @@ class Selector(QTreeWidget):
                             
                     sel_refs = list(set(sel_refs) & set(refs))
                                     
-        print(sorted(sel_refs))     
+        #print(sorted(sel_refs))     
         self.select_comps_signal.emit(sel_refs)       
     #---------------------------------------------------------------------------    
     

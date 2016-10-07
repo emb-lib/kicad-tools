@@ -71,7 +71,7 @@ class ComponentsTable(QTableWidget):
     def select_comps_slot(self, refs):
         self.clearSelection()
         
-        print('select_comps_slot', refs)
+        #print('select_comps_slot', refs)
         
         sel_mode = self.selectionMode()
         self.setSelectionMode(QAbstractItemView.MultiSelection)
@@ -79,7 +79,7 @@ class ComponentsTable(QTableWidget):
             for row in range( self.rowCount() ):
                 reftext = self.item(row, 0).text()
                 if ref == reftext:
-                    print(ref, reftext)
+                    #print(ref, reftext)
                     self.selectRow(row)
                     #self.item(row, 0).setSelected(True)
                    
