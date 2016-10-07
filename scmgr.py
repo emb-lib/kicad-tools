@@ -438,9 +438,9 @@ class MainWindow(QMainWindow):
 
 
         self.SelectorLayout.addWidget(self.Selector)
+        self.SelectorBtnLayout.addWidget(self.SelTemplateButton)
         self.SelectorBtnLayout.addWidget(self.SelApplyButton)
         self.SelectorBtnLayout.addWidget(self.SelClearButton)
-        self.SelectorBtnLayout.addWidget(self.SelTemplateButton)
         self.SelectorLayout.addWidget(self.SelectorBtnWidget)
         #self.SelectorLayout.addWidget(self.SelCheckBox)
         
