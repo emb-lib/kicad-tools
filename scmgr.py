@@ -409,7 +409,7 @@ class MainWindow(QMainWindow):
         self.CmpChooseButton = QPushButton('Choose', self)
         
         self.CmpTabLayout.addWidget(self.CmpTable)
-        self.CmpTabLayout.addWidget(self.CmpChooseButton)
+        #self.CmpTabLayout.addWidget(self.CmpChooseButton)
         
                 
         #----------------------------------------------------
