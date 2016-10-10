@@ -27,7 +27,9 @@ from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 from PyQt5.QtCore import QT_VERSION_STR
-                                        
+        
+VERSION = '0.1.0'
+                                
 #-------------------------------------------------------------------------------
 class TSettingsDialog(QDialog):
     
@@ -289,7 +291,7 @@ class MainWindow(QMainWindow):
         self.Inspector.remove_property()
     #--------------------------------------------------------------------------------        
     def rename_user_property(self):
-        self.Inspector.save_cmps()
+        #self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
                     
         self.Inspector.rename_property()
@@ -407,7 +409,7 @@ class MainWindow(QMainWindow):
         self.CmpChooseButton = QPushButton('Choose', self)
         
         self.CmpTabLayout.addWidget(self.CmpTable)
-        self.CmpTabLayout.addWidget(self.CmpChooseButton)
+        #self.CmpTabLayout.addWidget(self.CmpChooseButton)
         
                 
         #----------------------------------------------------
@@ -495,8 +497,8 @@ class MainWindow(QMainWindow):
         self.CmpTable.cells_chosen.connect(self.Selector.comp_template_slot)
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
+        self.CmpTable.cmps_selected.connect(self.set_status_text_slot)
 
-        #self.SelCheckBox.stateChanged.connect(self.Selector.change_mode_slot)
         self.SelApplyButton.clicked.connect(self.Selector.apply_slot)
         self.SelClearButton.clicked.connect(self.Selector.clear_slot)
         self.SelTemplateButton.clicked.connect(self.Selector.use_comp_as_template_slot)
@@ -504,9 +506,10 @@ class MainWindow(QMainWindow):
         self.Selector.select_comps_signal.connect(self.CmpTable.select_comps_slot)
 
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
-        self.Inspector.file_changed.connect(self.file_changed_slot)
-        self.Inspector.file_changed.connect(self.CmpTable.update_cmp_list_slot)
-        self.FieldInspector.file_changed.connect(self.file_changed_slot)
+        self.Inspector.data_changed.connect(self.data_changed_slot)
+        self.Inspector.data_changed.connect(self.CmpTable.update_cmp_list_slot)
+        self.Inspector.update_comps.connect(self.CmpTable.update_cmp_list_slot)
+        self.FieldInspector.data_changed.connect(self.data_changed_slot)
         CmpMgr.file_saved.connect(self.file_saved_slot)
         
         self.CmpTable.mouse_click.connect(self.mouse_change_tool)
@@ -601,11 +604,13 @@ class MainWindow(QMainWindow):
         self.CmpTable.load_file( filenames[0] )
     #---------------------------------------------------------------------------
     def save_file(self):
-        self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
+        self.Inspector.save_cmps()
         
         curr_file = CmpMgr.curr_file_path()
-        print('Save File "' + curr_file + '"')
+        message = 'Save File "' + curr_file + '"'
+        print(message)
+        self.statusBar().showMessage(message)
         
         CmpMgr.save_file(curr_file)
     #---------------------------------------------------------------------------
@@ -632,7 +637,7 @@ class MainWindow(QMainWindow):
         text = CmpMgr.curr_file_path()
         self.set_title(text)
     #---------------------------------------------------------------------------
-    def file_changed_slot(self):
+    def data_changed_slot(self):
         text = CmpMgr.curr_file_path() + ' *'
         self.set_title(text)
     #---------------------------------------------------------------------------
@@ -642,8 +647,10 @@ class MainWindow(QMainWindow):
     #---------------------------------------------------------------------------
     def set_title(self, text = ''):
         text = ' - ' + text if len(text) > 0 else ''
-        self.setWindowTitle(self.PROGRAM_NAME + text)
-        
+        self.setWindowTitle(self.PROGRAM_NAME + ' v' + VERSION + text)
+    #---------------------------------------------------------------------------
+    def set_status_text_slot(self, text):
+        self.statusBar().showMessage(text)
     #---------------------------------------------------------------------------
     def edit_settings(self):
         print('edit settings')
@@ -651,7 +658,6 @@ class MainWindow(QMainWindow):
         SettingsDialog.resize(400, 400)
         SettingsDialog.Tabs.setMinimumWidth(800)
         SettingsDialog.show()
-        
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 

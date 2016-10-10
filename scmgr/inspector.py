@@ -48,7 +48,6 @@ class TComboBox(QComboBox):
     def set_index(self, text):
         items = [self.itemText(i) for i in range(self.count()) ]
         self.setCurrentIndex( items.index(text) )
-
 #-------------------------------------------------------------------------------    
 class Inspector(QTreeWidget):
     
@@ -65,24 +64,16 @@ class Inspector(QTreeWidget):
                    ['Y',                'TextItemDelegate', None],
                    ['Timestamp',        'TextItemDelegate', None] ]
 
-    
-    StdParamsNameMap =\
-    {
-        'Ref'       : 'Ref',
-        'LibRef'    : 'LibRef',
-        'Value'     : 'Fields[1].Text',
-        'Footprint' : 'Fields[2].Text',
-        'DocSheet'  : 'Fields[3].Text',
-        'X'         : 'X',
-        'Y'         : 'Y',
-        'Timestamp' : 'Timestamp'
-    }
-    
+    NonFieldProps = [ 'LibRef',
+                      'X',
+                      'Y',
+                      'Timestamp' ]
     
     #---------------------------------------------------------------------------    
     load_field   = pyqtSignal( [list], [str] )
     mouse_click  = pyqtSignal([str])
-    file_changed = pyqtSignal()
+    data_changed = pyqtSignal()
+    update_comps = pyqtSignal()
     #---------------------------------------------------------------------------    
             
 #-------------------------------------------------------------------------------    
@@ -136,10 +127,9 @@ class Inspector(QTreeWidget):
                     values.append(value)
 
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
-
     #---------------------------------------------------------------------------    
     def add_property(self):
-        print('add property')
+        print('Inspector::add property')
         text, ok = QInputDialog.getText(self, 'Add Property', 'Enter Property Name')
         
         if len(text) > 0:
@@ -149,10 +139,9 @@ class Inspector(QTreeWidget):
                     c.add_field(f)
         
             self.load_user_defined_params()
-            
     #---------------------------------------------------------------------------    
     def remove_property(self):
-        print('delete property')
+        print('Inspector::delete property')
         
         item = self.currentItem()
         name  = item.data(colNAME, Qt.DisplayRole)
@@ -166,13 +155,14 @@ class Inspector(QTreeWidget):
             c.remove_field(f)
 
         self.load_user_defined_params()
-
     #---------------------------------------------------------------------------    
     def rename_property(self):
-        print('rename property')
+        print('Inspector::rename property')
         item = self.currentItem()
         name  = item.data(colNAME, Qt.DisplayRole)
-        text, ok = QInputDialog.getText(self, 'Rename Property', 'Enter New Proterty Name')
+        print(name)
+        text, ok = QInputDialog.getText(self, 'Rename Property', 'Enter New Proterty Name', QLineEdit.Normal, name)
+        print(text)
 
         if len(text) > 0:
             for c in self.comps:
@@ -180,12 +170,10 @@ class Inspector(QTreeWidget):
                 f.Name = text
     
             self.load_user_defined_params()
-
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
         QTreeWidget.mousePressEvent(self, e)
-        
     #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -207,9 +195,9 @@ class Inspector(QTreeWidget):
         self.setItemDelegate(self.ItemsDelegate)
         
         self.itemClicked.connect(self.item_clicked)
-        self.currentItemChanged.connect(self.item_changed)
+        self.itemChanged.connect(self.item_changed)
+        self.currentItemChanged.connect(self.curr_item_changed)
         self.itemActivated.connect(self.item_activated)
-        
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
@@ -217,7 +205,6 @@ class Inspector(QTreeWidget):
         item.setExpanded (True)
         item.setFlags(Qt.ItemIsEnabled)
         return item
-        
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
         item = QTreeWidgetItem(parent, [title])
@@ -225,7 +212,6 @@ class Inspector(QTreeWidget):
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
         
         return item
-        
     #---------------------------------------------------------------------------    
     def item_row(self, item):
         parent = item.parent()
@@ -237,7 +223,6 @@ class Inspector(QTreeWidget):
                     row += self.topLevelItem(j).childCount()
                 
                 return row
-                
     #---------------------------------------------------------------------------    
     def item_clicked(self, item, col):
         
@@ -248,14 +233,19 @@ class Inspector(QTreeWidget):
                 
         if item.parent() == self.topLevelItem(1):
             self.load_field.emit([comps, param])
-            
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
         self.editItem(item, colDATA)
-        #print('Inspector::item_activated')
-            
     #---------------------------------------------------------------------------    
-    def item_changed(self, item, prev):
+    def item_changed(self, item, col):
+        if self.load_cmp_sem:
+            return
+            
+        print(item.data(colNAME, Qt.DisplayRole), item.data(colDATA, Qt.DisplayRole))
+        self.save_cmps()
+        self.data_changed.emit()    
+    #---------------------------------------------------------------------------    
+    def curr_item_changed(self, item, prev):
 
         #print('Inspector::item_changed')
                 
@@ -271,7 +261,6 @@ class Inspector(QTreeWidget):
 
         self.editItem(item, colDATA)
         self.item_clicked(item, colNAME)
-
     #---------------------------------------------------------------------------    
     def finish_edit(self):
         print('Inspector::finish_edit')
@@ -286,16 +275,18 @@ class Inspector(QTreeWidget):
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
         
         self.save_cmps()
-            
     #---------------------------------------------------------------------------    
     def prepare_std_params(self, item):
         name  = item.data(colNAME, Qt.DisplayRole)
-        param = self.StdParamsNameMap[name]
-        
         l = []
         for c in self.comps:
-            l.append( eval('c.' + param) )
-
+            if name in self.NonFieldProps:
+                l.append( getattr(c, name) )
+            else:
+                #print(c.Ref, name)
+                f = c.field(name)
+                l.append( getattr(f, 'Text') )
+                
         vals = list(set(l))
         vals.sort()
         if len(vals) == 1:
@@ -306,14 +297,11 @@ class Inspector(QTreeWidget):
             vals.insert(0, MULTIVALUE)
             self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
-        
-        
     #---------------------------------------------------------------------------    
     def reduce_list(self, l):
         l = list(set(l))
         l.sort()
         return l
-        
     #---------------------------------------------------------------------------    
     def user_defined_params(self):
         
@@ -340,7 +328,6 @@ class Inspector(QTreeWidget):
                 fdict[f].insert(0, MULTIVALUE)
         
         return fdict
-        
     #---------------------------------------------------------------------------
     def load_user_defined_params(self):
         self.topLevelItem(1).takeChildren()
@@ -356,10 +343,10 @@ class Inspector(QTreeWidget):
             else:
                 vals = user_fields[name]
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
-        
     #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
         
+        self.load_cmp_sem = True
         #-------------------------------------
         #
         #    Create selected components list including component parts
@@ -380,9 +367,15 @@ class Inspector(QTreeWidget):
             self.prepare_std_params(item)
             
         self.load_user_defined_params()            
+        
+        curr_item = self.currentItem()
+        if curr_item:
+            self.item_clicked(curr_item, colNAME)
             
+        self.load_cmp_sem = False
     #---------------------------------------------------------------------------                            
     def save_cmps(self):
+        print('Inspector::save_cmps')
         if not hasattr(self, 'comps'):
             return
 
@@ -398,7 +391,6 @@ class Inspector(QTreeWidget):
                 
             for i in range( self.topLevelItem(1).childCount() ):
                 item_list.append( self.topLevelItem(1).child(i) )
-                
                 
             #---------------------------------------------
             #
@@ -424,8 +416,8 @@ class Inspector(QTreeWidget):
                     continue
                     
                 if item_value != MULTIVALUE:
-                    if item_name in self.StdParamsNameMap.keys():
-                        exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                    if item_name in self.NonFieldProps:
+                        setattr(c, item_name, item_value)
                     else:
                         f = c.field(item_name)
                         f.Text = item_value
@@ -437,19 +429,21 @@ class Inspector(QTreeWidget):
             for s in subst_list:
                 item_name  = s[0]
                 item_value = c.get_str_from_pattern( s[1] )
-                if item_name in self.StdParamsNameMap.keys():
-                    exec('c.' + self.StdParamsNameMap[item_name] + ' = item_value')
+                if item_name in self.NonFieldProps:
+                    setattr(c, item_name, item_value)
                 else:
                     f = c.field(item_name)
                     f.Text = item_value
                     
-                #c.dump()
-        self.file_changed.emit()
+                #s[2].setData(colDATA, Qt.DisplayRole, item_value)
+
+                    
+        self.update_comps.emit()
 #-------------------------------------------------------------------------------    
 class FieldInspector(QTreeWidget):
     
     mouse_click  = pyqtSignal([str])
-    file_changed = pyqtSignal()
+    data_changed = pyqtSignal()
     
     #---------------------------------------------------------------------------    
     class TextItemDelegate(QStyledItemDelegate):
@@ -490,8 +484,7 @@ class FieldInspector(QTreeWidget):
                 self.values.append(value)
 
             QStyledItemDelegate.setModelData(self, editor, model, idx)
-                
-            
+    #---------------------------------------------------------------------------        
     class FieldInspectorItemsDelegate(QStyledItemDelegate):
 
         TEXT_DELEGATE = 0
@@ -542,9 +535,7 @@ class FieldInspector(QTreeWidget):
                     values.append(value)
 
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
-            
-            
-    #---------------------------------------------------------------------------    
+    #---------------------------------------------------------------------------
     #
     #              Title              Field Name         Delegate         Delegate Data
     #
@@ -570,7 +561,6 @@ class FieldInspector(QTreeWidget):
         'Font Bold'        : [ 'FontBold',    ['Yes',  'No']               ],
         'Font Italic'      : [ 'FontItalic',  ['Yes',  'No']               ]
     }
-    
     #---------------------------------------------------------------------------    
     class TreeWidgetItem(QTreeWidgetItem):
         
@@ -579,7 +569,6 @@ class FieldInspector(QTreeWidget):
             
         def focusOutEvent(self, event):
             print('TreeItem::focusOutEvetnevent ' + str(event))
-            
     #---------------------------------------------------------------------------    
     class EventFilter(QObject):
         def __init__(self, parent):
@@ -602,12 +591,10 @@ class FieldInspector(QTreeWidget):
                 return False
                 
             return False
-            
     #-------------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('FieldInspector')
         QTreeWidget.mousePressEvent(self, e)
-        
     #-------------------------------------------------------------------------------    
     def __init__(self, parent):
         super().__init__(parent)
@@ -620,28 +607,23 @@ class FieldInspector(QTreeWidget):
         self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
         self.setHeaderLabels( ('Field Name', 'Value' ) );
         self.setHeaderHidden(True)
-        
         self.setFocusPolicy(Qt.WheelFocus)
-        #self.setTabKeyNavigation(False)
         
         self.field_items = self.addParent(self, 0, 'Field', '')
     
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.field_items, i[0], '')
-            #self.setItemDelegateForRow( idx, eval('self.' + i[2])(self, i[3]) )
             
         self.ItemsDelegate = self.FieldInspectorItemsDelegate(self)
         self.setItemDelegate(self.ItemsDelegate)
                 
         self.itemClicked.connect(self.item_clicked)
         self.itemPressed.connect(self.item_pressed)
-        self.currentItemChanged.connect(self.item_changed)
+        self.itemChanged.connect(self.item_changed)
+        self.currentItemChanged.connect(self.curr_item_changed)
         self.itemActivated.connect(self.item_activated)
     
         self.field = None
-        
-        #self.setItemDelegate(self.ItemDelegate(self))
-    
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
@@ -649,14 +631,12 @@ class FieldInspector(QTreeWidget):
         item.setExpanded (True)
         item.setFlags(Qt.ItemIsEnabled)
         return item
-    
     #---------------------------------------------------------------------------    
     def addChild(self, parent, title, data, flags=Qt.NoItemFlags):
         item = self.TreeWidgetItem(parent, [title])
         item.setData(colDATA, Qt.DisplayRole, data)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
         return item
-    
     #---------------------------------------------------------------------------    
 #   def keyPressEvent(self, e):
 #       if e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
@@ -675,9 +655,14 @@ class FieldInspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     def item_pressed(self, item, col):
         self.select_item(item)
-        
     #---------------------------------------------------------------------------    
-    def item_changed(self, item, prev):
+    def item_changed(self, item, col):
+        if self.load_field_sem:
+            return
+
+        self.data_changed.emit()    
+    #---------------------------------------------------------------------------    
+    def curr_item_changed(self, item, prev):
         
         if not item.data(colDATA, Qt.DisplayRole):
             return 
@@ -693,14 +678,12 @@ class FieldInspector(QTreeWidget):
         self.editItem(item, colDATA)
         self.handle_item(item)    
         self.item_clicked(item, colNAME)
-    
     #---------------------------------------------------------------------------    
     def item_activated(self, item, col):
         if not item.data(colDATA, Qt.DisplayRole):
             return 
 
         self.editItem(item, colDATA)
-    
     #---------------------------------------------------------------------------    
     def select_item(self, item):
         pass
@@ -713,7 +696,6 @@ class FieldInspector(QTreeWidget):
         self.param = d[1]
         
         self.load_field()
-        
     #---------------------------------------------------------------------------    
     def handle_item(self, item):
         if not self.field:
@@ -724,28 +706,21 @@ class FieldInspector(QTreeWidget):
 
         if item.data(colNAME, Qt.DisplayRole) == 'Y':
             self.field.Y = item.data(colDATA, Qt.DisplayRole)
-
     #---------------------------------------------------------------------------    
     def finish_edit(self):
-        print('FieldInspector::finish_edit')
         idx    = self.indexFromItem(self.currentItem(), colDATA)
         editor = self.indexWidget(idx)
 
-        #print(editor)
-
         if editor:
-            #print( self.itemFromIndex(idx).data(colNAME, Qt.DisplayRole) )
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
 
         self.save_fields()
-            
     #---------------------------------------------------------------------------    
     def reduce_list(self, l):
         l = list(set(l))
         l.sort()
         return l
-    
     #---------------------------------------------------------------------------    
     def prepare_item(self, item, flist):
         item_name   = item.data(colNAME, Qt.DisplayRole)
@@ -753,10 +728,9 @@ class FieldInspector(QTreeWidget):
         
         vals = []
         for f in flist:
-            vals.append( eval('f.' + fparam_name) )
+            vals.append( getattr(f, fparam_name) )
                 
         vals = self.reduce_list(vals)
-        #print(vals)
                      
         if len( self.ItemsParamNameMap[item_name] ) == 1:
             if len(vals) == 1:
@@ -767,9 +741,6 @@ class FieldInspector(QTreeWidget):
                 
             data_val = vals[0]
         else:
-#           print('*'*20)
-#           print(item_name)
-#           print(fparam_name)
             data_val = vals[0]
             if len(vals) > 1:
                 vals = [MULTIVALUE] + self.ItemsParamNameMap[item_name][1] 
@@ -779,13 +750,11 @@ class FieldInspector(QTreeWidget):
 
             self.ItemsDelegate.add_editor_data(item_name, self.FieldInspectorItemsDelegate.CBOX_DELEGATE, vals)
             
-            
-        #print(item_name + ' : ' + data_val)
-        #print(vals)
         item.setData(colDATA, Qt.DisplayRole, data_val)
-            
     #---------------------------------------------------------------------------    
     def load_field(self):
+        
+        self.load_field_sem = True
         
         NO_FIELD_PARAMS = ['LibRef', 'X', 'Y', 'Timestamp']
 
@@ -798,29 +767,24 @@ class FieldInspector(QTreeWidget):
                 item.setData(colDATA, Qt.DisplayRole, '')
                 if hasattr(self, 'field_list'):
                     delattr(self, 'field_list')
+                    
+            self.load_field_sem = False
             return
-        
-        #print(param)
         
         flist = []
         for c in comps:
             flist.append( c.field(param) )
-            #print(c.field(param))
-                        
                         
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
             self.prepare_item(item, flist)
         
         self.field_list = flist
-                
-#           if len(self.fgroup) > 0:
-#           else:
-#               item.setData( colDATA, Qt.DisplayRole, '' )
-                    
+        self.load_field_sem = False
     #---------------------------------------------------------------------------    
     def save_fields(self):
-        
+        print('FieldInspector::save_fields')
+          
         if not hasattr(self, 'field_list'):
             return
         
@@ -832,8 +796,6 @@ class FieldInspector(QTreeWidget):
             if val != MULTIVALUE:
                 for f in self.field_list:
                     exec('f.' + fparam_name + ' = val')
-            
-        self.file_changed.emit()
     #---------------------------------------------------------------------------    
     def column_resize(self, idx, osize, nsize):
         self.setColumnWidth(idx, nsize)
