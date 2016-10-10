@@ -285,7 +285,7 @@ class MainWindow(QMainWindow):
         self.Inspector.add_property()
     #--------------------------------------------------------------------------------
     def remove_user_property(self):
-        self.Inspector.save_cmps()
+        #self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
 
         self.Inspector.remove_property()
@@ -426,8 +426,7 @@ class MainWindow(QMainWindow):
         self.SelectorBtnLayout.setContentsMargins(4,10,4,4)
         self.SelectorBtnLayout.setSpacing(10)
 
-        self.Selector       = Selector(self)
-        #self.SelCheckBox    = QCheckBox('Use Component As Template', self)
+        self.Selector = Selector(self)
 
         self.SelApplyButton = QPushButton('Apply', self)
         self.SelApplyButton.setToolTip('Alt+S: Apply selection patterns to components')
@@ -444,7 +443,6 @@ class MainWindow(QMainWindow):
         self.SelectorBtnLayout.addWidget(self.SelApplyButton)
         self.SelectorBtnLayout.addWidget(self.SelClearButton)
         self.SelectorLayout.addWidget(self.SelectorBtnWidget)
-        #self.SelectorLayout.addWidget(self.SelCheckBox)
         
         self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_S), self)
         self.shortcutSelApply.activated.connect(self.Selector.apply_slot)
@@ -461,9 +459,19 @@ class MainWindow(QMainWindow):
         #
         self.Inspector       = Inspector(self)
         self.FieldInspector  = FieldInspector(self)
+
+        self.InspectorBtnWidget = QWidget(self)
+        self.InspectorBtnLayout = QHBoxLayout(self.InspectorBtnWidget)
+        self.InspectorBtnLayout.setContentsMargins(4,10,4,4)
+        self.InspectorBtnLayout.setSpacing(10)
+        
+
         self.AddUserProperty    = QPushButton('Add Property', self)
+        self.AddUserProperty.setToolTip('Alt+A: Add new user property')
         self.DeleteUserProperty = QPushButton('Delete Property', self)
+        self.DeleteUserProperty.setToolTip('Alt+Delete: Delete user property')
         self.RenameUserProperty = QPushButton('Rename Property', self)
+        self.RenameUserProperty.setToolTip('Alt+R: Rename user property')
         
         self.InspectorBox    = QGroupBox('Inspector', self)
         self.InspectorSplit  = QSplitter(Qt.Vertical, self)
@@ -475,10 +483,22 @@ class MainWindow(QMainWindow):
         self.InspectorSplit.addWidget(self.Inspector)
         self.InspectorSplit.addWidget(self.FieldInspector)
         self.InspectorLayout.addWidget(self.InspectorSplit)
-        self.InspectorLayout.addWidget(self.AddUserProperty)
-        self.InspectorLayout.addWidget(self.DeleteUserProperty)
-        self.InspectorLayout.addWidget(self.RenameUserProperty)
+        
+        self.InspectorBtnLayout.addWidget(self.AddUserProperty)
+        self.InspectorBtnLayout.addWidget(self.DeleteUserProperty)
+        self.InspectorBtnLayout.addWidget(self.RenameUserProperty)
                 
+        self.InspectorLayout.addWidget(self.InspectorBtnWidget)
+
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_A), self)
+        self.shortcutSelApply.activated.connect(self.add_user_property)
+        
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Delete), self)
+        self.shortcutSelApply.activated.connect(self.remove_user_property)
+        
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_R), self)
+        self.shortcutSelApply.activated.connect(self.rename_user_property)
+        
         #----------------------------------------------------
 
         self.Splitter = QSplitter(self)
