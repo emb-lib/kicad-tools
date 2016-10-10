@@ -497,6 +497,7 @@ class MainWindow(QMainWindow):
         self.CmpTable.cells_chosen.connect(self.Selector.comp_template_slot)
         self.CmpTable.file_load.connect(self.file_loaded_slot)
         self.CmpTable.cmps_updated.connect(self.Selector.process_comps_slot)
+        self.CmpTable.cmps_selected.connect(self.set_status_text_slot)
 
         self.SelApplyButton.clicked.connect(self.Selector.apply_slot)
         self.SelClearButton.clicked.connect(self.Selector.clear_slot)

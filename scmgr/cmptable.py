@@ -23,10 +23,11 @@ from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QI
 #-------------------------------------------------------------------------------
 class ComponentsTable(QTableWidget):
     
-    cells_chosen = pyqtSignal([list])
-    mouse_click  = pyqtSignal([str])
-    file_load    = pyqtSignal()
-    cmps_updated = pyqtSignal([dict])
+    cells_chosen  = pyqtSignal([list])
+    mouse_click   = pyqtSignal([str])
+    file_load     = pyqtSignal()
+    cmps_updated  = pyqtSignal([dict])
+    cmps_selected = pyqtSignal([str])
     
     def __init__(self, parent):
         super().__init__(0, 2, parent)
@@ -67,6 +68,7 @@ class ComponentsTable(QTableWidget):
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
         
         self.cells_chosen.emit(refs)
+        self.cmps_selected.emit(str(len(refs)) + ' components selected')
     #---------------------------------------------------------------------------    
     def select_comps_slot(self, refs):
         self.clearSelection()

@@ -334,10 +334,6 @@ class Selector(QTreeWidget):
                     value = fprop[3]
                     self.addChild(item, name, value)
                  
-#       if prev_val != value:
-#           print('>>>>>',prev_val, value)
-#           self.select_comps()
-                       
     #---------------------------------------------------------------------------    
     def apply_slot(self):
         self.select_comps()
