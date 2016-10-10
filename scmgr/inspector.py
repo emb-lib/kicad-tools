@@ -128,7 +128,7 @@ class Inspector(QTreeWidget):
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
     #---------------------------------------------------------------------------    
     def add_property(self):
-        print('add property')
+        print('Inspector::add property')
         text, ok = QInputDialog.getText(self, 'Add Property', 'Enter Property Name')
         
         if len(text) > 0:
@@ -140,7 +140,7 @@ class Inspector(QTreeWidget):
             self.load_user_defined_params()
     #---------------------------------------------------------------------------    
     def remove_property(self):
-        print('delete property')
+        print('Inspector::delete property')
         
         item = self.currentItem()
         name  = item.data(colNAME, Qt.DisplayRole)
@@ -156,7 +156,7 @@ class Inspector(QTreeWidget):
         self.load_user_defined_params()
     #---------------------------------------------------------------------------    
     def rename_property(self):
-        print('rename property')
+        print('Inspector::rename property')
         item = self.currentItem()
         name  = item.data(colNAME, Qt.DisplayRole)
         text, ok = QInputDialog.getText(self, 'Rename Property', 'Enter New Proterty Name')
@@ -271,7 +271,7 @@ class Inspector(QTreeWidget):
             if name in self.NonFieldProps:
                 l.append( getattr(c, name) )
             else:
-                print(c.Ref, name)
+                #print(c.Ref, name)
                 f = c.field(name)
                 l.append( getattr(f, 'Text') )
                 
@@ -354,8 +354,13 @@ class Inspector(QTreeWidget):
             self.prepare_std_params(item)
             
         self.load_user_defined_params()            
+        
+        curr_item = self.currentItem()
+        if curr_item:
+            self.item_clicked(curr_item, colNAME)
     #---------------------------------------------------------------------------                            
     def save_cmps(self):
+        print('Inspector::save_cmps')
         if not hasattr(self, 'comps'):
             return
 
@@ -750,7 +755,8 @@ class FieldInspector(QTreeWidget):
         self.field_list = flist
     #---------------------------------------------------------------------------    
     def save_fields(self):
-        
+        print('FieldInspector::save_fields')
+          
         if not hasattr(self, 'field_list'):
             return
         

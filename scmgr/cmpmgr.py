@@ -340,9 +340,9 @@ class ComponentManager(QObject):
         refs.sort()
         for ref in refs:
             clist = self.cmp_dict[ref]
-            if len(clist) > 1:
-                for c in clist:
-                    print('Sheet:', c.Sheet, 'Part:', c.PartNo)
+#           if len(clist) > 1:
+#               for c in clist:
+#                   print('Sheet:', c.Sheet, 'Part:', c.PartNo)
                 
             for c in clist:
                 c.renumerate_fields()
@@ -360,7 +360,7 @@ class ComponentManager(QObject):
         namelist = [basename] + self.sheets[1:]
         
         for sheet, name in enumerate(namelist):
-            print(sheet, name)
+            #print(sheet, name)
             dst_path  = os.path.join(dirname, name)
             if os.path.exists(dst_path):
                 n = os.path.splitext(name)[0]
@@ -369,10 +369,10 @@ class ComponentManager(QObject):
                 shutil.copy(dst_path, backup_path)
 
 
-            print(self.schdata[sheet][311:320])
+           # print(self.schdata[sheet][311:320])
             with open(dst_path, 'wb') as f:
                 f.write(self.schdata[sheet].encode('utf-8'))
-                print(dst_path, len(self.schdata[sheet].encode('utf-8')))
+                #print(dst_path, len(self.schdata[sheet].encode('utf-8')))
                 
         self.file_saved.emit()
 #-------------------------------------------------------------------------------

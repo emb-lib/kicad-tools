@@ -601,8 +601,8 @@ class MainWindow(QMainWindow):
         self.CmpTable.load_file( filenames[0] )
     #---------------------------------------------------------------------------
     def save_file(self):
-        self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
+        self.Inspector.save_cmps()
         
         curr_file = CmpMgr.curr_file_path()
         print('Save File "' + curr_file + '"')
