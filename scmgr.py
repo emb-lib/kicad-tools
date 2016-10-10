@@ -27,7 +27,9 @@ from PyQt5.Qt     import QShortcut, QKeySequence
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 from PyQt5.QtCore import QT_VERSION_STR
-                                        
+        
+VERSION = '0.1.0'
+                                
 #-------------------------------------------------------------------------------
 class TSettingsDialog(QDialog):
     
@@ -642,7 +644,7 @@ class MainWindow(QMainWindow):
     #---------------------------------------------------------------------------
     def set_title(self, text = ''):
         text = ' - ' + text if len(text) > 0 else ''
-        self.setWindowTitle(self.PROGRAM_NAME + text)
+        self.setWindowTitle(self.PROGRAM_NAME + ' v' + VERSION + text)
         
     #---------------------------------------------------------------------------
     def edit_settings(self):
