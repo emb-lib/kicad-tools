@@ -10,12 +10,8 @@ from utils import *
 from inspector import TComboBox
 
 from PyQt5.Qt        import Qt
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate, 
-                             QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog, QInputDialog, QMessageBox)
+from PyQt5.QtWidgets import (QStyledItemDelegate, QTreeWidget, QTreeWidgetItem,
+                             QAbstractItemView, QHeaderView)
 
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
@@ -119,37 +115,12 @@ class Selector(QTreeWidget):
                 editor.addItems( self.Parent.sel_options )
                 return editor
     
-    
-#       def setEditorData(self, editor, idx):
-#           print('setEditorData: ', editor.currentText())
-#           QStyledItemDelegate.setEditorData(self, editor, idx)
-            
-#           #print(editor.metaObject().className() )
-#           name = idx.sibling(idx.row(), 0).data()
-#           if self.editors[name][0] == self.TEXT_DELEGATE:
-#               QStyledItemDelegate.setEditorData(self, editor, idx)
-#           else:
-#               value = idx.model().data(idx, Qt.EditRole)
-#               editor.set_index(value)
-#
         def setModelData(self, editor, model, idx):
             
             value    = editor.currentText() if editor.metaObject().className() == 'TComboBox' else editor.text()
             prev_val = idx.sibling(idx.row(), 0).data()
             self.edit_finished.emit( [idx, prev_val, value ] )
             QStyledItemDelegate.setModelData(self, editor, model, idx)
-
-            
-#           name = idx.sibling(idx.row(), 0).data()
-#           if self.editors[name][0] == self.TEXT_DELEGATE:
-#               QStyledItemDelegate.setModelData(self, editor, model, idx)
-#           else:
-#               value = editor.currentText()
-#               values = self.editors[name][1]
-#               if value not in values:
-#                   values.append(value)
-#
-#               QStyledItemDelegate.setModelData(self, editor, model, idx)
     
     #---------------------------------------------------------------------------    
     #
@@ -168,18 +139,6 @@ class Selector(QTreeWidget):
                       'X',
                       'Y',
                       'Timestamp' ]
-
-#   StdParamsNameMap =\
-#   {
-#       'Ref'       : 'Ref',
-#       'LibRef'    : 'LibRef',
-#       'Value'     : 'Fields[1].Text',
-#       'Footprint' : 'Fields[2].Text',
-#       'DocSheet'  : 'Fields[3].Text',
-#       'X'         : 'X',
-#       'Y'         : 'Y',
-#       'Timestamp' : 'Timestamp'
-#   }
 
     FieldItemsTable = [ ['X',                'X',           None,                         '0'          ],
                         ['Y',                'Y',           None,                         '0'          ],

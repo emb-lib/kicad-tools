@@ -16,12 +16,12 @@ from utils     import *
 from cmpmgr    import *
 
 from PyQt5.Qt        import Qt
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate, QCheckBox, QTextBrowser, 
-                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
-                             QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
+from PyQt5.QtWidgets import (QWidget, QMainWindow, QApplication,
+                             QGroupBox,  QVBoxLayout,QHBoxLayout, QSplitter, 
+                             QTextBrowser, QTableWidget, QTableWidgetItem, 
+                             QListWidget, QListWidgetItem,QAbstractItemView, QHeaderView, 
+                             QAction, QDialog, QFileDialog, QInputDialog, 
+                             QTabWidget, QPushButton, QDialogButtonBox)
 
 
 from PyQt5.Qt     import QShortcut, QKeySequence
