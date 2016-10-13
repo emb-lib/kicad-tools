@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="" content="">
+<title>scmgr</title>
+  <style type="text/css">
+   TABLE {
+       background: #aaa;
+       color: black; 
+   }
+   TD {
+       background: #eee;
+       padding: 5px;
+       border: 1px solid #000;
+       font-size: 13pt;
+   }
+   /*h1 {
+       font-family: Arial;
+       font-size: 28pt;
+       font-weight: bold;
+   }
+   h3 {
+       font-size: 30pt;
+       font-weight: bold;
+   }*/ 
+   p {
+     font-size: 14pt;
+   }   
+   .li1 {
+     font: 13pt sans-serif;
+     font-style: normal;
+   }   
+   .li2 {
+     font: 11pt sans-serif;
+     font-style: italic;
+   }   
+  </style>    
+</head>
+<body>
+<h1>KiCad Schematic Component Manager User's Manual</h1>
+
+<h2>General</h2>
+
+<p>Schematic Component Manager (SCM) is intended for simplifying of property editing.</p>
+
+<font class="h3">Features:</font>
+
+  <ul>
+   <font  class="li1">
+   <li>Table representation of component list.</li>
+   <li>Automating of component selection.</li>
+     <ul>
+      <font  class="li2">
+       <li>Decicated Selector tool.</li>
+       <li>Using component property as selections criteria.</li>
+       <li>Flexible rules for property matching: same, different, regular expression.</li>
+       <li>Use component as template for property list.</li>
+      </font>
+     </ul>
+   <li>Group editing of selected componets.</li>
+     <ul>
+      <font  class="li2">
+       <li>Convenient Inspector tool.</li>
+       <li>Add/Delete/Rename of component[s] properties.</li>
+       <li>Property value substitutions.</li>
+       <li>Property templates: generating property value using template.</li>
+      </font>
+     </ul>
+   <li>Customization of components table view.</li>
+   <li>Delicate schematic files handling - preserve file sturcture over read/write operations.</li>
+   <li>Multisheet schematic support.</li>
+   </font>
+  </ul>
+
+  
+<h3>Description:</h3>  
+
+<p>Schematic Component Manager contains three tools:</p>  
+
+  <ul>
+    <font class="li1">
+    <li>Components Table. Represents all schematic components in two-columns table view: <b>Ref | Description</b>.</li>
+    <li>Selector. Offers some capabilities to select components. Selected components are highlighted in 
+        Component Table tool, automatically loaded in Inspector Tool (see below) and selected component count 
+        displayed in status line.</li>
+    <li>Inspector. Allows group property ediding of selected components. Inspector consists of two subtools: Property Inspector
+        and Field Inspector.</li>
+    </font>
+  </ul>
+  
+<h2>Controls</h2>
+
+<p>Each tool has its own control methods</p>
+
+<h3>Components Table controls</h3>
+<p></p>
+<table>
+    <tr>
+      <td><b>Name</b></td>
+      <td><b>Description</b></td>
+    </tr>
+    <tr>
+      <td>Navigation</td>
+      <td>Up/Down arrow keys</td>
+    </tr>
+    <tr>
+      <td>Load current component</td>
+      <td>Enter key or mouse click</td>
+    </tr>
+    <tr>
+      <td>Load multiple components</td>
+      <td>Ctrl+click: add single component; Shift+click: add several components</td>
+    </tr>
+</table>
+
+<p>Component Table description column view can be customized by specifying template pattern for each
+component reference prefix - see <a href="settings.html">Settings Dialog</a></p>
+
+<h3>Selector</h3>
+
+<p></p>
+<table>
+    <tr>
+      <td><b>Name</b></td>
+      <td><b>Description</b></td>
+    </tr>
+    <tr>
+      <td>Navigation</td>
+      <td>Up/Down arrow keys</td>
+    </tr>
+
+
+<h3>Inspector</h3>
+
+<p>slonick</p>
+<a href="settings.html">Settings Dialog</a>
+</body>
+</html>

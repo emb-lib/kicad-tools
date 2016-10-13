@@ -156,3 +156,6 @@ QListWidget::item:selected:!active {
 QListView::item:alternate {
     background: #EEEEEE;
 }
+QTextBrowser {
+    font-size: 14px;
+}
