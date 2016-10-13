@@ -175,9 +175,47 @@ class Selector(QTreeWidget):
             item = self.currentItem()
             col  = self.currentColumn()
             self.editItem(item, col)
+            
+        elif e.key() == Qt.Key_Left or e.key() == Qt.Key_Right:
+                curr_idx = self.currentIndex()
+                if e.key() == Qt.Key_Left:
+                    print('Left')
+                    if curr_idx.column() > 0:
+                        next_idx = curr_idx.sibling(curr_idx.row(), curr_idx.column()-1)
+                        self.setCurrentIndex(next_idx)
+                else: 
+                    print('Right')
+                    if curr_idx.column() < self.colSELOPT:
+                        next_idx = curr_idx.sibling(curr_idx.row(), curr_idx.column()+1)
+                        self.setCurrentIndex(next_idx)
+                        
+        elif (e.key() == Qt.Key_Up or e.key() == Qt.Key_Down) and e.modifiers() == Qt.ControlModifier:
+            if e.key() == Qt.Key_Up:
+                print('Collapse')
+                event = QKeyEvent(QEvent.KeyPress, Qt.Key_Left, Qt.NoModifier)
+            else:
+                print('Expand')
+                event = QKeyEvent(QEvent.KeyPress, Qt.Key_Right, Qt.NoModifier)
+            
+            QTreeWidget.keyPressEvent(self, event)
+                
+                            
         else:
             QTreeWidget.keyPressEvent(self, e)
         
+            
+#   def keyPressEvent(self, e):
+#       key = e.key()
+#       mod = e.modifiers()
+#       if key == Qt.Key_Down or key == Qt.Key_Up:
+#           if not mod:
+#               QApplication.sendEvent( self.parent(), e )
+#               return
+#           elif mod == Qt.AltModifier:
+#               self.showPopup()
+#
+#       QComboBox.keyPressEvent(self, e)
+
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
