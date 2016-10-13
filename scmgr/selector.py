@@ -164,7 +164,6 @@ class Selector(QTreeWidget):
         self.setItemDelegate(self.ItemsDelegate)
     
         self.itemChanged.connect(self.item_changed)
-        self.currentItemChanged.connect(self.current_item_changed)
         self.ItemsDelegate.edit_finished.connect(self.edit_finished_slot)
         
         self.state = Qt.Unchecked
@@ -179,43 +178,30 @@ class Selector(QTreeWidget):
         elif e.key() == Qt.Key_Left or e.key() == Qt.Key_Right:
                 curr_idx = self.currentIndex()
                 if e.key() == Qt.Key_Left:
-                    print('Left')
                     if curr_idx.column() > 0:
                         next_idx = curr_idx.sibling(curr_idx.row(), curr_idx.column()-1)
                         self.setCurrentIndex(next_idx)
                 else: 
-                    print('Right')
                     if curr_idx.column() < self.colSELOPT:
                         next_idx = curr_idx.sibling(curr_idx.row(), curr_idx.column()+1)
                         self.setCurrentIndex(next_idx)
                         
         elif (e.key() == Qt.Key_Up or e.key() == Qt.Key_Down) and e.modifiers() == Qt.ControlModifier:
+            item = self.currentItem()
+            idx  = self.currentIndex()
             if e.key() == Qt.Key_Up:
-                print('Collapse')
-                event = QKeyEvent(QEvent.KeyPress, Qt.Key_Left, Qt.NoModifier)
+                if item.childCount():
+                    self.collapseItem(item)
+                else:
+                    if item.parent():
+                        self.collapseItem( item.parent() )
+                        p_idx = idx.parent()
+                        self.setCurrentIndex( p_idx.sibling( p_idx.row(), idx.column() ) )
             else:
-                print('Expand')
-                event = QKeyEvent(QEvent.KeyPress, Qt.Key_Right, Qt.NoModifier)
-            
-            QTreeWidget.keyPressEvent(self, event)
-                
-                            
+                if item.childCount():
+                    self.expandItem(item)
         else:
             QTreeWidget.keyPressEvent(self, e)
-        
-            
-#   def keyPressEvent(self, e):
-#       key = e.key()
-#       mod = e.modifiers()
-#       if key == Qt.Key_Down or key == Qt.Key_Up:
-#           if not mod:
-#               QApplication.sendEvent( self.parent(), e )
-#               return
-#           elif mod == Qt.AltModifier:
-#               self.showPopup()
-#
-#       QComboBox.keyPressEvent(self, e)
-
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
@@ -309,10 +295,6 @@ class Selector(QTreeWidget):
         if col == self.colNAME:
             item.setData(self.colVALUE, Qt.EditRole, '')
             item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
-    #---------------------------------------------------------------------------    
-    def current_item_changed(self, curr, prev):
-        print('selector::current_item_changed')
-
     #---------------------------------------------------------------------------    
     def edit_finished_slot(self, data):
         print('edit_finished_slot')
