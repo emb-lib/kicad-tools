@@ -9,7 +9,8 @@ import shutil
 from cmpmgr    import *
 
 from PyQt5.Qt        import Qt
-from PyQt5.QtWidgets import (QLineEdit,QComboBox, QStyledItemDelegate, QAbstractItemDelegate, 
+from PyQt5.QtWidgets import (QApplication, QLineEdit,QComboBox, 
+                             QStyledItemDelegate, QAbstractItemDelegate, 
                              QTreeWidget, QTreeWidgetItem, QAbstractItemView, QHeaderView, 
                              QInputDialog, QMessageBox)
 
