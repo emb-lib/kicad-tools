@@ -52,10 +52,10 @@
    <li>Automating of component selection.</li>
      <ul>
       <font  class="li2">
-       <li>Decicated Selector tool.</li>
-       <li>Using component property as selections criteria.</li>
+       <li>Dedicated Selector tool.</li>
+       <li>Using component property as selection criteria.</li>
        <li>Flexible rules for property matching: same, different, regular expression.</li>
-       <li>Use component as template for property list.</li>
+       <li>Use any component as template for property list.</li>
       </font>
      </ul>
    <li>Group editing of selected componets.</li>
@@ -70,6 +70,7 @@
    <li>Customization of components table view.</li>
    <li>Delicate schematic files handling - preserve file sturcture over open/save operations.</li>
    <li>Multisheet schematic support.</li>
+   <li>Automatic save/restore all GUI geometry properties.</li>
    </font>
   </ul>
 
@@ -78,20 +79,21 @@
 
 <p>Schematic Component Manager contains three tools:</p>  
 
-  <ul>
-    <font class="li1">
+<ul>
+  <font class="li1">
     <li>Components Table. Represents all schematic components in two-columns table view: <b>Ref | Description</b>.</li>
-    <li>Selector. Offers some capabilities to select components. Selected components are highlighted in 
-        Component Table tool, automatically loaded in Inspector Tool (see below) and selected component count 
+    <li>Selector. Offers capabilities to select components. Selected components are highlighted in 
+        Components Table tool, automatically loaded in Inspector Tool (see below) and selected components count 
         displayed in status line.</li>
-    <li>Inspector. Allows group property ediding of selected components. Inspector consists of two subtools: Property Inspector
+    <li>Inspector. Allows group property editing of selected components. Inspector consists of two subtools: Property Inspector
         and Field Inspector.</li>
-    </font>
-  </ul>
+  </font>
+</ul>
   
 <h2>Components Table</h2>
 
-<p>Each tool has its own control methods</p>
+<p>Components Table intended for displaying main componets data in breif list view, manually 
+selecting of components and review of results of Selector Tool use.</p>
 
 <h3>Components Table controls</h3>
 <p></p>
@@ -119,6 +121,82 @@ component reference prefix - see <a href="settings.html">Settings Dialog</a></p>
 
 <h2>Selector</h2>
 
+<p>Selector tool allows to select components using property parameters as criteria. This greatly simplify 
+preparing list of components for editing. Property name, value and other parameters can be typed manually or
+easely selected from drop-down list that contains only context-related values.</p>
+
+<p>Selector tool implemented as hierarchical three-columns table: 
+
+<ol>
+  <font  class="li1">
+    <li>the first column contains property/parameter name;</li>
+    <li>the second column contains property/parameter value;</li>
+    <li>the third column offer selection option. Selection option can have four values:</li>
+        <ol>
+          <font  class="li2">
+            <li><b>Empty</b>. Property/parameter ignored.</li>
+            <li><b>+</b>. Use the same property/parameter value.</li>
+            <li><b>-</b>. Use different property/parameter value.</li>
+            <li><b>re</b>. Use property/parameter value as regular expression.</li>
+          </font>
+        </ol>
+  </font>
+</ol>
+
+<p>Properties with internal parameters (field properties) have ligth-gray background. These 
+properties can be expanded (and collapsed) to access internal data by mouse click at the point left from
+property name. Also, keyboard can be used to expand/collapse such properties (see Selector controls table below).</p>
+
+<h3>Selector controls</h3>
+<p></p>
+<table>
+    <tr>
+      <td><b>Name</b></td>
+      <td><b>Description</b></td>
+    </tr>
+    <tr>
+      <td>Navigation</td>
+      <td>Up/Down/Left/Right arrow keys</td>
+    </tr>
+    <tr>
+      <td>Expand/Collapse property</td>
+      <td>Ctrl+Down/Ctrl+Up keys</td>
+    </tr>
+    <tr>
+      <td>Edit/save property</td>
+      <td>Enter key</td>
+    </tr>
+    <tr>
+      <td>Discard property changes</td>
+      <td>Escape key</td>
+    </tr>
+    <tr>
+      <td>Drop down item list</td>
+      <td>Alt+Up/Alt+Down keys</td>
+    </tr>
+</table>
+
+
+<h2>Inspector</h2>
+
+<p>Inspector tool is intended for group editing of properties of selected components.
+Inspector tool consists of two sub-tools:</p>
+<ul>
+  <font class="li1">
+    <li>Property Inspector tool.</li>
+    <li>Field Inspector tool.</li>
+  </font>
+</ul>
+
+<p>Property Inspector allows view and edit components properties values. Field Inspector operates
+ on the same manner but work with internal property parameters (field data).</p>
+
+<p>Each component has standard property set that is always available in Inspector. Any 
+user-defined property presents in Inspector only when this property exists in each selected
+component. Property value cell editor is contex-based: in case of single value the editor
+is simple text-string editor; in case of multiple values the editor is editable combo box.</p>
+
+<h3>Inspector controls</h3>
 <p></p>
 <table>
     <tr>
@@ -129,12 +207,34 @@ component reference prefix - see <a href="settings.html">Settings Dialog</a></p>
       <td>Navigation</td>
       <td>Up/Down arrow keys</td>
     </tr>
+    <tr>
+      <td>Edit/save property</td>
+      <td>Enter key</td>
+    </tr>
+    <tr>
+      <td>Discard property changes</td>
+      <td>Escape key</td>
+    </tr>
+    <tr>
+      <td>Drop down item list</td>
+      <td>Alt+Up/Alt+Down keys</td>
+    </tr>
 </table>
 
+<h2>Settings</h2>
 
-<h3>Inspector</h3>
+<p>There are some features that require customization.</p>
 
-<p>slonick</p>
-<a href="settings.html">Settings Dialog</a>
+<p> First, Components Table <b>Description</b> column view can be set up. 
+This is intended for convenience: the user can configure contents for each 
+component reference prefix.</p>
+
+<p>Next, some schematics contain components that are not true components - such
+as power symbols, custom bus entry points and so on. There is no need to work
+with these components, so the components should be removed from Components Table
+tool. This can be done with adding corresponding component prefixes to ignore list.</p>
+
+<p>See <a href="settings.html">Settings Dialog</a> for details</p>
 </body>
 </html>
+
