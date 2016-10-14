@@ -321,7 +321,7 @@ class Selector(QTreeWidget):
         print('select_comps')
         
         sel_refs = list( self.comps_dict.keys() )
-        #print(sel_refs)
+        sel = False
         
         for i in range( self.topLevelItemCount() ):
             item = self.topLevelItem(i)
@@ -336,7 +336,6 @@ class Selector(QTreeWidget):
                 for c in self.comps:
                     comp = c[0]
                     
-                    #print(c[0].Ref, name, value, sel_opt)
                     if name in self.NonFieldProps:
                         prop_val = getattr(comp, name)
                     else:
@@ -346,13 +345,12 @@ class Selector(QTreeWidget):
                         else:
                             continue
                         
-                    #print('prop_val: ', prop_val)
                     if (sel_opt == '+' and value == prop_val) or\
                        (sel_opt == '-' and value != prop_val) or\
                        (sel_opt == 're' and re.match(value, prop_val)):
                         refs.append(c[0].Ref)
+                        sel = True
                 
-               # print('refs: ', refs)
                 sel_refs = list(set(sel_refs) & set(refs))
                 
             for j in range( item.childCount() ):
@@ -360,7 +358,6 @@ class Selector(QTreeWidget):
                 sel_opt = field_item.data(self.colSELOPT, Qt.DisplayRole)
                 refs = []
                 if sel_opt:
-                    #fi_name  = field_item.data(self.colNAME, Qt.DisplayRole)
                     finame = self.FieldItemsTable[j][1]
                     value  = field_item.data(self.colVALUE, Qt.DisplayRole)
                 
@@ -372,16 +369,16 @@ class Selector(QTreeWidget):
                         else:
                             continue
 
-                        #print(c[0].Ref, value, prop_val)
                         if (sel_opt == '+' and value == prop_val) or\
                            (sel_opt == '-' and value != prop_val) or\
                            (sel_opt == 're' and re.match(value, prop_val)):
                             refs.append(c[0].Ref)
+                            sel = True
                             
                     sel_refs = list(set(sel_refs) & set(refs))
                                     
-        #print(sorted(sel_refs))     
-        self.select_comps_signal.emit(sel_refs)       
+        if sel:     # select only if at least one components match select option
+            self.select_comps_signal.emit(sel_refs)       
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
