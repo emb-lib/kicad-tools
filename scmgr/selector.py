@@ -10,12 +10,8 @@ from utils import *
 from inspector import TComboBox
 
 from PyQt5.Qt        import Qt
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate, 
-                             QTableWidget, QTableWidgetItem, QCommonStyle, QTreeWidget, QTreeWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication,
-                             QFileDialog, QInputDialog, QMessageBox)
+from PyQt5.QtWidgets import (QStyledItemDelegate, QTreeWidget, QTreeWidgetItem,
+                             QAbstractItemView, QHeaderView)
 
 from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
@@ -119,37 +115,12 @@ class Selector(QTreeWidget):
                 editor.addItems( self.Parent.sel_options )
                 return editor
     
-    
-#       def setEditorData(self, editor, idx):
-#           print('setEditorData: ', editor.currentText())
-#           QStyledItemDelegate.setEditorData(self, editor, idx)
-            
-#           #print(editor.metaObject().className() )
-#           name = idx.sibling(idx.row(), 0).data()
-#           if self.editors[name][0] == self.TEXT_DELEGATE:
-#               QStyledItemDelegate.setEditorData(self, editor, idx)
-#           else:
-#               value = idx.model().data(idx, Qt.EditRole)
-#               editor.set_index(value)
-#
         def setModelData(self, editor, model, idx):
             
             value    = editor.currentText() if editor.metaObject().className() == 'TComboBox' else editor.text()
             prev_val = idx.sibling(idx.row(), 0).data()
             self.edit_finished.emit( [idx, prev_val, value ] )
             QStyledItemDelegate.setModelData(self, editor, model, idx)
-
-            
-#           name = idx.sibling(idx.row(), 0).data()
-#           if self.editors[name][0] == self.TEXT_DELEGATE:
-#               QStyledItemDelegate.setModelData(self, editor, model, idx)
-#           else:
-#               value = editor.currentText()
-#               values = self.editors[name][1]
-#               if value not in values:
-#                   values.append(value)
-#
-#               QStyledItemDelegate.setModelData(self, editor, model, idx)
     
     #---------------------------------------------------------------------------    
     #
@@ -168,18 +139,6 @@ class Selector(QTreeWidget):
                       'X',
                       'Y',
                       'Timestamp' ]
-
-#   StdParamsNameMap =\
-#   {
-#       'Ref'       : 'Ref',
-#       'LibRef'    : 'LibRef',
-#       'Value'     : 'Fields[1].Text',
-#       'Footprint' : 'Fields[2].Text',
-#       'DocSheet'  : 'Fields[3].Text',
-#       'X'         : 'X',
-#       'Y'         : 'Y',
-#       'Timestamp' : 'Timestamp'
-#   }
 
     FieldItemsTable = [ ['X',                'X',           None,                         '0'          ],
                         ['Y',                'Y',           None,                         '0'          ],
@@ -205,7 +164,6 @@ class Selector(QTreeWidget):
         self.setItemDelegate(self.ItemsDelegate)
     
         self.itemChanged.connect(self.item_changed)
-        self.currentItemChanged.connect(self.current_item_changed)
         self.ItemsDelegate.edit_finished.connect(self.edit_finished_slot)
         
         self.state = Qt.Unchecked
@@ -216,9 +174,34 @@ class Selector(QTreeWidget):
             item = self.currentItem()
             col  = self.currentColumn()
             self.editItem(item, col)
+            
+        elif e.key() == Qt.Key_Left or e.key() == Qt.Key_Right:
+                curr_idx = self.currentIndex()
+                if e.key() == Qt.Key_Left:
+                    if curr_idx.column() > 0:
+                        next_idx = curr_idx.sibling(curr_idx.row(), curr_idx.column()-1)
+                        self.setCurrentIndex(next_idx)
+                else: 
+                    if curr_idx.column() < self.colSELOPT:
+                        next_idx = curr_idx.sibling(curr_idx.row(), curr_idx.column()+1)
+                        self.setCurrentIndex(next_idx)
+                        
+        elif (e.key() == Qt.Key_Up or e.key() == Qt.Key_Down) and e.modifiers() == Qt.ControlModifier:
+            item = self.currentItem()
+            idx  = self.currentIndex()
+            if e.key() == Qt.Key_Up:
+                if item.childCount():
+                    self.collapseItem(item)
+                else:
+                    if item.parent():
+                        self.collapseItem( item.parent() )
+                        p_idx = idx.parent()
+                        self.setCurrentIndex( p_idx.sibling( p_idx.row(), idx.column() ) )
+            else:
+                if item.childCount():
+                    self.expandItem(item)
         else:
             QTreeWidget.keyPressEvent(self, e)
-        
     #---------------------------------------------------------------------------    
     def addParent(self, parent, column, title, data):
         item = QTreeWidgetItem(parent, [title])
@@ -313,10 +296,6 @@ class Selector(QTreeWidget):
             item.setData(self.colVALUE, Qt.EditRole, '')
             item.setData(self.colSELOPT, Qt.EditRole, self.sel_options[0])
     #---------------------------------------------------------------------------    
-    def current_item_changed(self, curr, prev):
-        print('selector::current_item_changed')
-
-    #---------------------------------------------------------------------------    
     def edit_finished_slot(self, data):
         print('edit_finished_slot')
 
@@ -342,7 +321,7 @@ class Selector(QTreeWidget):
         print('select_comps')
         
         sel_refs = list( self.comps_dict.keys() )
-        #print(sel_refs)
+        sel = False
         
         for i in range( self.topLevelItemCount() ):
             item = self.topLevelItem(i)
@@ -357,7 +336,6 @@ class Selector(QTreeWidget):
                 for c in self.comps:
                     comp = c[0]
                     
-                    #print(c[0].Ref, name, value, sel_opt)
                     if name in self.NonFieldProps:
                         prop_val = getattr(comp, name)
                     else:
@@ -367,13 +345,12 @@ class Selector(QTreeWidget):
                         else:
                             continue
                         
-                    #print('prop_val: ', prop_val)
                     if (sel_opt == '+' and value == prop_val) or\
                        (sel_opt == '-' and value != prop_val) or\
                        (sel_opt == 're' and re.match(value, prop_val)):
                         refs.append(c[0].Ref)
+                        sel = True
                 
-               # print('refs: ', refs)
                 sel_refs = list(set(sel_refs) & set(refs))
                 
             for j in range( item.childCount() ):
@@ -381,7 +358,6 @@ class Selector(QTreeWidget):
                 sel_opt = field_item.data(self.colSELOPT, Qt.DisplayRole)
                 refs = []
                 if sel_opt:
-                    #fi_name  = field_item.data(self.colNAME, Qt.DisplayRole)
                     finame = self.FieldItemsTable[j][1]
                     value  = field_item.data(self.colVALUE, Qt.DisplayRole)
                 
@@ -393,16 +369,16 @@ class Selector(QTreeWidget):
                         else:
                             continue
 
-                        #print(c[0].Ref, value, prop_val)
                         if (sel_opt == '+' and value == prop_val) or\
                            (sel_opt == '-' and value != prop_val) or\
                            (sel_opt == 're' and re.match(value, prop_val)):
                             refs.append(c[0].Ref)
+                            sel = True
                             
                     sel_refs = list(set(sel_refs) & set(refs))
                                     
-        #print(sorted(sel_refs))     
-        self.select_comps_signal.emit(sel_refs)       
+        if sel:     # select only if at least one components match select option
+            self.select_comps_signal.emit(sel_refs)       
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    

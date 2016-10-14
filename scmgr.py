@@ -16,16 +16,17 @@ from utils     import *
 from cmpmgr    import *
 
 from PyQt5.Qt        import Qt
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QAction, QComboBox,
-                             QTextEdit, QVBoxLayout,QHBoxLayout, QGridLayout, QSplitter, QStyledItemDelegate,
-                             QAbstractItemDelegate, QCheckBox, 
-                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem,
-                             QAbstractItemView, QHeaderView, QMainWindow, QApplication, QCommonStyle,
-                             QDialog, QFileDialog, QInputDialog, QMessageBox, QTabWidget, QDialogButtonBox)
+from PyQt5.QtWidgets import (QWidget, QMainWindow, QApplication,
+                             QGroupBox,  QVBoxLayout,QHBoxLayout, QSplitter, 
+                             QTextBrowser, QTableWidget, QTableWidgetItem, 
+                             QListWidget, QListWidgetItem,QAbstractItemView, QHeaderView, 
+                             QAction, QDialog, QFileDialog, QInputDialog, 
+                             QTabWidget, QPushButton, QDialogButtonBox)
+
 
 from PyQt5.Qt     import QShortcut, QKeySequence
-from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
-from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
+from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent, QFont
+from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel, QUrl
 from PyQt5.QtCore import QT_VERSION_STR
         
 VERSION = '0.1.0'
@@ -195,6 +196,59 @@ class TSettingsDialog(QDialog):
         self.close()
         
 #-------------------------------------------------------------------------------
+class THelpForm(QWidget):
+    
+    def __init__(self, parent, title, path):
+        #super().__init__(parent, Qt.WA_DeleteOnClose )
+        super().__init__(parent, Qt.Window)
+        
+        self.text_browser  = QTextBrowser(self)
+        #self.text_browser  = QWebEngineView(self)
+        self.home_button   = QPushButton('Home', self)
+        self.back_button   = QPushButton('Back', self)
+        self.close_button  = QPushButton('Close', self)
+        
+        self.layout = QVBoxLayout(self)
+        self.btn_widget = QWidget(self)
+        self.btn_layout = QHBoxLayout(self.btn_widget)
+        self.btn_layout.addWidget(self.home_button)
+        self.btn_layout.addWidget(self.back_button)
+        self.btn_layout.addStretch(1)
+        self.btn_layout.addWidget(self.close_button)
+        
+        self.shortcutEscape  = QShortcut(QKeySequence(Qt.Key_Escape), self)
+        self.shortcutEscape.activated.connect(self.close)
+        
+        self.layout.addWidget(self.btn_widget)
+        self.layout.addWidget(self.text_browser)
+        
+        self.home_button.clicked.connect(self.text_browser.home)
+        self.back_button.clicked.connect(self.text_browser.backward)
+        self.close_button.clicked.connect(self.close)
+        
+        
+        self.text_browser.setSearchPaths(['scmgr/doc'])
+        self.text_browser.setSource(QUrl(path))
+#       f = QFont()
+#       f.setPointSize(14)
+#       self.text_browser.setFont(f)
+        
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+
+        if Settings.contains('help-window'):
+            self.restoreGeometry(Settings.value('help-window'))
+            #pos_x, pos_y, width, height = Settings.value('help-window')
+        else:
+            pos_x, pos_y, width, height = 0, 0, 640, 640
+            self.setGeometry(pos_x, pos_y, width, height)
+        
+        self.window().setWindowTitle(title)
+        self.show()
+    #--------------------------------------------------------------------------------
+    def closeEvent(self, event):
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        Settings.setValue( 'help-window', self.saveGeometry() )
+#-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
 #    class EventFilter(QObject):
@@ -285,7 +339,7 @@ class MainWindow(QMainWindow):
         self.Inspector.add_property()
     #--------------------------------------------------------------------------------
     def remove_user_property(self):
-        self.Inspector.save_cmps()
+        #self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
 
         self.Inspector.remove_property()
@@ -357,6 +411,12 @@ class MainWindow(QMainWindow):
         settingsAction.setStatusTip('Edit settings')
         settingsAction.triggered.connect(self.edit_settings)
         
+        helpAction = QAction(QIcon( os.path.join('scmgr', 'help_book24.png') ), 'Help', self)
+        helpAction.setShortcut('F1')
+        helpAction.setStatusTip('Help')
+        helpAction.triggered.connect(self.show_help)
+        
+                
         self.statusBar().showMessage('Ready')
 
         #--------------------------------------------
@@ -379,15 +439,22 @@ class MainWindow(QMainWindow):
         
         #--------------------------------------------
         #
+        #    Help Menu
+        #
+        optionsMenu = menubar.addMenu('&Help')
+        optionsMenu.addAction(helpAction)
+                
+        #--------------------------------------------
+        #
         #    Toolbar
         #
         toolbar = self.addToolBar('Exit')
+        toolbar.addAction(exitAction)        
         toolbar.addAction(openAction)        
         toolbar.addAction(saveAction)        
         toolbar.addAction(saveAsAction)        
-        toolbar.addAction(exitAction)        
         toolbar.addAction(settingsAction)        
-        
+        toolbar.addAction(helpAction)        
         
         #----------------------------------------------------
         #
@@ -406,7 +473,7 @@ class MainWindow(QMainWindow):
         self.CmpTabLayout.setSizeConstraint(QVBoxLayout.SetMaximumSize)
 
         self.CmpTable       = ComponentsTable(self) 
-        self.CmpChooseButton = QPushButton('Choose', self)
+        #self.CmpChooseButton = QPushButton('Choose', self)
         
         self.CmpTabLayout.addWidget(self.CmpTable)
         #self.CmpTabLayout.addWidget(self.CmpChooseButton)
@@ -426,8 +493,7 @@ class MainWindow(QMainWindow):
         self.SelectorBtnLayout.setContentsMargins(4,10,4,4)
         self.SelectorBtnLayout.setSpacing(10)
 
-        self.Selector       = Selector(self)
-        #self.SelCheckBox    = QCheckBox('Use Component As Template', self)
+        self.Selector = Selector(self)
 
         self.SelApplyButton = QPushButton('Apply', self)
         self.SelApplyButton.setToolTip('Alt+S: Apply selection patterns to components')
@@ -444,7 +510,6 @@ class MainWindow(QMainWindow):
         self.SelectorBtnLayout.addWidget(self.SelApplyButton)
         self.SelectorBtnLayout.addWidget(self.SelClearButton)
         self.SelectorLayout.addWidget(self.SelectorBtnWidget)
-        #self.SelectorLayout.addWidget(self.SelCheckBox)
         
         self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_S), self)
         self.shortcutSelApply.activated.connect(self.Selector.apply_slot)
@@ -461,9 +526,19 @@ class MainWindow(QMainWindow):
         #
         self.Inspector       = Inspector(self)
         self.FieldInspector  = FieldInspector(self)
+
+        self.InspectorBtnWidget = QWidget(self)
+        self.InspectorBtnLayout = QHBoxLayout(self.InspectorBtnWidget)
+        self.InspectorBtnLayout.setContentsMargins(4,10,4,4)
+        self.InspectorBtnLayout.setSpacing(10)
+        
+
         self.AddUserProperty    = QPushButton('Add Property', self)
+        self.AddUserProperty.setToolTip('Alt+A: Add new user property')
         self.DeleteUserProperty = QPushButton('Delete Property', self)
+        self.DeleteUserProperty.setToolTip('Alt+Delete: Delete user property')
         self.RenameUserProperty = QPushButton('Rename Property', self)
+        self.RenameUserProperty.setToolTip('Alt+R: Rename user property')
         
         self.InspectorBox    = QGroupBox('Inspector', self)
         self.InspectorSplit  = QSplitter(Qt.Vertical, self)
@@ -475,10 +550,22 @@ class MainWindow(QMainWindow):
         self.InspectorSplit.addWidget(self.Inspector)
         self.InspectorSplit.addWidget(self.FieldInspector)
         self.InspectorLayout.addWidget(self.InspectorSplit)
-        self.InspectorLayout.addWidget(self.AddUserProperty)
-        self.InspectorLayout.addWidget(self.DeleteUserProperty)
-        self.InspectorLayout.addWidget(self.RenameUserProperty)
+        
+        self.InspectorBtnLayout.addWidget(self.AddUserProperty)
+        self.InspectorBtnLayout.addWidget(self.DeleteUserProperty)
+        self.InspectorBtnLayout.addWidget(self.RenameUserProperty)
                 
+        self.InspectorLayout.addWidget(self.InspectorBtnWidget)
+
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_A), self)
+        self.shortcutSelApply.activated.connect(self.add_user_property)
+        
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_Delete), self)
+        self.shortcutSelApply.activated.connect(self.remove_user_property)
+        
+        self.shortcutSelApply = QShortcut(QKeySequence(Qt.ALT + Qt.Key_R), self)
+        self.shortcutSelApply.activated.connect(self.rename_user_property)
+        
         #----------------------------------------------------
 
         self.Splitter = QSplitter(self)
@@ -658,6 +745,10 @@ class MainWindow(QMainWindow):
         SettingsDialog.resize(400, 400)
         SettingsDialog.Tabs.setMinimumWidth(800)
         SettingsDialog.show()
+    #---------------------------------------------------------------------------
+    def show_help(self):
+        help = THelpForm(self, 'Help', 'main.html')
+        
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 

@@ -78,6 +78,12 @@
             <Folder
                 Name="Schematic Component Manager"
                 Filters="">
+                <Folder
+                    Name="Doc"
+                    Filters="*.html">
+                    <F N="scmgr/doc/main.html"/>
+                    <F N="scmgr/doc/settings.html"/>
+                </Folder>
                 <F N="scmgr/cmpmgr.py"/>
                 <F N="scmgr/cmptable.py"/>
                 <F N="scmgr/inspector.py"/>
