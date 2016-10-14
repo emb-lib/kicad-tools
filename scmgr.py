@@ -233,12 +233,21 @@ class THelpForm(QWidget):
 #       f.setPointSize(14)
 #       self.text_browser.setFont(f)
         
-        self.setGeometry(300, 200, 1024, 800)
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+
+        if Settings.contains('help-window'):
+            self.restoreGeometry(Settings.value('help-window'))
+            #pos_x, pos_y, width, height = Settings.value('help-window')
+        else:
+            pos_x, pos_y, width, height = 0, 0, 640, 640
+            self.setGeometry(pos_x, pos_y, width, height)
         
         self.window().setWindowTitle(title)
         self.show()
-    
-    
+    #--------------------------------------------------------------------------------
+    def closeEvent(self, event):
+        Settings = QSettings('kicad-tools', 'Schematic Component Manager')
+        Settings.setValue( 'help-window', self.saveGeometry() )
 #-------------------------------------------------------------------------------
 class MainWindow(QMainWindow):
     
