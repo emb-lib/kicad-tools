@@ -422,7 +422,16 @@ class MainWindow(QMainWindow):
         helpAction.setStatusTip('User\'s Manual')
         helpAction.triggered.connect(self.show_user_manual_slot)
         
+        helpSDAction = QAction(QIcon( os.path.join('scmgr', 'gear24.png') ), 'Settings Dialog', self)
+        helpSDAction.setShortcut('Ctrl+F1')
+        helpSDAction.setStatusTip('Settings Dialog Help')
+        helpSDAction.triggered.connect(self.show_setting_dialog_help_slot)
                 
+        helpHKAction = QAction(QIcon( os.path.join('scmgr', 'rocket24.png') ), 'Hotkeys', self)
+        helpHKAction.setShortcut('Shift+F1')
+        helpHKAction.setStatusTip('Hotkeys Help')
+        helpHKAction.triggered.connect(self.show_hotkeys_help_slot)
+
         self.statusBar().showMessage('Ready')
 
         #--------------------------------------------
@@ -449,7 +458,8 @@ class MainWindow(QMainWindow):
         #
         helpMenu = menubar.addMenu('&Help')
         helpMenu.addAction(helpAction)
-        helpMenu.addAction('Settings Dialog', self.show_setting_dialog_help_slot)
+        helpMenu.addAction(helpSDAction)
+        helpMenu.addAction(helpHKAction)
                 
         #--------------------------------------------
         #
@@ -758,6 +768,9 @@ class MainWindow(QMainWindow):
     #---------------------------------------------------------------------------
     def show_setting_dialog_help_slot(self):
         help = THelpForm(self, 'Settings Dialog', 'settings.html')
+    #---------------------------------------------------------------------------
+    def show_hotkeys_help_slot(self):
+        help = THelpForm(self, 'Hotkeys', 'hotkeys.html')
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
