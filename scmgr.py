@@ -179,6 +179,10 @@ class TSettingsDialog(QDialog):
         #---------------------------------------------------
         self.setWindowTitle('Settings')
         self.setModal(True)
+        #---------------------------------------------------
+        self.shortcutHelp  = QShortcut(QKeySequence(Qt.Key_F1), self)
+        self.shortcutHelp.activated.connect(self.show_help)
+
     #-----------------------------------------------------------------    
     def save_settings(self):
         print('save settings')
@@ -194,7 +198,9 @@ class TSettingsDialog(QDialog):
     def cancel(self):
         print('close settings dialog')
         self.close()
-        
+    #---------------------------------------------------------------------------
+    def show_help(self):
+        help = THelpForm(self, 'Settings Dialog', 'settings.html')
 #-------------------------------------------------------------------------------
 class THelpForm(QWidget):
     
@@ -411,10 +417,10 @@ class MainWindow(QMainWindow):
         settingsAction.setStatusTip('Edit settings')
         settingsAction.triggered.connect(self.edit_settings)
         
-        helpAction = QAction(QIcon( os.path.join('scmgr', 'help_book24.png') ), 'Help', self)
+        helpAction = QAction(QIcon( os.path.join('scmgr', 'help_book24.png') ), 'User\'s Manual', self)
         helpAction.setShortcut('F1')
-        helpAction.setStatusTip('Help')
-        helpAction.triggered.connect(self.show_help)
+        helpAction.setStatusTip('User\'s Manual')
+        helpAction.triggered.connect(self.show_user_manual_slot)
         
                 
         self.statusBar().showMessage('Ready')
@@ -441,8 +447,9 @@ class MainWindow(QMainWindow):
         #
         #    Help Menu
         #
-        optionsMenu = menubar.addMenu('&Help')
-        optionsMenu.addAction(helpAction)
+        helpMenu = menubar.addMenu('&Help')
+        helpMenu.addAction(helpAction)
+        helpMenu.addAction('Settings Dialog', self.show_setting_dialog_help_slot)
                 
         #--------------------------------------------
         #
@@ -746,9 +753,11 @@ class MainWindow(QMainWindow):
         SettingsDialog.Tabs.setMinimumWidth(800)
         SettingsDialog.show()
     #---------------------------------------------------------------------------
-    def show_help(self):
-        help = THelpForm(self, 'Help', 'main.html')
-        
+    def show_user_manual_slot(self):
+        help = THelpForm(self, 'User\'s Manual', 'main.html')
+    #---------------------------------------------------------------------------
+    def show_setting_dialog_help_slot(self):
+        help = THelpForm(self, 'Settings Dialog', 'settings.html')
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
