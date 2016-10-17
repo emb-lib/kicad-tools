@@ -665,6 +665,7 @@ class FieldInspector(QTreeWidget):
         if self.load_field_sem:
             return
 
+        self.save_fields()
         self.data_changed.emit()    
     #---------------------------------------------------------------------------    
     def curr_item_changed(self, item, prev):
