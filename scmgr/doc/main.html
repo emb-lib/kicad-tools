@@ -100,11 +100,11 @@ selecting of components and review of results of Selector Tool use.</p>
 <table>
     <tr>
       <td><b>Name</b></td>
-      <td><b>Description</b></td>
+      <td><b>Controls</b></td>
     </tr>
     <tr>
       <td>Navigation</td>
-      <td>Up/Down arrow keys</td>
+      <td>Up/Down keys</td>
     </tr>
     <tr>
       <td>Load current component</td>
@@ -152,11 +152,11 @@ property name. Also, keyboard can be used to expand/collapse such properties (se
 <table>
     <tr>
       <td><b>Name</b></td>
-      <td><b>Description</b></td>
+      <td><b>Controls</b></td>
     </tr>
     <tr>
       <td>Navigation</td>
-      <td>Up/Down/Left/Right arrow keys</td>
+      <td>Up/Down/Left/Right keys</td>
     </tr>
     <tr>
       <td>Expand/Collapse property</td>
@@ -176,6 +176,21 @@ property name. Also, keyboard can be used to expand/collapse such properties (se
     </tr>
 </table>
 
+<p>The user can add properties as selection criteria. Another was is to use
+any component as template. Selector tool has three buttons to carry out 
+typical actions:</p>
+
+<ul>
+  <font class="li1">
+    <li><b>Use Component</b>. Use current component (that is selected) in Components 
+        Table tool as template - all component proerties are copied in Selector
+         Tool table.</li>
+    <li><b>Apply</b>. Process schematic components to select group of components that
+           match selection criterias. Count of selected components displayed in status 
+           line.</li>
+    <li><b>Clear</b>. Removes all items in Selector tool table.</li>
+  </font>
+</ul>
 
 <h2>Inspector</h2>
 
@@ -201,7 +216,7 @@ is simple text-string editor; in case of multiple values the editor is editable 
 <table>
     <tr>
       <td><b>Name</b></td>
-      <td><b>Description</b></td>
+      <td><b>Controls</b></td>
     </tr>
     <tr>
       <td>Navigation</td>
@@ -221,18 +236,75 @@ is simple text-string editor; in case of multiple values the editor is editable 
     </tr>
 </table>
 
+<p>Property Inspector subtool support text substituting in property values.
+If value string contains reference to another property (substitution pattern)
+ the reference will replaced with the corresponding value. The reference 
+ consists of leading "$" symbol and the referenced property name - for 
+ example, <i>"$Type"</i> is reference to property <i>"Type"</i>.</p>
+
+<p>Another feature to automate property value generation is property templates.
+Property template is user-defined dedicated property with name consisting of
+"@" symbol and target property name. For example, <i>"@Value"</i> is property 
+template that targeted to <i>"Value"</i> property. Value of the property  
+template can contain plain text and substitution patterns (references to the
+other component properties). The value of the property template is not changed
+but used to construct result string that is used as value of the target 
+component property. This allows to create complex property values using
+other component properties as sources. For example, some comonent has the
+following properties:</p>
+
+<p></p>
+<table>
+    <tr>
+         <td><b>Property Name</b></td>
+         <td><b>Property Value</b></td>
+    </tr>
+    <tr>
+         <td>Value</td>
+         <td>ceramic capacitor</td>
+    </tr>
+    <tr>
+         <td>Type</td>
+         <td>X7R</td>
+    </tr>
+    <tr>
+         <td>Footprint</td>
+         <td>CAP0603</td>
+    </tr>
+    <tr>
+         <td>Nominal</td>
+         <td>0.1uF</td>
+    </tr>
+    <tr>
+         <td>Tolerance</td>
+         <td>5%</td>
+    </tr>
+    <tr>
+         <td>Voltage</td>
+         <td>50V</td>
+    </tr>
+    <tr>
+         <td>@Value</td>
+         <td>Capacitor $Nominal $Tolerance $Voltage $Type $Footprint</td>
+    </tr>
+</table>
+
+<p>The resulting value of the component property <i>"Value"</i>: will be:</p>
+
+<p><i>Capacitor 0.1uF %5 50V X7R CAP0603</i></p>
+
+
 <h2>Settings</h2>
 
 <p>There are some features that require customization.</p>
 
-<p> First, Components Table <b>Description</b> column view can be set up. 
-This is intended for convenience: the user can configure contents for each 
-component reference prefix.</p>
+<p> First, Components Table <b>Description</b> column view can be tuned 
+by user to improve convenience and usability.</p>
 
 <p>Next, some schematics contain components that are not true components - such
 as power symbols, custom bus entry points and so on. There is no need to work
-with these components, so the components should be removed from Components Table
-tool. This can be done with adding corresponding component prefixes to ignore list.</p>
+with these components, therefore the components should not be loaded to Components Table
+tool. This can be done by adding corresponding component prefixes to ignore list.</p>
 
 <p>See <a href="settings.html">Settings Dialog</a> for details</p>
 </body>
