@@ -208,17 +208,17 @@ class THelpForm(QWidget):
         #super().__init__(parent, Qt.WA_DeleteOnClose )
         super().__init__(parent, Qt.Window)
         
-        self.text_browser  = QTextBrowser(self)
+        self.text_browser   = QTextBrowser(self)
         #self.text_browser  = QWebEngineView(self)
-        self.home_button   = QPushButton('Home', self)
-        self.back_button   = QPushButton('Back', self)
-        self.close_button  = QPushButton('Close', self)
+        self.back_button    = QPushButton('Back', self)
+        self.forward_button = QPushButton('Forward', self)
+        self.close_button   = QPushButton('Close', self)
         
         self.layout = QVBoxLayout(self)
         self.btn_widget = QWidget(self)
         self.btn_layout = QHBoxLayout(self.btn_widget)
-        self.btn_layout.addWidget(self.home_button)
         self.btn_layout.addWidget(self.back_button)
+        self.btn_layout.addWidget(self.forward_button)
         self.btn_layout.addStretch(1)
         self.btn_layout.addWidget(self.close_button)
         
@@ -228,8 +228,8 @@ class THelpForm(QWidget):
         self.layout.addWidget(self.btn_widget)
         self.layout.addWidget(self.text_browser)
         
-        self.home_button.clicked.connect(self.text_browser.home)
         self.back_button.clicked.connect(self.text_browser.backward)
+        self.forward_button.clicked.connect(self.text_browser.forward)
         self.close_button.clicked.connect(self.close)
         
         
