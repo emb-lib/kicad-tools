@@ -54,14 +54,12 @@ class ComponentsTable(QTableWidget):
     #---------------------------------------------------------------------------    
     def cell_chosen(self, row, col):
         items = self.selectedItems()
-        if len(items) == 0:
-            return
-            
         refs = []
+     #   if len(items) > 0:
         for i in items:
             if i.column() == 0:
                 refs.append( self.CmpDict[i.data(Qt.DisplayRole)] )
-        
+    
         self.cells_chosen.emit(refs)
         self.cmps_selected.emit(str(len(refs)) + ' components selected')
     #---------------------------------------------------------------------------    

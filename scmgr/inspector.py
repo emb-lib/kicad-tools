@@ -287,7 +287,11 @@ class Inspector(QTreeWidget):
                 
         vals = list(set(l))
         vals.sort()
-        if len(vals) == 1:
+        if len(vals) == 0:
+            self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
+            item.setData(colDATA, Qt.DisplayRole, '')
+
+        elif len(vals) == 1:
             self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
 
@@ -329,6 +333,9 @@ class Inspector(QTreeWidget):
     #---------------------------------------------------------------------------
     def load_user_defined_params(self):
         self.topLevelItem(1).takeChildren()
+        if not self.comps:
+            return 
+            
         user_fields = self.user_defined_params()        
 
         user_fields_names = list(user_fields.keys())
@@ -358,7 +365,7 @@ class Inspector(QTreeWidget):
         
         self.comps = comps
         self.ItemsDelegate.clear_editor_data()
-        comp = self.comps[0]
+       # comp = self.comps[0]
         
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
@@ -759,7 +766,7 @@ class FieldInspector(QTreeWidget):
         comps = self.comps
         param = self.param
         
-        if param in NO_FIELD_PARAMS:
+        if (param in NO_FIELD_PARAMS) or (len(comps) == 0):
             for i in range( self.topLevelItem(0).childCount() ):
                 item = self.topLevelItem(0).child(i)
                 item.setData(colDATA, Qt.DisplayRole, '')

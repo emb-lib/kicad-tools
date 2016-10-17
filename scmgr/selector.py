@@ -286,7 +286,8 @@ class Selector(QTreeWidget):
         self.update_items()
     #---------------------------------------------------------------------------    
     def comp_template_slot(self, comps):
-        self.comp = comps[0][0]
+        if len(comps):
+            self.comp = comps[0][0]
       #  self.update_items(self.state)  # clear items when template mode turned on
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
@@ -377,8 +378,10 @@ class Selector(QTreeWidget):
                             
                     sel_refs = list(set(sel_refs) & set(refs))
                                     
-        if sel:     # select only if at least one components match select option
-            self.select_comps_signal.emit(sel_refs)       
+        if not sel:     # select only if at least one components match select option
+            sel_refs = []
+            
+        self.select_comps_signal.emit(sel_refs)       
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    
