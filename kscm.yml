@@ -1,0 +1,7 @@
+
+ComponentTable: 
+    Width:     260
+    RefWidth:  60
+    NameWidth: 153
+    
+Ignore: [LBL]
