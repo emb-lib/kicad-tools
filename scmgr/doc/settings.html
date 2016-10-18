@@ -31,11 +31,66 @@
 <body>
 <h1>Settings Dialog</h1>
 
-<h2>General</h2>
+<h2>Components Table View</h2>
 
-<p>Schematic Component Manager (SCM) is intended for simplifying property editing.</p>
+<p>Componets Table Description column contents can be configured to achieve informative 
+and convenient view. The user can specify template string for each componet reference prefix. 
+Template string can contain plain text and references to other properties of the component.
+The final description string is constructed from template using text substitutions where
+references to properties are replaced with the values of the corresponding properties.</p>
 
-<h3>Features:</h3>
+<p>For example, some component is capacitor (component reference prefix is <i>C</i>) and has the 
+following properties:</p>
+<p></p>
+<table>
+    <tr>
+         <td><b>Property Name</b></td>
+         <td><b>Property Value</b></td>
+    </tr>
+    <tr>
+         <td>Type</td>
+         <td>X7R</td>
+    </tr>
+    <tr>
+         <td>Footprint</td>
+         <td>CAP0805</td>
+    </tr>
+    <tr>
+         <td>Nominal</td>
+         <td>0.1uF</td>
+    </tr>
+    <tr>
+         <td>Voltage</td>
+         <td>50V</td>
+    </tr>
+</table>
+
+<p>Template string:</p>
+ 
+<p>"<i>Cap $Nominal, $Voltage, $Type, $Footprint</i>"</p>
+ 
+<p>will produce the final string:</p>
+
+<p>"<i>Cap 0.1uF, 50V, X7R, CAP0805</i>".</p>
+ 
+<p>Any component type (prefix) can be configured by similar manner.</p>
+
+<p>Components Table Description column settings editor is designed as a table
+consisting of two columns: components reference prefix and template string.
+To add item the user should double-click left mouse button or press 
+<i>F2</i> key on empty cell. To delete the item - press <i>Delete</i> key, 
+this will remove seleted row from the table. Any cell can be edited by
+double-click left mouse button or pressing <i>F2</i> key.</p>
+
+<p>Components which reference prefixes are not present in the table will use
+"LibRef" property value as default.</p>
+
+<h2>Component Ignore List</h2>
+
+<p>Component Ignore List is simple one column list containig component reference prefixes. 
+Any component that has matching reference will not be loaded in Components Table.</p>
+
+<p>To add item to the list press <i>Insert</i> key. To delete item press <i>Delete</i> key.</p>
 
 </body>
 </html>

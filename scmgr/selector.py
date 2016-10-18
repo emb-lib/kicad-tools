@@ -32,18 +32,6 @@ class Selector(QTreeWidget):
     select_comps_signal = pyqtSignal([list])
     
     #---------------------------------------------------------------------------
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.setIndentation(16)
-        self.setColumnCount(2)
-        self.header().resizeSection(2, 10)
-        #self.header().setSectionResizeMode(colNAME, QHeaderView.Interactive)
-        self.setHeaderLabels( ('Property', 'Value' ) );
-        
-        self.model().setHeaderData(0, Qt.Horizontal, QColor('red'), Qt.BackgroundColorRole)
-    
-    #---------------------------------------------------------------------------
     class SelectorItemsDelegate(QStyledItemDelegate):
     
         TEXT_DELEGATE = 0
@@ -158,6 +146,7 @@ class Selector(QTreeWidget):
         self.setColumnCount(3)
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.header().resizeSection(1, 200)
+        self.header().resizeSection(2, 16)
         self.header().setSectionResizeMode(self.colNAME, QHeaderView.Interactive)
         self.setHeaderLabels( ('Property', 'Value', 'Sel') );
         self.ItemsDelegate = self.SelectorItemsDelegate(self)
@@ -286,7 +275,8 @@ class Selector(QTreeWidget):
         self.update_items()
     #---------------------------------------------------------------------------    
     def comp_template_slot(self, comps):
-        self.comp = comps[0][0]
+        if len(comps):
+            self.comp = comps[0][0]
       #  self.update_items(self.state)  # clear items when template mode turned on
     #---------------------------------------------------------------------------    
     def item_changed(self, item, col):
@@ -377,8 +367,10 @@ class Selector(QTreeWidget):
                             
                     sel_refs = list(set(sel_refs) & set(refs))
                                     
-        if sel:     # select only if at least one components match select option
-            self.select_comps_signal.emit(sel_refs)       
+        if not sel:     # select only if at least one components match select option
+            sel_refs = []
+            
+        self.select_comps_signal.emit(sel_refs)       
     #---------------------------------------------------------------------------    
     
 #-------------------------------------------------------------------------------    

@@ -81,6 +81,7 @@
                 <Folder
                     Name="Doc"
                     Filters="*.html">
+                    <F N="scmgr/doc/hotkeys.html"/>
                     <F N="scmgr/doc/main.html"/>
                     <F N="scmgr/doc/settings.html"/>
                 </Folder>

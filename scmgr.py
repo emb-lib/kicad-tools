@@ -179,6 +179,10 @@ class TSettingsDialog(QDialog):
         #---------------------------------------------------
         self.setWindowTitle('Settings')
         self.setModal(True)
+        #---------------------------------------------------
+        self.shortcutHelp  = QShortcut(QKeySequence(Qt.Key_F1), self)
+        self.shortcutHelp.activated.connect(self.show_help)
+
     #-----------------------------------------------------------------    
     def save_settings(self):
         print('save settings')
@@ -194,7 +198,9 @@ class TSettingsDialog(QDialog):
     def cancel(self):
         print('close settings dialog')
         self.close()
-        
+    #---------------------------------------------------------------------------
+    def show_help(self):
+        help = THelpForm(self, 'Settings Dialog', 'settings.html')
 #-------------------------------------------------------------------------------
 class THelpForm(QWidget):
     
@@ -202,17 +208,17 @@ class THelpForm(QWidget):
         #super().__init__(parent, Qt.WA_DeleteOnClose )
         super().__init__(parent, Qt.Window)
         
-        self.text_browser  = QTextBrowser(self)
+        self.text_browser   = QTextBrowser(self)
         #self.text_browser  = QWebEngineView(self)
-        self.home_button   = QPushButton('Home', self)
-        self.back_button   = QPushButton('Back', self)
-        self.close_button  = QPushButton('Close', self)
+        self.back_button    = QPushButton('Back', self)
+        self.forward_button = QPushButton('Forward', self)
+        self.close_button   = QPushButton('Close', self)
         
         self.layout = QVBoxLayout(self)
         self.btn_widget = QWidget(self)
         self.btn_layout = QHBoxLayout(self.btn_widget)
-        self.btn_layout.addWidget(self.home_button)
         self.btn_layout.addWidget(self.back_button)
+        self.btn_layout.addWidget(self.forward_button)
         self.btn_layout.addStretch(1)
         self.btn_layout.addWidget(self.close_button)
         
@@ -222,8 +228,8 @@ class THelpForm(QWidget):
         self.layout.addWidget(self.btn_widget)
         self.layout.addWidget(self.text_browser)
         
-        self.home_button.clicked.connect(self.text_browser.home)
         self.back_button.clicked.connect(self.text_browser.backward)
+        self.forward_button.clicked.connect(self.text_browser.forward)
         self.close_button.clicked.connect(self.close)
         
         
@@ -411,12 +417,21 @@ class MainWindow(QMainWindow):
         settingsAction.setStatusTip('Edit settings')
         settingsAction.triggered.connect(self.edit_settings)
         
-        helpAction = QAction(QIcon( os.path.join('scmgr', 'help_book24.png') ), 'Help', self)
+        helpAction = QAction(QIcon( os.path.join('scmgr', 'help_book24.png') ), 'User\'s Manual', self)
         helpAction.setShortcut('F1')
-        helpAction.setStatusTip('Help')
-        helpAction.triggered.connect(self.show_help)
+        helpAction.setStatusTip('User\'s Manual')
+        helpAction.triggered.connect(self.show_user_manual_slot)
         
+        helpSDAction = QAction(QIcon( os.path.join('scmgr', 'gear24.png') ), 'Settings Dialog', self)
+        helpSDAction.setShortcut('Ctrl+F1')
+        helpSDAction.setStatusTip('Settings Dialog Help')
+        helpSDAction.triggered.connect(self.show_setting_dialog_help_slot)
                 
+        helpHKAction = QAction(QIcon( os.path.join('scmgr', 'rocket24.png') ), 'Hotkeys', self)
+        helpHKAction.setShortcut('Shift+F1')
+        helpHKAction.setStatusTip('Hotkeys Help')
+        helpHKAction.triggered.connect(self.show_hotkeys_help_slot)
+
         self.statusBar().showMessage('Ready')
 
         #--------------------------------------------
@@ -441,8 +456,10 @@ class MainWindow(QMainWindow):
         #
         #    Help Menu
         #
-        optionsMenu = menubar.addMenu('&Help')
-        optionsMenu.addAction(helpAction)
+        helpMenu = menubar.addMenu('&Help')
+        helpMenu.addAction(helpAction)
+        helpMenu.addAction(helpSDAction)
+        helpMenu.addAction(helpHKAction)
                 
         #--------------------------------------------
         #
@@ -746,9 +763,14 @@ class MainWindow(QMainWindow):
         SettingsDialog.Tabs.setMinimumWidth(800)
         SettingsDialog.show()
     #---------------------------------------------------------------------------
-    def show_help(self):
-        help = THelpForm(self, 'Help', 'main.html')
-        
+    def show_user_manual_slot(self):
+        help = THelpForm(self, 'User\'s Manual', 'main.html')
+    #---------------------------------------------------------------------------
+    def show_setting_dialog_help_slot(self):
+        help = THelpForm(self, 'Settings Dialog', 'settings.html')
+    #---------------------------------------------------------------------------
+    def show_hotkeys_help_slot(self):
+        help = THelpForm(self, 'Hotkeys', 'hotkeys.html')
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
