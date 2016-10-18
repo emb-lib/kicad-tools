@@ -14,8 +14,8 @@ from PyQt5.QtWidgets import (QApplication, QLineEdit,QComboBox,
                              QTreeWidget, QTreeWidgetItem, QAbstractItemView, QHeaderView, 
                              QInputDialog, QMessageBox)
 
-from PyQt5.Qt     import QShortcut, QKeySequence
-from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent
+from PyQt5.Qt     import QShortcut, QKeySequence, QStyle
+from PyQt5.QtGui  import QIcon, QBrush, QColor, QKeyEvent, QPen
 from PyQt5.QtCore import QSettings, pyqtSignal, QObject, QEvent, QModelIndex, QItemSelectionModel
 
 #-------------------------------------------------------------------------------
@@ -80,16 +80,17 @@ class Inspector(QTreeWidget):
         TEXT_DELEGATE = 0
         CBOX_DELEGATE = 1
         
+        #----------------------------------------------------------------
         def __init__(self, parent):
             super().__init__(parent)
             self.editors = {}
-        
+        #----------------------------------------------------------------
         def clear_editor_data(self):
             self.editors = {}
-            
+        #----------------------------------------------------------------    
         def add_editor_data(self, name, editor_type, editor_data = []):
             self.editors[name] = [editor_type, editor_data]
-            
+        #----------------------------------------------------------------    
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
                 name = idx.sibling(idx.row(), 0).data()
@@ -103,8 +104,7 @@ class Inspector(QTreeWidget):
                     editor.setEditable(True)
                     editor.addItems( self.editors[name][1] )
                     return editor
-                
-
+        #----------------------------------------------------------------
         def setEditorData(self, editor, idx):
             #print(editor.metaObject().className() )
             name = idx.sibling(idx.row(), 0).data()
@@ -113,7 +113,7 @@ class Inspector(QTreeWidget):
             else:
                 value = idx.model().data(idx, Qt.EditRole)
                 editor.set_index(value)
-
+        #----------------------------------------------------------------
         def setModelData(self, editor, model, idx):
             name = idx.sibling(idx.row(), 0).data()
             if self.editors[name][0] == self.TEXT_DELEGATE:
@@ -125,6 +125,29 @@ class Inspector(QTreeWidget):
                     values.append(value)
 
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
+        #----------------------------------------------------------------
+        def paint(self, painter, option, idx):
+            painter.save()
+                
+            # set background color
+            painter.setPen(QPen(Qt.NoPen))
+            
+            if idx.column() == 0:
+                ccode = 245
+                painter.setBrush(QBrush(QColor(ccode, ccode, ccode)))
+            else:
+                painter.setBrush(QBrush(Qt.transparent))
+
+            if not idx.parent().isValid():
+                painter.setBrush(QBrush(QColor(0xFF, 0xDC, 0xA4) ) )
+                    
+            painter.drawRect(option.rect)
+    
+            # draw the rest
+            
+            QStyledItemDelegate.paint(self, painter, option, idx)
+                
+            painter.restore()            
     #---------------------------------------------------------------------------    
     def add_property(self):
         print('Inspector::add property')
@@ -208,7 +231,6 @@ class Inspector(QTreeWidget):
         item = QTreeWidgetItem(parent, [title])
         item.setData(colDATA, Qt.DisplayRole, data)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable | flags)
-        
         return item
     #---------------------------------------------------------------------------    
     def item_row(self, item):
@@ -494,17 +516,17 @@ class FieldInspector(QTreeWidget):
 
         TEXT_DELEGATE = 0
         CBOX_DELEGATE = 1
-
+        #----------------------------------------------------------------
         def __init__(self, parent):
             super().__init__(parent)
             self.editors = {}
-
+        #----------------------------------------------------------------
         def clear_editor_data(self):
             self.editors = {}
-
+        #----------------------------------------------------------------
         def add_editor_data(self, name, editor_type, editor_data = []):
             self.editors[name] = [editor_type, editor_data]
-
+        #----------------------------------------------------------------
         def createEditor(self, parent, option, idx):
             if idx.column() == 1:
                 name = idx.sibling(idx.row(), 0).data()
@@ -518,8 +540,7 @@ class FieldInspector(QTreeWidget):
                     editor.setEditable(True)
                     editor.addItems( self.editors[name][1] )
                     return editor
-
-
+        #----------------------------------------------------------------
         def setEditorData(self, editor, idx):
             #print(editor.metaObject().className() )
             name = idx.sibling(idx.row(), 0).data()
@@ -528,7 +549,7 @@ class FieldInspector(QTreeWidget):
             else:
                 value = idx.model().data(idx, Qt.EditRole)
                 editor.set_index(value)
-
+        #----------------------------------------------------------------
         def setModelData(self, editor, model, idx):
             name = idx.sibling(idx.row(), 0).data()
             if self.editors[name][0] == self.TEXT_DELEGATE:
@@ -540,6 +561,29 @@ class FieldInspector(QTreeWidget):
                     values.append(value)
 
                 QStyledItemDelegate.setModelData(self, editor, model, idx)
+        #----------------------------------------------------------------        
+        def paint(self, painter, option, idx):
+            painter.save()
+
+            # set background color
+            painter.setPen(QPen(Qt.NoPen))
+
+            if idx.column() == 0:
+                ccode = 245
+                painter.setBrush(QBrush(QColor(ccode, ccode, ccode)))
+            else:
+                painter.setBrush(QBrush(Qt.transparent))
+
+            if not idx.parent().isValid():
+                painter.setBrush(QBrush(QColor(0xFF, 0xDC, 0xA4) ) )
+
+            painter.drawRect(option.rect)
+
+            # draw the rest
+
+            QStyledItemDelegate.paint(self, painter, option, idx)
+
+            painter.restore()            
     #---------------------------------------------------------------------------
     #
     #              Title              Field Name         Delegate         Delegate Data
