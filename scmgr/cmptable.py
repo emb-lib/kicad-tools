@@ -34,8 +34,9 @@ class ComponentsTable(QTableWidget):
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)   # disable edit cells
 
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
+        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Interactive)
+        self.horizontalHeader().resizeSection(1, 200)
         self.horizontalHeader().setStretchLastSection(True)
-        
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(20)
         self.setHorizontalHeaderLabels( ('Ref', 'Description') )
