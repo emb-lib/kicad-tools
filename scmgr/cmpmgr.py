@@ -96,18 +96,45 @@ class Component:
         self.Sheet   = sheet
         
     def parse_comp(self, rec):
-        self.rec = rec
-        r = re.search('L ([\w-]+) ([\w#]+)', rec)
+        self.rec        = rec
+        self.DisplayRef = ''
+        
+        #-----------------------------------------------------------
+        #
+        #     Alternative Component Reference
+        #
+        self.ar_list = re.findall('AR Path=.+', rec)
+        #-----------------------------------------------------------
+        #
+        #     Component Reference and Library Reference
+        #
+        r = re.search('L ([\w-]+) ([\w#]+[\d+|\?])', rec)
         if r:
             self.LibRef, self.Ref = r.groups()
+            if self.Ref[-1] == '?':
+                self.DisplayRef = self.Ref
+                for ar in self.ar_list:
+                    r = re.match('AR Path="\/\w+\/\w+"\sRef="(\w+)"\s+Part="\d+"', ar)
+                    if r:
+                        self.Ref = r.group(1)
+                        break
         else:
             print('E: invalid component L record, rec: "' + rec + '"')
             sys.exit(1)
            
-        if not re.match( '\D+\d+',  r.group(2) ):
+        #-----------------------------------------------------------
+        #
+        #     Check if schematic not annotated
+        #
+        #if not re.match( '\D+\d+',  r.group(2) ):
+        if self.Ref[-1] == '?':
             print('E: schematic must be annotated before loading in Component Manager' + os.linesep*2 + rec)
             sys.exit(2)
             
+        #-----------------------------------------------------------
+        #
+        #     Part No and  Timestamp
+        #
         r = re.search('U (\d+) (\d+) ([\w\d]+)', rec)
 
         if r:
@@ -116,6 +143,10 @@ class Component:
             print('E: invalid component U record, rec: "' + rec + '"')
             sys.exit(1)
 
+        #-----------------------------------------------------------
+        #
+        #     Position
+        #
         r = re.search('P (\d+) (\d+)', rec)
         if r:
             self.X, self.Y = r.groups()
@@ -123,6 +154,10 @@ class Component:
             print('E: invalid component P record, rec: "' + rec + '"')
             sys.exit(1)
             
+        #-----------------------------------------------------------
+        #
+        #     Fields
+        #
         cfre = re.compile('F\s+(\d+)\s+\"(.*?)\"\s+(H|V)\s+([\d-]+)\s+([\d-]+)\s+(\d+)\s+(\d+)\s+([LRCBT])\s+([LRCBT])([NI])([NB])\s+(?:\"(.*)\")*')
         r = re.findall(cfre, rec)
         
@@ -133,6 +168,10 @@ class Component:
         for i in r:
             self.Fields.append( ComponentField(self, i) )
         
+        #-----------------------------------------------------------
+        #
+        #     Trailer
+        #
         r = re.search('([ \t]+\d+\s+\d+\s+\d+\s+-*[01]\s+-*[01]\s+-*[01]\s+-*[01]\s+)', rec)
         if r:
             self.Trailer = r.groups()[0]
@@ -141,7 +180,7 @@ class Component:
             sys.exit(1)
          
         
-#       if self.Ref == 'A1':
+#       if self.Ref == 'D5':
 #           self.dump()
 
     #--------------------------------------------------------------
@@ -224,9 +263,13 @@ class Component:
     def create_cmp_rec(self):
         #print(self.Ref)
         rec_list = []
-        rec_list.append('L ' + self.LibRef + ' ' + self.Ref)
+        Ref = self.DisplayRef if self.DisplayRef else self.Ref
+        rec_list.append('L ' + self.LibRef + ' ' + Ref)
         rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
         rec_list.append('P ' + self.X + ' ' + self.Y)
+        
+        for ar in self.ar_list:
+            rec_list.append(ar)
         
         for f in self.Fields:
             frec = ['F', 
@@ -285,8 +328,9 @@ class ComponentManager(QObject):
         self.schdata = [self.read_file(fname)]
         
         pattern = '\$Sheet\s.+\s.+\sF0.+\sF1\s\"(.+)\".+\s\$EndSheet'
-        self.dirname  =   os.path.dirname(fname)
-        self.sheets  +=   re.findall(pattern, self.schdata[0])
+        self.dirname  = os.path.dirname(fname)
+        self.sheets  += list( set( re.findall(pattern, self.schdata[0]) ) )
+        #print(self.sheets)
         sheets_paths  = [ os.path.join(self.dirname, filepath) for filepath in self.sheets ]
         
         for sheet in sheets_paths[1:]:
