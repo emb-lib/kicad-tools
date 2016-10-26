@@ -658,7 +658,7 @@ class FieldInspector(QTreeWidget):
         self.setHeaderHidden(True)
         self.setFocusPolicy(Qt.WheelFocus)
         
-        self.field_items = self.addParent(self, 0, 'Field', '')
+        self.field_items = self.addParent(self, 0, 'Field Parameters', '')
     
         for idx, i in enumerate(self.ItemsTable):
             self.addChild(self.field_items, i[0], '')
