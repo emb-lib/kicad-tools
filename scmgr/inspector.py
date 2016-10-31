@@ -353,8 +353,8 @@ class Inspector(QTreeWidget):
         
         return fdict
     #---------------------------------------------------------------------------
-        self.topLevelItem(1).takeChildren()
     def load_user_defined_props(self):
+        #self.topLevelItem(1).takeChildren()
         if not self.comps:
             return 
                         
@@ -362,13 +362,31 @@ class Inspector(QTreeWidget):
 
         user_fields_names = list(user_fields.keys())
         user_fields_names.sort()
+        
+        item_names = []
+        for i in range( self.topLevelItem(1).childCount()-1, -1, -1 ):  # reverse order to prevent collision with indices when take child
+            item = self.topLevelItem(1).child(i)
+            item_name = item.data(colNAME, Qt.DisplayRole)
+            item_names.append( item_name )
+            if item_name not in user_fields_names:
+                if item == self.currentItem():
+                    self.setCurrentItem(self.topLevelItem(1))
+                self.topLevelItem(1).takeChild(i)
+        
         for name in user_fields_names:
-            item = self.addChild(self.usr_items, name, user_fields[name][0])
-
+            if name not in item_names:
+                item = self.addChild(self.usr_items, name, user_fields[name][0])
+            else:
+                for i in range( self.topLevelItem(1).childCount() ):
+                    item = self.topLevelItem(1).child(i)
+                    if item.data(colNAME, Qt.DisplayRole) == name:
+                        break
+    
+            vals = user_fields[name]
+            item.setData(colDATA, Qt.DisplayRole, vals[0])
             if len(user_fields[name]) == 1:
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
             else:
-                vals = user_fields[name]
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
     #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
