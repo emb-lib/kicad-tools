@@ -159,7 +159,7 @@ class Inspector(QTreeWidget):
                     f = ComponentField.default(c, text)
                     c.add_field(f)
         
-            self.load_user_defined_params()
+            self.load_user_defined_props()
     #---------------------------------------------------------------------------    
     def remove_property(self):
         print('Inspector::delete property')
@@ -175,7 +175,7 @@ class Inspector(QTreeWidget):
             f = c.field(name)
             c.remove_field(f)
 
-        self.load_user_defined_params()
+        self.load_user_defined_props()
     #---------------------------------------------------------------------------    
     def rename_property(self):
         print('Inspector::rename property')
@@ -190,7 +190,7 @@ class Inspector(QTreeWidget):
                 f = c.field(name)
                 f.Name = text
     
-            self.load_user_defined_params()
+            self.load_user_defined_props()
     #---------------------------------------------------------------------------    
     def mousePressEvent(self, e):
         self.mouse_click.emit('Inspector')
@@ -296,7 +296,7 @@ class Inspector(QTreeWidget):
         
         self.save_cmps()
     #---------------------------------------------------------------------------    
-    def prepare_std_params(self, item):
+    def prepare_std_props(self, item):
         name  = item.data(colNAME, Qt.DisplayRole)
         l = []
         for c in self.comps:
@@ -327,7 +327,7 @@ class Inspector(QTreeWidget):
         l.sort()
         return l
     #---------------------------------------------------------------------------    
-    def user_defined_params(self):
+    def user_defined_props(self):
         
         l = []
         fnames_set = set([ i.Name for i in self.comps[0].Fields[4:]])
@@ -353,12 +353,12 @@ class Inspector(QTreeWidget):
         
         return fdict
     #---------------------------------------------------------------------------
-    def load_user_defined_params(self):
         self.topLevelItem(1).takeChildren()
+    def load_user_defined_props(self):
         if not self.comps:
             return 
-            
-        user_fields = self.user_defined_params()        
+                        
+        user_fields = self.user_defined_props()        
 
         user_fields_names = list(user_fields.keys())
         user_fields_names.sort()
@@ -387,15 +387,13 @@ class Inspector(QTreeWidget):
         
         self.comps = comps
         self.ItemsDelegate.clear_editor_data()
-       # comp = self.comps[0]
         
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
-            self.prepare_std_params(item)
+            self.prepare_std_props(item)
             
-        self.load_user_defined_params()            
-        
-        curr_item = self.currentItem()
+        self.load_user_defined_props()            
+        curr_item = self.currentItem()   
         if curr_item:
             self.item_clicked(curr_item, colNAME)
             
