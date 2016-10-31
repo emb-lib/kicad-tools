@@ -27,7 +27,7 @@ class Selector(QTreeWidget):
     
     NAME_PLACE_HOLDER = '<enter name>'
     
-    sel_options = ['', '+', '-', 're']
+    sel_options = ['', '=', '!=', '=re', '!=re']
     
     select_comps_signal = pyqtSignal([list])
     
@@ -335,9 +335,10 @@ class Selector(QTreeWidget):
                         else:
                             continue
                         
-                    if (sel_opt == '+' and value == prop_val) or\
-                       (sel_opt == '-' and value != prop_val) or\
-                       (sel_opt == 're' and re.match(value, prop_val)):
+                    if (sel_opt == '=' and value == prop_val) or\
+                       (sel_opt == '!=' and value != prop_val) or\
+                       (sel_opt == '=re' and re.match(value, prop_val)) or\
+                       (sel_opt == '!=re' and not re.match(value, prop_val)):
                         refs.append(c[0].Ref)
                         sel = True
                 
@@ -359,9 +360,10 @@ class Selector(QTreeWidget):
                         else:
                             continue
 
-                        if (sel_opt == '+' and value == prop_val) or\
-                           (sel_opt == '-' and value != prop_val) or\
-                           (sel_opt == 're' and re.match(value, prop_val)):
+                        if (sel_opt == '=' and value == prop_val) or\
+                           (sel_opt == '!=' and value != prop_val) or\
+                           (sel_opt == '=re' and re.match(value, prop_val)) or\
+                           (sel_opt == '!=re' and not re.match(value, prop_val)):
                             refs.append(c[0].Ref)
                             sel = True
                             

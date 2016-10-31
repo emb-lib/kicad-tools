@@ -217,11 +217,16 @@ class Component:
                 return None
     #--------------------------------------------------------------
     def get_str_from_pattern(self, pattern):
-        subs = re.findall('\$(\w+)', pattern)
+        subs  = re.findall('\$(\w+)', pattern)
+        subs += re.findall('\$(\{[\w\s]+\})', pattern)
 
         for sub in subs:
-            pval = self.property_value(sub)
-            if pval:
+            if sub[0] == '{':
+                pname = sub[1:-1]
+            else:
+                pname = sub
+            pval = self.property_value(pname)
+            if pval or pval == '':
                 pattern = re.sub('\$' + sub, pval, pattern)
 
         return pattern
