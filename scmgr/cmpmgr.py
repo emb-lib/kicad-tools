@@ -226,7 +226,7 @@ class Component:
             else:
                 pname = sub
             pval = self.property_value(pname)
-            if pval:
+            if pval or pval == '':
                 pattern = re.sub('\$' + sub, pval, pattern)
 
         return pattern
