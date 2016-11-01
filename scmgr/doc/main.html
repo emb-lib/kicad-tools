@@ -131,13 +131,14 @@ easely selected from drop-down list that contains only context-related values.</
   <font  class="li1">
     <li>the first column contains property/parameter name;</li>
     <li>the second column contains property/parameter value;</li>
-    <li>the third column offer selection option. Selection option can have four values:</li>
+    <li>the third column offer selection option. Selection option can have five values:</li>
         <ol>
           <font  class="li2">
             <li><b>Empty</b>. Property/parameter ignored.</li>
-            <li><b>+</b>. Use the same property/parameter value.</li>
-            <li><b>-</b>. Use different property/parameter value.</li>
-            <li><b>re</b>. Use property/parameter value as regular expression.</li>
+            <li><b>=</b>. Exactly match property/parameter value.</li>
+            <li><b>!=</b>. Non-match property/parameter value.</li>
+            <li><b>=re</b>. Match regular expression property/parameter value.</li>
+            <li><b>!=re</b>. Non-match regular expression property/parameter value.</li>
           </font>
         </ol>
   </font>
@@ -240,7 +241,12 @@ is simple text-string editor; in case of multiple values the editor is editable 
 If value string contains reference to another property (substitution pattern)
  the reference will replaced with the corresponding value. The reference 
  consists of leading "$" symbol and the referenced property name - for 
- example, <i>"$Type"</i> is reference to property <i>"Type"</i>.</p>
+ example, <i>"$Type"</i> is reference to property <i>"Type"</i>. Also, one
+ more form of the references supported: <i>"${property-name}"</i>. This form is
+ suitable when property name has white spaces or when the reference concatinating
+ with other part of string without white spaces. For example:</p>
+ 
+ <p><i>"${Vendor ID}"</i>, <i>"${Capacitor Type} ${Nominal}$Units"</i> </p>
 
 <p>Another feature to automate property value generation is property templates.
 Property template is user-defined dedicated property with name consisting of
