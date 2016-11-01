@@ -7,7 +7,9 @@ import os
 import re
 import shutil
 
-sys.path.append(os.path.join( os.getcwd(), 'scmgr' ) )
+run_path, filename = os.path.split(  os.path.abspath(__file__) )
+resources_path = os.path.join( run_path, 'scmgr' )
+sys.path.append( resources_path )
                 
 from inspector import *
 from selector  import *
@@ -233,7 +235,7 @@ class THelpForm(QWidget):
         self.close_button.clicked.connect(self.close)
         
         
-        self.text_browser.setSearchPaths(['scmgr/doc'])
+        self.text_browser.setSearchPaths([os.path.join(resources_path, 'doc')])
         self.text_browser.setSource(QUrl(path))
 #       f = QFont()
 #       f.setPointSize(14)
@@ -391,43 +393,43 @@ class MainWindow(QMainWindow):
         Layout    = QHBoxLayout(work_zone)
         self.setCentralWidget(work_zone)
         
-        openAction = QAction(QIcon( os.path.join('scmgr', 'open24.png') ), 'Open', self)
+        openAction = QAction(QIcon( os.path.join(resources_path, 'open24.png') ), 'Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open Schematic File')
         openAction.triggered.connect(self.open_file)
         
-        saveAction = QAction(QIcon( os.path.join('scmgr', 'save24.png') ), 'Save', self)
+        saveAction = QAction(QIcon( os.path.join(resources_path, 'save24.png') ), 'Save', self)
         saveAction.setShortcut('Ctrl+S')
         saveAction.setStatusTip('Save Schematic File')
         saveAction.triggered.connect(self.save_file)
                 
-        saveAsAction = QAction(QIcon( os.path.join('scmgr', 'save-as24.png') ), 'Save As...', self)
+        saveAsAction = QAction(QIcon( os.path.join(resources_path, 'save-as24.png') ), 'Save As...', self)
         saveAsAction.setShortcut('Ctrl+Shift+S')
         saveAsAction.setStatusTip('Save Schematic File As...')
         saveAsAction.triggered.connect(self.save_file_as)
         
                         
-        exitAction = QAction(QIcon( os.path.join('scmgr', 'exit24.png') ), 'Exit', self)
+        exitAction = QAction(QIcon( os.path.join(resources_path, 'exit24.png') ), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
         
-        settingsAction = QAction(QIcon( os.path.join('scmgr', 'settings24.png') ), 'Settings', self)
+        settingsAction = QAction(QIcon( os.path.join(resources_path, 'settings24.png') ), 'Settings', self)
         settingsAction.setShortcut('Ctrl+Alt+S')
         settingsAction.setStatusTip('Edit settings')
         settingsAction.triggered.connect(self.edit_settings)
         
-        helpAction = QAction(QIcon( os.path.join('scmgr', 'help_book24.png') ), 'User\'s Manual', self)
+        helpAction = QAction(QIcon( os.path.join(resources_path, 'help_book24.png') ), 'User\'s Manual', self)
         helpAction.setShortcut('F1')
         helpAction.setStatusTip('User\'s Manual')
         helpAction.triggered.connect(self.show_user_manual_slot)
         
-        helpSDAction = QAction(QIcon( os.path.join('scmgr', 'gear24.png') ), 'Settings Dialog', self)
+        helpSDAction = QAction(QIcon( os.path.join(resources_path, 'gear24.png') ), 'Settings Dialog', self)
         helpSDAction.setShortcut('Ctrl+F1')
         helpSDAction.setStatusTip('Settings Dialog Help')
         helpSDAction.triggered.connect(self.show_setting_dialog_help_slot)
                 
-        helpHKAction = QAction(QIcon( os.path.join('scmgr', 'rocket24.png') ), 'Hotkeys', self)
+        helpHKAction = QAction(QIcon( os.path.join(resources_path, 'rocket24.png') ), 'Hotkeys', self)
         helpHKAction.setShortcut('Shift+F1')
         helpHKAction.setStatusTip('Hotkeys Help')
         helpHKAction.triggered.connect(self.show_hotkeys_help_slot)
@@ -778,7 +780,7 @@ if __name__ == '__main__':
     
     app  = QApplication(sys.argv)
     
-    with open( os.path.join('scmgr', 'scmgr.qss'), 'rb') as fqss:
+    with open( os.path.join(resources_path, 'scmgr.qss'), 'rb') as fqss:
         qss = fqss.read().decode()
         qss = re.sub(os.linesep, '', qss )
     app.setStyleSheet(qss)
