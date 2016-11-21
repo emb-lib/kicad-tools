@@ -13,6 +13,7 @@ Currently, the following utilities are offered:
 | `conngen.py`   |  Connector generator utility. Allows to generate arbitrary connector component |
 | `icgen.py`     |  Integrated circuit generator utility. Intended to create IC component from `YAML` description |
 | `merge-lib.sh` |  Simple shell script for merging component files into library.  |
+| `scmgr.py`     |  Powerfull GUI application for schematic components properties management |
  
 
 ## Tools description
@@ -51,3 +52,35 @@ usage: merge-lib.sh libname
 Result: `libname.lib` and `libname.dcm` files.
 Note: the script utility merges all `.cmp` files in current directory to 
 `.lib` file and all `.dcmp` files in current directory to `.dcm` file.
+
+### Schematic Component Manager
+
+Schematic Component Manager is powerfull GUI application that allows efficient way for processing of schematic components properties.
+
+#### Features
+
+   * Table representation of component list
+   * Automating of component selection
+       * Dedicated Selector tool
+       * Using component property as selection criteria
+       * Flexible rules for property matching: same, different, regular expression
+       * Use any component as template for property list
+   * Group editing of selected componets
+       * Convenient Inspector tool
+       * Add/Delete/Rename of component[s] properties
+       * Property value substitutions
+       * Property templates: generating property value using template
+   * Customization of components table view
+   * Delicate schematic files handling - preserve file sturcture over open/save operations
+   * Multisheet schematic support
+   * Automatic save/restore all GUI geometry properties
+
+#### Usage
+```
+usage: scmgr.py [<schematic-filename>.sch]
+```
+
+#### Documentation
+
+The program contains help documentation that explains the program features and usage. Besides, there is [wiki page](https://github.com/emb-lib/kicad-tools/wiki/KiCad-Schematic-Components-Manager-User's-Manual-(ru)) [ru] with more detail program description.
+
