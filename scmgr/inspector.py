@@ -318,6 +318,9 @@ class Inspector(QTreeWidget):
         else:
             vals.insert(0, MULTIVALUE)
             self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+            idx    = self.indexFromItem(self.currentItem(), colDATA)
+            editor = self.indexWidget(idx)
+            self.closeEditor(editor, QAbstractItemDelegate.NoHint)
             item.setData(colDATA, Qt.DisplayRole, vals[0])
     #---------------------------------------------------------------------------    
     def reduce_list(self, l):
@@ -378,15 +381,17 @@ class Inspector(QTreeWidget):
                     item = self.topLevelItem(1).child(i)
                     if item.data(colNAME, Qt.DisplayRole) == name:
                         break
-    
+
             vals = user_fields[name]
-            item.setData(colDATA, Qt.DisplayRole, vals[0])
-            if len(user_fields[name]) == 1:
+            if len(vals) == 1:
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
             else:
                 self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.CBOX_DELEGATE, vals)
+                
+            item.setData(colDATA, Qt.DisplayRole, vals[0])
     #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
+        print('Inspector::load_cmp')
         
         self.load_cmp_sem = True
         #-------------------------------------
