@@ -612,8 +612,9 @@ class MainWindow(QMainWindow):
         self.Selector.select_comps_signal.connect(self.CmpTable.select_comps_slot)
 
         self.Inspector.load_field.connect(self.FieldInspector.load_field_slot)
-        self.Inspector.data_changed.connect(self.data_changed_slot)
-        self.Inspector.data_changed.connect(self.CmpTable.update_cmp_list_slot)
+        #self.Inspector.data_changed.connect(self.data_changed_slot)
+        self.Inspector.update_comps.connect(self.data_changed_slot)
+        #self.Inspector.data_changed.connect(self.CmpTable.update_cmp_list_slot)
         self.Inspector.update_comps.connect(self.CmpTable.update_cmp_list_slot)
         self.FieldInspector.data_changed.connect(self.data_changed_slot)
         CmpMgr.file_saved.connect(self.file_saved_slot)

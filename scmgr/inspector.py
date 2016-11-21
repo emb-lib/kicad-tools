@@ -70,7 +70,7 @@ class Inspector(QTreeWidget):
     #---------------------------------------------------------------------------    
     load_field   = pyqtSignal( [list], [str] )
     mouse_click  = pyqtSignal([str])
-    data_changed = pyqtSignal()
+    #data_changed = pyqtSignal()
     update_comps = pyqtSignal()
     #---------------------------------------------------------------------------    
             
@@ -263,21 +263,18 @@ class Inspector(QTreeWidget):
             
         print(item.data(colNAME, Qt.DisplayRole), item.data(colDATA, Qt.DisplayRole))
         self.save_cmps()
-        self.data_changed.emit()    
+        #self.data_changed.emit()    
     #---------------------------------------------------------------------------    
     def curr_item_changed(self, item, prev):
-
         #print('Inspector::item_changed')
                 
         idx    = self.indexFromItem(prev, colDATA)
         editor = self.indexWidget(idx)
-
         
         if editor:
             #print(editor)
             self.commitData(editor)
             self.closeEditor(editor, QAbstractItemDelegate.NoHint)
-
 
         self.editItem(item, colDATA)
         self.item_clicked(item, colNAME)
@@ -309,6 +306,7 @@ class Inspector(QTreeWidget):
                 
         vals = list(set(l))
         vals.sort()
+        
         if len(vals) == 0:
             self.ItemsDelegate.add_editor_data(name, self.InspectorItemsDelegate.TEXT_DELEGATE)
             item.setData(colDATA, Qt.DisplayRole, '')
@@ -328,7 +326,6 @@ class Inspector(QTreeWidget):
         return l
     #---------------------------------------------------------------------------    
     def user_defined_props(self):
-        
         l = []
         fnames_set = set([ i.Name for i in self.comps[0].Fields[4:]])
         for c in self.comps[1:]:
@@ -357,7 +354,7 @@ class Inspector(QTreeWidget):
         #self.topLevelItem(1).takeChildren()
         if not self.comps:
             return 
-                        
+        
         user_fields = self.user_defined_props()        
 
         user_fields_names = list(user_fields.keys())
@@ -409,7 +406,7 @@ class Inspector(QTreeWidget):
         for i in range( self.topLevelItem(0).childCount() ):
             item = self.topLevelItem(0).child(i)
             self.prepare_std_props(item)
-            
+        
         self.load_user_defined_props()            
         curr_item = self.currentItem()   
         if curr_item:
