@@ -166,7 +166,7 @@ def main():
     
     if pin_count == 0:
         print('E: pin count must be specified')
-        print('usage: conngen.py -n <pin-count> [-p <part-count>] [-w <width>] [-f <filled>]' + os.linesep)
+        print('usage: conngen.py -n <pin-count> [-p <part-count>] [-w <width>] [-f <filled>] [-l <pin-length]' + os.linesep)
         sys.exit(1)
         
     if int(pin_count)%int(part_count):
