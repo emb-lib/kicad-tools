@@ -57,7 +57,7 @@ class ComponentsTable(QTableWidget):
     def __init__(self, parent):
         super().__init__(0, 2, parent)
         
-        self.cellActivated.connect(self.cell_chosen)
+        self.itemSelectionChanged.connect(self.cell_chosen)
         self.cellClicked.connect  (self.cell_chosen)
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)  # select whole row
@@ -83,7 +83,7 @@ class ComponentsTable(QTableWidget):
         self.mouse_click.emit('CmpTable')
         QTableWidget.mousePressEvent(self, e)
     #---------------------------------------------------------------------------    
-    def cell_chosen(self, row, col):
+    def cell_chosen(self):
         items = self.selectedItems()
         refs = []
      #   if len(items) > 0:
@@ -120,7 +120,7 @@ class ComponentsTable(QTableWidget):
         self.CmpDict = CmpMgr.load_file(fname)
         self.update_cmp_list(self.CmpDict)
         self.selectRow(0)
-        self.cell_chosen(0, 0)
+        self.cell_chosen()
         CmpMgr.set_curr_file_path(fname)
         self.file_load.emit()
         self.cmps_updated.emit( self.CmpDict )
@@ -135,7 +135,7 @@ class ComponentsTable(QTableWidget):
     def update_cmp_list_slot(self):
         self.update_cmp_list(self.CmpDict)
         self.cmps_updated.emit( self.CmpDict )
-        self.cell_chosen(0,0)
+        self.cell_chosen()
     #---------------------------------------------------------------------------    
     def update_cmp_list(self, cd):
 
