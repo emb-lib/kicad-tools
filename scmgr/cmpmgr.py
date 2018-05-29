@@ -120,10 +120,12 @@ class ComponentField:
 #-------------------------------------------------------------------------------
 class Component:
     
-    def __init__(self, sheet = 0):
-        self.Ref     = '~'
-        self.LibRef = '~'
-        self.Sheet   = sheet
+    def __init__(self, sheet = 0, fver = '2'):
+        self.Lib      = '~'
+        self.Ref      = '~'
+        self.LibRef   = '~'
+        self.Sheet    = sheet
+        self.file_ver = fver
         
     def parse_comp(self, rec):
         self.rec        = rec
@@ -138,9 +140,14 @@ class Component:
         #
         #     Component Reference and Library Reference
         #
-        r = re.search('L ([\w-]+) ([\w#]+[\d+|\?])', rec)
+        pattern = 'L ([\w-]+) ([\w#]+[\d+|\?])' if self.file_ver == '2' else 'L ([\w-]+)\:([\w-]+) ([\w#]+[\d+|\?])'
+        r = re.search(pattern, rec)
         if r:
-            self.LibRef, self.Ref = r.groups()
+            if self.file_ver == '2':
+                self.LibRef, self.Ref = r.groups()
+            else:
+                self.Lib, self.LibRef, self.Ref = r.groups()
+                
             if self.Ref[-1] == '?':
                 self.DisplayRef = self.Ref
                 for ar in self.ar_list:
@@ -299,7 +306,10 @@ class Component:
         #print(self.Ref)
         rec_list = []
         Ref = self.DisplayRef if self.DisplayRef else self.Ref
-        rec_list.append('L ' + self.LibRef + ' ' + Ref)
+        if self.file_ver == '2':
+            rec_list.append('L ' + self.LibRef + ' ' + Ref)
+        else:
+            rec_list.append('L ' + self.Lib + ':' + self.LibRef + ' ' + Ref)
         rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
         rec_list.append('P ' + self.X + ' ' + self.Y)
         
@@ -361,6 +371,7 @@ class ComponentManager(QObject):
     def load_file(self, fname):
         self.sheets = [ os.path.basename(fname) ]
         self.schdata = [self.read_file(fname)]
+        self.file_format_ver = re.match('EESchema Schematic File Version (\d)', self.schdata[0]).group(1)
         
         pattern = '\$Sheet\s.+\s.+\sF0.+\sF1\s\"(.+)\".+\s\$EndSheet'
         self.dirname  = os.path.dirname(fname)
@@ -394,7 +405,7 @@ class ComponentManager(QObject):
 
         for sheet_num, rcl in enumerate(rcls):
             for i in rcl:
-                cmp = Component(sheet_num)
+                cmp = Component(sheet_num, self.file_format_ver)
                 cmp.parse_comp(i)
                 ignore = False
                 for ip in ipl:
