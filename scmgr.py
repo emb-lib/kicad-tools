@@ -754,7 +754,7 @@ class MainWindow(QMainWindow):
         self.FieldInspector.save_fields()
         filenames = QFileDialog.getSaveFileName(self, 'Save File As...', '', 'KiCad Schematic Files (*.sch)')
             
-        if len(filenames) == 0:
+        if filenames[0] == '':
             return
             
         print('Save File As "' + filenames[0] + '"')
