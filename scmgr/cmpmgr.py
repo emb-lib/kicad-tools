@@ -121,6 +121,7 @@ class ComponentField:
 class Component:
     
     def __init__(self, sheet = 0):
+        self.Sch     = '~'
         self.Ref     = '~'
         self.LibRef = '~'
         self.Sheet   = sheet
@@ -138,9 +139,10 @@ class Component:
         #
         #     Component Reference and Library Reference
         #
-        r = re.search('L ([\w-]+) ([\w#]+[\d+|\?])', rec)
+        #r = re.search('L ([\w-:]+) ([\w#]+[\d+|\?])', rec)
+        r = re.search('L ([\w-]+)\:([\w-]+) ([\w#]+[\d+|\?])', rec)
         if r:
-            self.LibRef, self.Ref = r.groups()
+            self.Sch, self.LibRef, self.Ref = r.groups()
             if self.Ref[-1] == '?':
                 self.DisplayRef = self.Ref
                 for ar in self.ar_list:
@@ -299,7 +301,8 @@ class Component:
         #print(self.Ref)
         rec_list = []
         Ref = self.DisplayRef if self.DisplayRef else self.Ref
-        rec_list.append('L ' + self.LibRef + ' ' + Ref)
+        #rec_list.append('L ' + self.LibRef + ' ' + Ref)
+        rec_list.append('L ' + self.Sch + ':' + self.LibRef + ' ' + Ref)
         rec_list.append('U ' + self.PartNo  + ' ' + self.mm + ' ' + self.Timestamp)
         rec_list.append('P ' + self.X + ' ' + self.Y)
         
