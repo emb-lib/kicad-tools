@@ -734,6 +734,8 @@ class MainWindow(QMainWindow):
         filenames = []
         if dialog.exec_():
             filenames = dialog.selectedFiles()
+        if len(filenames) == 0:
+            return
         
         CmpMgr.set_curr_file_path( filenames[0] )
         self.CmpTable.load_file( filenames[0] )
