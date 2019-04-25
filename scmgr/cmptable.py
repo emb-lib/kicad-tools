@@ -110,7 +110,7 @@ class ComponentsTable(QTableWidget):
                     #self.item(row, 0).setSelected(True)
                    
         self.setSelectionMode(sel_mode)
-        self.cell_chosen(0, 0)
+        self.cell_chosen()
     #---------------------------------------------------------------------------    
     def load_file(self, fname):
                 
