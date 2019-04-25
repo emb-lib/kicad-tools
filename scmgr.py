@@ -734,6 +734,8 @@ class MainWindow(QMainWindow):
         filenames = []
         if dialog.exec_():
             filenames = dialog.selectedFiles()
+        if len(filenames) == 0:
+            return
         
         CmpMgr.set_curr_file_path( filenames[0] )
         self.CmpTable.load_file( filenames[0] )
@@ -752,16 +754,9 @@ class MainWindow(QMainWindow):
     def save_file_as(self):
         self.Inspector.save_cmps()
         self.FieldInspector.save_fields()
-        
-        dialog = QFileDialog(self)
-        dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setNameFilter('KiCad Schematic Files (*.sch)')
-
-        filenames = []
-        if dialog.exec_():
-            filenames = dialog.selectedFiles()
+        filenames = QFileDialog.getSaveFileName(self, 'Save File As...', '', 'KiCad Schematic Files (*.sch)')
             
-        if len(filenames) == 0:
+        if filenames[0] == '':
             return
             
         print('Save File As "' + filenames[0] + '"')

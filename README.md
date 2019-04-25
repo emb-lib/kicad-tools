@@ -22,12 +22,13 @@ Currently, the following utilities are offered:
 
 #### Connector generator utility
 ```
-usage: conngen -n N [-p P -w W -f]
+usage: conngen -n N [-p P] [-w W] [-f] [-l L]
     where:
       -n N - pin count
       -p P - part count
       -w W - symbol width
       -f   - make connector body filled with color
+      -l L - pin length (default pin lenght is 200 mils)
 
 ```
 Result: connector component file.

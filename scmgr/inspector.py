@@ -421,7 +421,7 @@ class Inspector(QTreeWidget):
             item.setData(colDATA, Qt.DisplayRole, vals[0])
     #---------------------------------------------------------------------------
     def load_cmp(self, cmps):
-        print('Inspector::load_cmp')
+        #print('Inspector::load_cmp')
         
         self.load_cmp_sem = True
         #-------------------------------------

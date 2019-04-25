@@ -9,7 +9,7 @@
 #   
 #    Purpose: Create schematic connector symbols
 #
-#    Copyright (c) 2016, emb-lib Project Team
+#    Copyright (c) 2016-2017, emb-lib Project Team
 #
 #    Permission is hereby granted, free of charge, to any person
 #    obtaining  a copy of this software and associated documentation
@@ -87,16 +87,21 @@ def create_field(field, name, pos_x, pos_y, font=FONT_SIZE, visibility='V'):
     return join_rec(l) + os.linesep
  
 #-------------------------------------------------------------------------------
-def create_drawings(pin_count, part_count, width, filled, font=FONT_SIZE):
+def create_drawings(pin_count, part_count, width, filled, pinlen, font=FONT_SIZE):
 
     if filled:
         f = 'f'
     else:
         f = 'n'
     
+    if pinlen < 0:
+        pinlen = PIN_LEN
+            
+    cir_width = int(width) - 420
+    cir_pos   = str(420 + int(cir_width/2))
     draw  = 'DRAW' + os.linesep
-    draw += 'T 0 210 -200 '  + str(FONT_SIZE) + ' 0 0 0 Конт Normal 0 C C' + os.linesep
-    draw += 'T 0 1200 -200 ' + str(FONT_SIZE) + ' 0 0 0 Цепь Normal 0 C C' + os.linesep
+    draw += 'T 0 210 -200 '             + str(FONT_SIZE) + ' 0 0 0 Конт Normal 0 C C' + os.linesep
+    draw += 'T 0 ' + cir_pos + ' -200 ' + str(FONT_SIZE) + ' 0 0 0 Цепь Normal 0 C C' + os.linesep
 
     pins_chunk = int(int(pin_count)/int(part_count))
     height = str(-(pins_chunk + 1)*STEP)
@@ -111,22 +116,21 @@ def create_drawings(pin_count, part_count, width, filled, font=FONT_SIZE):
     for n in range(1, int(part_count)+1):
         for i in range(1,pins_chunk+1):
             draw += 'X ' + str(i+(n-1)*pins_chunk) + ' ' + str(i+(n-1)*pins_chunk) + ' ' + \
-                     str(-PIN_LEN) + ' ' + str( -int( (STEP/2+i*STEP) ) ) + ' ' + str(PIN_LEN) + \
+                     str(-pinlen) + ' ' + str( -int( (STEP/2+i*STEP) ) ) + ' ' + str(pinlen) + \
                      ' R ' + str(font) + ' ' + str(font) + ' ' + str(n) + ' 1 P'  + os.linesep
-        
         
     draw += 'ENDDRAW' + os.linesep
 
     return draw
        
 #-------------------------------------------------------------------------------
-def create_conn(pin_count, part_count, width, filled):
+def create_conn(pin_count, part_count, width, filled, pinlen):
     rec  = create_header( pin_count, part_count )
     rec += create_field( field=0, name='XP', pos_x=0, pos_y=100 )
-    rec += create_field( field=1, name='CONN-'+pin_count, pos_x=1000, pos_y=100 )
+    rec += create_field( field=1, name='CONN-'+pin_count, pos_x=700, pos_y=100 )
     rec += create_field( field=2, name='', pos_x=700, pos_y=400, visibility='I' )
     rec += create_field( field=3, name='', pos_x=700, pos_y=400, visibility='I' )
-    rec += create_drawings(pin_count, part_count, width, filled)
+    rec += create_drawings(pin_count, part_count, width, filled, pinlen)
     rec += 'ENDDEF' + os.linesep
 
     cname = 'conn-' + pin_count + '.cmp'
@@ -140,13 +144,14 @@ def main():
     #
     #    Process options
     #
-    optlist, fld = getopt.gnu_getopt(sys.argv[1:], 'n:p:w:f')
+    optlist, fld = getopt.gnu_getopt(sys.argv[1:], 'n:p:w:fl:')
 
 
     pin_count  = 0
     part_count = 1
     width      = str(WIDTH)
     filled     = False
+    pinlen     = -1
     for i in optlist:
         if i[0] == '-n':
             pin_count = i[1]
@@ -156,16 +161,19 @@ def main():
             width = i[1]
         elif i[0] == '-f':
             filled = True
+        elif i[0] == '-l':
+            pinlen = int(i[1])
     
     if pin_count == 0:
         print('E: pin count must be specified')
+        print('usage: conngen.py -n <pin-count> [-p <part-count>] [-w <width>] [-f <filled>] [-l <pin-length]' + os.linesep)
         sys.exit(1)
         
     if int(pin_count)%int(part_count):
         print('E: pin count should be multiple of part count')
         sys.exit(1)
             
-    create_conn(pin_count, part_count, width, filled)
+    create_conn(pin_count, part_count, width, filled, pinlen)
     
 if __name__ == '__main__':
     main()
